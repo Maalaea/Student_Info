@@ -51,3 +51,68 @@ public class NativeSecp256k1 {
      * @param data The data which was signed, must be exactly 32 bytes
      * @param signature The signature
      * @param pub The public key which did the signing
+     */
+    public static boolean verify(byte[] data, byte[] signature, byte[] pub) throws AssertFailException {
+        Preconditions.checkArgument(data.length == 32 && signature.length <= 520 && pub.length <= 520);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null || byteBuff.capacity() < 520) {
+            byteBuff = ByteBuffer.allocateDirect(520);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(data);
+        byteBuff.put(signature);
+        byteBuff.put(pub);
+
+        r.lock();
+        try {
+            return secp256k1_ecdsa_verify(byteBuff, Secp256k1Context.getContext(), signature.length, pub.length) == 1;
+        } finally {
+            r.unlock();
+        }
+    }
+
+    /**
+     * libsecp256k1 Create an ECDSA signature.
+     *
+     * @param data Message hash, 32 bytes
+     * @param key Secret key, 32 bytes
+     * @return sig byte array of signature
+     */
+    public static byte[] sign(byte[] data, byte[] sec) throws AssertFailException {
+        Preconditions.checkArgument(data.length == 32 && sec.length <= 32);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null || byteBuff.capacity() < 32 + 32) {
+            byteBuff = ByteBuffer.allocateDirect(32 + 32);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(data);
+        byteBuff.put(sec);
+
+        byte[][] retByteArray;
+
+        r.lock();
+        try {
+            retByteArray = secp256k1_ecdsa_sign(byteBuff, Secp256k1Context.getContext());
+        } finally {
+            r.unlock();
+        }
+
+        byte[] sigArr = retByteArray[0];
+        int sigLen = new BigInteger(new byte[] { retByteArray[1][0] }).intValue();
+        int retVal = new BigInteger(new byte[] { retByteArray[1][1] }).intValue();
+
+        assertEquals(sigArr.length, sigLen, "Got bad signature length.");
+
+        return retVal == 0 ? new byte[0] : sigArr;
+    }
+
+    /**
+     * libsecp256k1 Seckey Verify - returns 1 if valid, 0 if invalid
+     *
+     * @param seckey ECDSA Secret 
