@@ -181,4 +181,70 @@ public class NativeSecp256k1 {
     public static synchronized void cleanup() {
         w.lock();
         try {
-            secp25
+            secp256k1_destroy_context(Secp256k1Context.getContext());
+        } finally {
+            w.unlock();
+        }
+    }
+
+    public static long cloneContext() {
+        r.lock();
+        try {
+            return secp256k1_ctx_clone(Secp256k1Context.getContext());
+        } finally {
+            r.unlock();
+        }
+    }
+
+    /**
+     * libsecp256k1 PrivKey Tweak-Mul - Tweak privkey by multiplying to it
+     *
+     * @param tweak some bytes to tweak with
+     * @param seckey 32-byte seckey
+     */
+    public static byte[] privKeyTweakMul(byte[] privkey, byte[] tweak) throws AssertFailException {
+        Preconditions.checkArgument(privkey.length == 32);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null || byteBuff.capacity() < privkey.length + tweak.length) {
+            byteBuff = ByteBuffer.allocateDirect(privkey.length + tweak.length);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(privkey);
+        byteBuff.put(tweak);
+
+        byte[][] retByteArray;
+        r.lock();
+        try {
+            retByteArray = secp256k1_privkey_tweak_mul(byteBuff, Secp256k1Context.getContext());
+        } finally {
+            r.unlock();
+        }
+
+        byte[] privArr = retByteArray[0];
+
+        int privLen = (byte) new BigInteger(new byte[] { retByteArray[1][0] }).intValue() & 0xFF;
+        int retVal = new BigInteger(new byte[] { retByteArray[1][1] }).intValue();
+
+        assertEquals(privArr.length, privLen, "Got bad pubkey length.");
+
+        assertEquals(retVal, 1, "Failed return value check.");
+
+        return privArr;
+    }
+
+    /**
+     * libsecp256k1 PrivKey Tweak-Add - Tweak privkey by adding to it
+     *
+     * @param tweak some bytes to tweak with
+     * @param seckey 32-byte seckey
+     */
+    public static byte[] privKeyTweakAdd(byte[] privkey, byte[] tweak) throws AssertFailException {
+        Preconditions.checkArgument(privkey.length == 32);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null || byteBuff.capacity() < privkey.length + tweak.length) {
+            byteBuff = ByteBuffer.allocateDirect(privkey.length + tweak.length);
+            byteB
