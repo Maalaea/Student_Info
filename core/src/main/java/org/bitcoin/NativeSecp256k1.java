@@ -115,4 +115,70 @@ public class NativeSecp256k1 {
     /**
      * libsecp256k1 Seckey Verify - returns 1 if valid, 0 if invalid
      *
-     * @param seckey ECDSA Secret 
+     * @param seckey ECDSA Secret key, 32 bytes
+     */
+    public static boolean secKeyVerify(byte[] seckey) {
+        Preconditions.checkArgument(seckey.length == 32);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null || byteBuff.capacity() < seckey.length) {
+            byteBuff = ByteBuffer.allocateDirect(seckey.length);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(seckey);
+
+        r.lock();
+        try {
+            return secp256k1_ec_seckey_verify(byteBuff, Secp256k1Context.getContext()) == 1;
+        } finally {
+            r.unlock();
+        }
+    }
+
+    /**
+     * libsecp256k1 Compute Pubkey - computes public key from secret key
+     *
+     * @param seckey ECDSA Secret key, 32 bytes
+     * @return pubkey ECDSA Public key, 33 or 65 bytes
+     */
+    // TODO add a 'compressed' arg
+    public static byte[] computePubkey(byte[] seckey) throws AssertFailException {
+        Preconditions.checkArgument(seckey.length == 32);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null || byteBuff.capacity() < seckey.length) {
+            byteBuff = ByteBuffer.allocateDirect(seckey.length);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(seckey);
+
+        byte[][] retByteArray;
+
+        r.lock();
+        try {
+            retByteArray = secp256k1_ec_pubkey_create(byteBuff, Secp256k1Context.getContext());
+        } finally {
+            r.unlock();
+        }
+
+        byte[] pubArr = retByteArray[0];
+        int pubLen = new BigInteger(new byte[] { retByteArray[1][0] }).intValue();
+        int retVal = new BigInteger(new byte[] { retByteArray[1][1] }).intValue();
+
+        assertEquals(pubArr.length, pubLen, "Got bad pubkey length.");
+
+        return retVal == 0 ? new byte[0] : pubArr;
+    }
+
+    /**
+     * libsecp256k1 Cleanup - This destroys the secp256k1 context object This should be called at the end of the program
+     * for proper cleanup of the context.
+     */
+    public static synchronized void cleanup() {
+        w.lock();
+        try {
+            secp25
