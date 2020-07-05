@@ -371,4 +371,71 @@ public class NativeSecp256k1 {
         byteBuff.put(seckey);
         byteBuff.put(pubkey);
 
-        byte[][] retBy
+        byte[][] retByteArray;
+        r.lock();
+        try {
+            retByteArray = secp256k1_ecdh(byteBuff, Secp256k1Context.getContext(), pubkey.length);
+        } finally {
+            r.unlock();
+        }
+
+        byte[] resArr = retByteArray[0];
+        int retVal = new BigInteger(new byte[] { retByteArray[1][0] }).intValue();
+
+        assertEquals(resArr.length, 32, "Got bad result length.");
+        assertEquals(retVal, 1, "Failed return value check.");
+
+        return resArr;
+    }
+
+    /**
+     * libsecp256k1 randomize - updates the context randomization
+     *
+     * @param seed 32-byte random seed
+     */
+    public static synchronized boolean randomize(byte[] seed) throws AssertFailException {
+        Preconditions.checkArgument(seed.length == 32 || seed == null);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null || byteBuff.capacity() < seed.length) {
+            byteBuff = ByteBuffer.allocateDirect(seed.length);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(seed);
+
+        w.lock();
+        try {
+            return secp256k1_context_randomize(byteBuff, Secp256k1Context.getContext()) == 1;
+        } finally {
+            w.unlock();
+        }
+    }
+
+    public static byte[] schnorrSign(byte[] data, byte[] sec) throws AssertFailException {
+        Preconditions.checkArgument(data.length == 32 && sec.length <= 32);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null) {
+            byteBuff = ByteBuffer.allocateDirect(32 + 32);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(data);
+        byteBuff.put(sec);
+
+        byte[][] retByteArray;
+
+        r.lock();
+        try {
+            retByteArray = secp256k1_schnorr_sign(byteBuff, Secp256k1Context.getContext());
+        } finally {
+            r.unlock();
+        }
+
+        byte[] sigArr = retByteArray[0];
+        int retVal = new BigInteger(new byte[] { retByteArray[1][0] }).intValue();
+
+        assertEquals(sigArr.length, 64, "Got bad signature le
