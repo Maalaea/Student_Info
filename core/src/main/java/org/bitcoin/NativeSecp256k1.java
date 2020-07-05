@@ -247,4 +247,71 @@ public class NativeSecp256k1 {
         ByteBuffer byteBuff = nativeECDSABuffer.get();
         if (byteBuff == null || byteBuff.capacity() < privkey.length + tweak.length) {
             byteBuff = ByteBuffer.allocateDirect(privkey.length + tweak.length);
-            byteB
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(privkey);
+        byteBuff.put(tweak);
+
+        byte[][] retByteArray;
+        r.lock();
+        try {
+            retByteArray = secp256k1_privkey_tweak_add(byteBuff, Secp256k1Context.getContext());
+        } finally {
+            r.unlock();
+        }
+
+        byte[] privArr = retByteArray[0];
+
+        int privLen = (byte) new BigInteger(new byte[] { retByteArray[1][0] }).intValue() & 0xFF;
+        int retVal = new BigInteger(new byte[] { retByteArray[1][1] }).intValue();
+
+        assertEquals(privArr.length, privLen, "Got bad pubkey length.");
+
+        assertEquals(retVal, 1, "Failed return value check.");
+
+        return privArr;
+    }
+
+    /**
+     * libsecp256k1 PubKey Tweak-Add - Tweak pubkey by adding to it
+     *
+     * @param tweak some bytes to tweak with
+     * @param pubkey 32-byte seckey
+     */
+    public static byte[] pubKeyTweakAdd(byte[] pubkey, byte[] tweak) throws AssertFailException {
+        Preconditions.checkArgument(pubkey.length == 33 || pubkey.length == 65);
+
+        ByteBuffer byteBuff = nativeECDSABuffer.get();
+        if (byteBuff == null || byteBuff.capacity() < pubkey.length + tweak.length) {
+            byteBuff = ByteBuffer.allocateDirect(pubkey.length + tweak.length);
+            byteBuff.order(ByteOrder.nativeOrder());
+            nativeECDSABuffer.set(byteBuff);
+        }
+        byteBuff.rewind();
+        byteBuff.put(pubkey);
+        byteBuff.put(tweak);
+
+        byte[][] retByteArray;
+        r.lock();
+        try {
+            retByteArray = secp256k1_pubkey_tweak_add(byteBuff, Secp256k1Context.getContext(), pubkey.length);
+        } finally {
+            r.unlock();
+        }
+
+        byte[] pubArr = retByteArray[0];
+
+        int pubLen = (byte) new BigInteger(new byte[] { retByteArray[1][0] }).intValue() & 0xFF;
+        int retVal = new BigInteger(new byte[] { retByteArray[1][1] }).intValue();
+
+        assertEquals(pubArr.length, pubLen, "Got bad pubkey length.");
+
+        assertEquals(retVal, 1, "Failed return value check.");
+
+        return pubArr;
+    }
+
+    /**
+     * libsecp256k1 PubK
