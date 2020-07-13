@@ -2413,3 +2413,2175 @@ public final class Protos {
      * <pre>
      * pki-dependent signature
      * </pre>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * Protobuf type {@code payments.PaymentRequest}
+   */
+  public static final class PaymentRequest extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:payments.PaymentRequest)
+      PaymentRequestOrBuilder {
+    // Use PaymentRequest.newBuilder() to construct.
+    private PaymentRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private PaymentRequest(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final PaymentRequest defaultInstance;
+    public static PaymentRequest getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public PaymentRequest getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PaymentRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              paymentDetailsVersion_ = input.readUInt32();
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              pkiType_ = bs;
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              pkiData_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              serializedPaymentDetails_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              signature_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.protocols.payments.Protos.internal_static_payments_PaymentRequest_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.protocols.payments.Protos.internal_static_payments_PaymentRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.protocols.payments.Protos.PaymentRequest.class, org.bitcoin.protocols.payments.Protos.PaymentRequest.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<PaymentRequest> PARSER =
+        new com.google.protobuf.AbstractParser<PaymentRequest>() {
+      public PaymentRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PaymentRequest(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PaymentRequest> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int PAYMENT_DETAILS_VERSION_FIELD_NUMBER = 1;
+    private int paymentDetailsVersion_;
+    /**
+     * <code>optional uint32 payment_details_version = 1 [default = 1];</code>
+     */
+    public boolean hasPaymentDetailsVersion() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional uint32 payment_details_version = 1 [default = 1];</code>
+     */
+    public int getPaymentDetailsVersion() {
+      return paymentDetailsVersion_;
+    }
+
+    public static final int PKI_TYPE_FIELD_NUMBER = 2;
+    private java.lang.Object pkiType_;
+    /**
+     * <code>optional string pki_type = 2 [default = "none"];</code>
+     *
+     * <pre>
+     * none / x509+sha256 / x509+sha1
+     * </pre>
+     */
+    public boolean hasPkiType() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string pki_type = 2 [default = "none"];</code>
+     *
+     * <pre>
+     * none / x509+sha256 / x509+sha1
+     * </pre>
+     */
+    public java.lang.String getPkiType() {
+      java.lang.Object ref = pkiType_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          pkiType_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string pki_type = 2 [default = "none"];</code>
+     *
+     * <pre>
+     * none / x509+sha256 / x509+sha1
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getPkiTypeBytes() {
+      java.lang.Object ref = pkiType_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        pkiType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int PKI_DATA_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString pkiData_;
+    /**
+     * <code>optional bytes pki_data = 3;</code>
+     *
+     * <pre>
+     * depends on pki_type
+     * </pre>
+     */
+    public boolean hasPkiData() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional bytes pki_data = 3;</code>
+     *
+     * <pre>
+     * depends on pki_type
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getPkiData() {
+      return pkiData_;
+    }
+
+    public static final int SERIALIZED_PAYMENT_DETAILS_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString serializedPaymentDetails_;
+    /**
+     * <code>required bytes serialized_payment_details = 4;</code>
+     *
+     * <pre>
+     * PaymentDetails
+     * </pre>
+     */
+    public boolean hasSerializedPaymentDetails() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>required bytes serialized_payment_details = 4;</code>
+     *
+     * <pre>
+     * PaymentDetails
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getSerializedPaymentDetails() {
+      return serializedPaymentDetails_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>optional bytes signature = 5;</code>
+     *
+     * <pre>
+     * pki-dependent signature
+     * </pre>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional bytes signature = 5;</code>
+     *
+     * <pre>
+     * pki-dependent signature
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private void initFields() {
+      paymentDetailsVersion_ = 1;
+      pkiType_ = "none";
+      pkiData_ = com.google.protobuf.ByteString.EMPTY;
+      serializedPaymentDetails_ = com.google.protobuf.ByteString.EMPTY;
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasSerializedPaymentDetails()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeUInt32(1, paymentDetailsVersion_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getPkiTypeBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, pkiData_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, serializedPaymentDetails_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, signature_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(1, paymentDetailsVersion_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getPkiTypeBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, pkiData_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, serializedPaymentDetails_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, signature_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.PaymentRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.protocols.payments.Protos.PaymentRequest prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code payments.PaymentRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:payments.PaymentRequest)
+        org.bitcoin.protocols.payments.Protos.PaymentRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_PaymentRequest_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_PaymentRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.protocols.payments.Protos.PaymentRequest.class, org.bitcoin.protocols.payments.Protos.PaymentRequest.Builder.class);
+      }
+
+      // Construct using org.bitcoin.protocols.payments.Protos.PaymentRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        paymentDetailsVersion_ = 1;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        pkiType_ = "none";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        pkiData_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        serializedPaymentDetails_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_PaymentRequest_descriptor;
+      }
+
+      public org.bitcoin.protocols.payments.Protos.PaymentRequest getDefaultInstanceForType() {
+        return org.bitcoin.protocols.payments.Protos.PaymentRequest.getDefaultInstance();
+      }
+
+      public org.bitcoin.protocols.payments.Protos.PaymentRequest build() {
+        org.bitcoin.protocols.payments.Protos.PaymentRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.protocols.payments.Protos.PaymentRequest buildPartial() {
+        org.bitcoin.protocols.payments.Protos.PaymentRequest result = new org.bitcoin.protocols.payments.Protos.PaymentRequest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.paymentDetailsVersion_ = paymentDetailsVersion_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.pkiType_ = pkiType_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.pkiData_ = pkiData_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.serializedPaymentDetails_ = serializedPaymentDetails_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.protocols.payments.Protos.PaymentRequest) {
+          return mergeFrom((org.bitcoin.protocols.payments.Protos.PaymentRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.protocols.payments.Protos.PaymentRequest other) {
+        if (other == org.bitcoin.protocols.payments.Protos.PaymentRequest.getDefaultInstance()) return this;
+        if (other.hasPaymentDetailsVersion()) {
+          setPaymentDetailsVersion(other.getPaymentDetailsVersion());
+        }
+        if (other.hasPkiType()) {
+          bitField0_ |= 0x00000002;
+          pkiType_ = other.pkiType_;
+          onChanged();
+        }
+        if (other.hasPkiData()) {
+          setPkiData(other.getPkiData());
+        }
+        if (other.hasSerializedPaymentDetails()) {
+          setSerializedPaymentDetails(other.getSerializedPaymentDetails());
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasSerializedPaymentDetails()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.protocols.payments.Protos.PaymentRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.protocols.payments.Protos.PaymentRequest) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int paymentDetailsVersion_ = 1;
+      /**
+       * <code>optional uint32 payment_details_version = 1 [default = 1];</code>
+       */
+      public boolean hasPaymentDetailsVersion() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional uint32 payment_details_version = 1 [default = 1];</code>
+       */
+      public int getPaymentDetailsVersion() {
+        return paymentDetailsVersion_;
+      }
+      /**
+       * <code>optional uint32 payment_details_version = 1 [default = 1];</code>
+       */
+      public Builder setPaymentDetailsVersion(int value) {
+        bitField0_ |= 0x00000001;
+        paymentDetailsVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 payment_details_version = 1 [default = 1];</code>
+       */
+      public Builder clearPaymentDetailsVersion() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        paymentDetailsVersion_ = 1;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object pkiType_ = "none";
+      /**
+       * <code>optional string pki_type = 2 [default = "none"];</code>
+       *
+       * <pre>
+       * none / x509+sha256 / x509+sha1
+       * </pre>
+       */
+      public boolean hasPkiType() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string pki_type = 2 [default = "none"];</code>
+       *
+       * <pre>
+       * none / x509+sha256 / x509+sha1
+       * </pre>
+       */
+      public java.lang.String getPkiType() {
+        java.lang.Object ref = pkiType_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            pkiType_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string pki_type = 2 [default = "none"];</code>
+       *
+       * <pre>
+       * none / x509+sha256 / x509+sha1
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getPkiTypeBytes() {
+        java.lang.Object ref = pkiType_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          pkiType_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string pki_type = 2 [default = "none"];</code>
+       *
+       * <pre>
+       * none / x509+sha256 / x509+sha1
+       * </pre>
+       */
+      public Builder setPkiType(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        pkiType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string pki_type = 2 [default = "none"];</code>
+       *
+       * <pre>
+       * none / x509+sha256 / x509+sha1
+       * </pre>
+       */
+      public Builder clearPkiType() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        pkiType_ = getDefaultInstance().getPkiType();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string pki_type = 2 [default = "none"];</code>
+       *
+       * <pre>
+       * none / x509+sha256 / x509+sha1
+       * </pre>
+       */
+      public Builder setPkiTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        pkiType_ = value;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString pkiData_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes pki_data = 3;</code>
+       *
+       * <pre>
+       * depends on pki_type
+       * </pre>
+       */
+      public boolean hasPkiData() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bytes pki_data = 3;</code>
+       *
+       * <pre>
+       * depends on pki_type
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getPkiData() {
+        return pkiData_;
+      }
+      /**
+       * <code>optional bytes pki_data = 3;</code>
+       *
+       * <pre>
+       * depends on pki_type
+       * </pre>
+       */
+      public Builder setPkiData(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        pkiData_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes pki_data = 3;</code>
+       *
+       * <pre>
+       * depends on pki_type
+       * </pre>
+       */
+      public Builder clearPkiData() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        pkiData_ = getDefaultInstance().getPkiData();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString serializedPaymentDetails_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes serialized_payment_details = 4;</code>
+       *
+       * <pre>
+       * PaymentDetails
+       * </pre>
+       */
+      public boolean hasSerializedPaymentDetails() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>required bytes serialized_payment_details = 4;</code>
+       *
+       * <pre>
+       * PaymentDetails
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getSerializedPaymentDetails() {
+        return serializedPaymentDetails_;
+      }
+      /**
+       * <code>required bytes serialized_payment_details = 4;</code>
+       *
+       * <pre>
+       * PaymentDetails
+       * </pre>
+       */
+      public Builder setSerializedPaymentDetails(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        serializedPaymentDetails_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes serialized_payment_details = 4;</code>
+       *
+       * <pre>
+       * PaymentDetails
+       * </pre>
+       */
+      public Builder clearSerializedPaymentDetails() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        serializedPaymentDetails_ = getDefaultInstance().getSerializedPaymentDetails();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes signature = 5;</code>
+       *
+       * <pre>
+       * pki-dependent signature
+       * </pre>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional bytes signature = 5;</code>
+       *
+       * <pre>
+       * pki-dependent signature
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <code>optional bytes signature = 5;</code>
+       *
+       * <pre>
+       * pki-dependent signature
+       * </pre>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes signature = 5;</code>
+       *
+       * <pre>
+       * pki-dependent signature
+       * </pre>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:payments.PaymentRequest)
+    }
+
+    static {
+      defaultInstance = new PaymentRequest(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:payments.PaymentRequest)
+  }
+
+  public interface X509CertificatesOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:payments.X509Certificates)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated bytes certificate = 1;</code>
+     *
+     * <pre>
+     * DER-encoded X.509 certificate chain
+     * </pre>
+     */
+    java.util.List<com.google.protobuf.ByteString> getCertificateList();
+    /**
+     * <code>repeated bytes certificate = 1;</code>
+     *
+     * <pre>
+     * DER-encoded X.509 certificate chain
+     * </pre>
+     */
+    int getCertificateCount();
+    /**
+     * <code>repeated bytes certificate = 1;</code>
+     *
+     * <pre>
+     * DER-encoded X.509 certificate chain
+     * </pre>
+     */
+    com.google.protobuf.ByteString getCertificate(int index);
+  }
+  /**
+   * Protobuf type {@code payments.X509Certificates}
+   */
+  public static final class X509Certificates extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:payments.X509Certificates)
+      X509CertificatesOrBuilder {
+    // Use X509Certificates.newBuilder() to construct.
+    private X509Certificates(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private X509Certificates(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final X509Certificates defaultInstance;
+    public static X509Certificates getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public X509Certificates getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private X509Certificates(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                certificate_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              certificate_.add(input.readBytes());
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          certificate_ = java.util.Collections.unmodifiableList(certificate_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.protocols.payments.Protos.internal_static_payments_X509Certificates_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.protocols.payments.Protos.internal_static_payments_X509Certificates_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.protocols.payments.Protos.X509Certificates.class, org.bitcoin.protocols.payments.Protos.X509Certificates.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<X509Certificates> PARSER =
+        new com.google.protobuf.AbstractParser<X509Certificates>() {
+      public X509Certificates parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new X509Certificates(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<X509Certificates> getParserForType() {
+      return PARSER;
+    }
+
+    public static final int CERTIFICATE_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> certificate_;
+    /**
+     * <code>repeated bytes certificate = 1;</code>
+     *
+     * <pre>
+     * DER-encoded X.509 certificate chain
+     * </pre>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getCertificateList() {
+      return certificate_;
+    }
+    /**
+     * <code>repeated bytes certificate = 1;</code>
+     *
+     * <pre>
+     * DER-encoded X.509 certificate chain
+     * </pre>
+     */
+    public int getCertificateCount() {
+      return certificate_.size();
+    }
+    /**
+     * <code>repeated bytes certificate = 1;</code>
+     *
+     * <pre>
+     * DER-encoded X.509 certificate chain
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getCertificate(int index) {
+      return certificate_.get(index);
+    }
+
+    private void initFields() {
+      certificate_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < certificate_.size(); i++) {
+        output.writeBytes(1, certificate_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < certificate_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(certificate_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getCertificateList().size();
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.X509Certificates parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.protocols.payments.Protos.X509Certificates prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code payments.X509Certificates}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:payments.X509Certificates)
+        org.bitcoin.protocols.payments.Protos.X509CertificatesOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_X509Certificates_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_X509Certificates_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.protocols.payments.Protos.X509Certificates.class, org.bitcoin.protocols.payments.Protos.X509Certificates.Builder.class);
+      }
+
+      // Construct using org.bitcoin.protocols.payments.Protos.X509Certificates.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        certificate_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_X509Certificates_descriptor;
+      }
+
+      public org.bitcoin.protocols.payments.Protos.X509Certificates getDefaultInstanceForType() {
+        return org.bitcoin.protocols.payments.Protos.X509Certificates.getDefaultInstance();
+      }
+
+      public org.bitcoin.protocols.payments.Protos.X509Certificates build() {
+        org.bitcoin.protocols.payments.Protos.X509Certificates result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.protocols.payments.Protos.X509Certificates buildPartial() {
+        org.bitcoin.protocols.payments.Protos.X509Certificates result = new org.bitcoin.protocols.payments.Protos.X509Certificates(this);
+        int from_bitField0_ = bitField0_;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          certificate_ = java.util.Collections.unmodifiableList(certificate_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.certificate_ = certificate_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.protocols.payments.Protos.X509Certificates) {
+          return mergeFrom((org.bitcoin.protocols.payments.Protos.X509Certificates)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.protocols.payments.Protos.X509Certificates other) {
+        if (other == org.bitcoin.protocols.payments.Protos.X509Certificates.getDefaultInstance()) return this;
+        if (!other.certificate_.isEmpty()) {
+          if (certificate_.isEmpty()) {
+            certificate_ = other.certificate_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureCertificateIsMutable();
+            certificate_.addAll(other.certificate_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.protocols.payments.Protos.X509Certificates parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.protocols.payments.Protos.X509Certificates) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<com.google.protobuf.ByteString> certificate_ = java.util.Collections.emptyList();
+      private void ensureCertificateIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          certificate_ = new java.util.ArrayList<com.google.protobuf.ByteString>(certificate_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated bytes certificate = 1;</code>
+       *
+       * <pre>
+       * DER-encoded X.509 certificate chain
+       * </pre>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getCertificateList() {
+        return java.util.Collections.unmodifiableList(certificate_);
+      }
+      /**
+       * <code>repeated bytes certificate = 1;</code>
+       *
+       * <pre>
+       * DER-encoded X.509 certificate chain
+       * </pre>
+       */
+      public int getCertificateCount() {
+        return certificate_.size();
+      }
+      /**
+       * <code>repeated bytes certificate = 1;</code>
+       *
+       * <pre>
+       * DER-encoded X.509 certificate chain
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getCertificate(int index) {
+        return certificate_.get(index);
+      }
+      /**
+       * <code>repeated bytes certificate = 1;</code>
+       *
+       * <pre>
+       * DER-encoded X.509 certificate chain
+       * </pre>
+       */
+      public Builder setCertificate(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCertificateIsMutable();
+        certificate_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificate = 1;</code>
+       *
+       * <pre>
+       * DER-encoded X.509 certificate chain
+       * </pre>
+       */
+      public Builder addCertificate(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureCertificateIsMutable();
+        certificate_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificate = 1;</code>
+       *
+       * <pre>
+       * DER-encoded X.509 certificate chain
+       * </pre>
+       */
+      public Builder addAllCertificate(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureCertificateIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, certificate_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes certificate = 1;</code>
+       *
+       * <pre>
+       * DER-encoded X.509 certificate chain
+       * </pre>
+       */
+      public Builder clearCertificate() {
+        certificate_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:payments.X509Certificates)
+    }
+
+    static {
+      defaultInstance = new X509Certificates(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:payments.X509Certificates)
+  }
+
+  public interface PaymentOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:payments.Payment)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional bytes merchant_data = 1;</code>
+     *
+     * <pre>
+     * From PaymentDetails.merchant_data
+     * </pre>
+     */
+    boolean hasMerchantData();
+    /**
+     * <code>optional bytes merchant_data = 1;</code>
+     *
+     * <pre>
+     * From PaymentDetails.merchant_data
+     * </pre>
+     */
+    com.google.protobuf.ByteString getMerchantData();
+
+    /**
+     * <code>repeated bytes transactions = 2;</code>
+     *
+     * <pre>
+     * Signed transactions that satisfy PaymentDetails.outputs
+     * </pre>
+     */
+    java.util.List<com.google.protobuf.ByteString> getTransactionsList();
+    /**
+     * <code>repeated bytes transactions = 2;</code>
+     *
+     * <pre>
+     * Signed transactions that satisfy PaymentDetails.outputs
+     * </pre>
+     */
+    int getTransactionsCount();
+    /**
+     * <code>repeated bytes transactions = 2;</code>
+     *
+     * <pre>
+     * Signed transactions that satisfy PaymentDetails.outputs
+     * </pre>
+     */
+    com.google.protobuf.ByteString getTransactions(int index);
+
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    java.util.List<org.bitcoin.protocols.payments.Protos.Output> 
+        getRefundToList();
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    org.bitcoin.protocols.payments.Protos.Output getRefundTo(int index);
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    int getRefundToCount();
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    java.util.List<? extends org.bitcoin.protocols.payments.Protos.OutputOrBuilder> 
+        getRefundToOrBuilderList();
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    org.bitcoin.protocols.payments.Protos.OutputOrBuilder getRefundToOrBuilder(
+        int index);
+
+    /**
+     * <code>optional string memo = 4;</code>
+     *
+     * <pre>
+     * Human-readable message for the merchant
+     * </pre>
+     */
+    boolean hasMemo();
+    /**
+     * <code>optional string memo = 4;</code>
+     *
+     * <pre>
+     * Human-readable message for the merchant
+     * </pre>
+     */
+    java.lang.String getMemo();
+    /**
+     * <code>optional string memo = 4;</code>
+     *
+     * <pre>
+     * Human-readable message for the merchant
+     * </pre>
+     */
+    com.google.protobuf.ByteString
+        getMemoBytes();
+  }
+  /**
+   * Protobuf type {@code payments.Payment}
+   */
+  public static final class Payment extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:payments.Payment)
+      PaymentOrBuilder {
+    // Use Payment.newBuilder() to construct.
+    private Payment(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private Payment(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Payment defaultInstance;
+    public static Payment getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public Payment getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Payment(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              merchantData_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                transactions_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              transactions_.add(input.readBytes());
+              break;
+            }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                refundTo_ = new java.util.ArrayList<org.bitcoin.protocols.payments.Protos.Output>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              refundTo_.add(input.readMessage(org.bitcoin.protocols.payments.Protos.Output.PARSER, extensionRegistry));
+              break;
+            }
+            case 34: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              memo_ = bs;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          transactions_ = java.util.Collections.unmodifiableList(transactions_);
+        }
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          refundTo_ = java.util.Collections.unmodifiableList(refundTo_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.protocols.payments.Protos.internal_static_payments_Payment_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.protocols.payments.Protos.internal_static_payments_Payment_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.protocols.payments.Protos.Payment.class, org.bitcoin.protocols.payments.Protos.Payment.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<Payment> PARSER =
+        new com.google.protobuf.AbstractParser<Payment>() {
+      public Payment parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Payment(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Payment> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int MERCHANT_DATA_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString merchantData_;
+    /**
+     * <code>optional bytes merchant_data = 1;</code>
+     *
+     * <pre>
+     * From PaymentDetails.merchant_data
+     * </pre>
+     */
+    public boolean hasMerchantData() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional bytes merchant_data = 1;</code>
+     *
+     * <pre>
+     * From PaymentDetails.merchant_data
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getMerchantData() {
+      return merchantData_;
+    }
+
+    public static final int TRANSACTIONS_FIELD_NUMBER = 2;
+    private java.util.List<com.google.protobuf.ByteString> transactions_;
+    /**
+     * <code>repeated bytes transactions = 2;</code>
+     *
+     * <pre>
+     * Signed transactions that satisfy PaymentDetails.outputs
+     * </pre>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getTransactionsList() {
+      return transactions_;
+    }
+    /**
+     * <code>repeated bytes transactions = 2;</code>
+     *
+     * <pre>
+     * Signed transactions that satisfy PaymentDetails.outputs
+     * </pre>
+     */
+    public int getTransactionsCount() {
+      return transactions_.size();
+    }
+    /**
+     * <code>repeated bytes transactions = 2;</code>
+     *
+     * <pre>
+     * Signed transactions that satisfy PaymentDetails.outputs
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getTransactions(int index) {
+      return transactions_.get(index);
+    }
+
+    public static final int REFUND_TO_FIELD_NUMBER = 3;
+    private java.util.List<org.bitcoin.protocols.payments.Protos.Output> refundTo_;
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    public java.util.List<org.bitcoin.protocols.payments.Protos.Output> getRefundToList() {
+      return refundTo_;
+    }
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    public java.util.List<? extends org.bitcoin.protocols.payments.Protos.OutputOrBuilder> 
+        getRefundToOrBuilderList() {
+      return refundTo_;
+    }
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    public int getRefundToCount() {
+      return refundTo_.size();
+    }
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    public org.bitcoin.protocols.payments.Protos.Output getRefundTo(int index) {
+      return refundTo_.get(index);
+    }
+    /**
+     * <code>repeated .payments.Output refund_to = 3;</code>
+     *
+     * <pre>
+     * Where to send refunds, if a refund is necessary
+     * </pre>
+     */
+    public org.bitcoin.protocols.payments.Protos.OutputOrBuilder getRefundToOrBuilder(
+        int index) {
+      return refundTo_.get(index);
+    }
+
+    public static final int MEMO_FIELD_NUMBER = 4;
+    private java.lang.Object memo_;
+    /**
+     * <code>optional string memo = 4;</code>
+     *
+     * <pre>
+     * Human-readable message for the merchant
+     * </pre>
+     */
+    public boolean hasMemo() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string memo = 4;</code>
+     *
+     * <pre>
+     * Human-readable message for the merchant
+     * </pre>
+     */
+    public java.lang.String getMemo() {
+      java.lang.Object ref = memo_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          memo_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string memo = 4;</code>
+     *
+     * <pre>
+     * Human-readable message for the merchant
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getMemoBytes() {
+      java.lang.Object ref = memo_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        memo_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      merchantData_ = com.google.protobuf.ByteString.EMPTY;
+      transactions_ = java.util.Collections.emptyList();
+      refundTo_ = java.util.Collections.emptyList();
+      memo_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      for (int i = 0; i < getRefundToCount(); i++) {
+        if (!getRefundTo(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, merchantData_);
+      }
+      for (int i = 0; i < transactions_.size(); i++) {
+        output.writeBytes(2, transactions_.get(i));
+      }
+      for (int i = 0; i < refundTo_.size(); i++) {
+        output.writeMessage(3, refundTo_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(4, getMemoBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, merchantData_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < transactions_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(transactions_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getTransactionsList().size();
+      }
+      for (int i = 0; i < refundTo_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, refundTo_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getMemoBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.protocols.payments.Protos.Payment parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.protocols.payments.Protos.Payment parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.protocols.payments.Protos.Payment prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code payments.Payment}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:payments.Payment)
+        org.bitcoin.protocols.payments.Protos.PaymentOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_Payment_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_Payment_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.protocols.payments.Protos.Payment.class, org.bitcoin.protocols.payments.Protos.Payment.Builder.class);
+      }
+
+      // Construct using org.bitcoin.protocols.payments.Protos.Payment.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getRefundToFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        merchantData_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        transactions_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (refundToBuilder_ == null) {
+          refundTo_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          refundToBuilder_.clear();
+        }
+        memo_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.protocols.payments.Protos.internal_static_payments_Payment_descriptor;
+      }
+
+      public org.bitcoin.protocols.payments.Protos.Payment getDefaultInstanceForType() {
+        return org.bitcoin.protocols.payments.Protos.Payment.getDefaultInstance();
+      }
+
+      public org.bitcoin.protocols.payments.Protos.Payment build() {
+        org.bitcoin.protocols.payments.Protos.Payment result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.protocols.payments.Protos.Payment buildPartial() {
+        org.bitcoin.protocols.payments.Protos.Payment result = new org.bitcoin.protocols.payments.Protos.Payment(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.merchantData_ = merchantData_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          transactions_ = java.util.Collections.unmodifiableList(transactions_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.transactions_ = transactions_;
+        if (refundToBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            refundTo_ = java.util.Collections.unmodifiableList(refundTo_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.refundTo_ = refundTo_;
+        } else {
+          result.refundTo_ = refundToBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.memo_ = memo_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.protocols.payments.Protos.Payment) {
+          return mergeFrom((org.bitcoin.protocols.payments.Protos.Payment)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.protocols.payments.Protos.Payment other) {
+        if (other == org.bitcoin.protocols.payments.Protos.Payment.getDefaultInstance()) return this;
+        if (other.hasMerchantData()) {
+          setMerchantData(other.getMerchantData());
+        }
+        if (!other.transactions_.isEmpty()) {
+          if (transactions_.isEmpty()) {
+            transactions_ = other.transactions_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureTransactionsIsMutable();
+            transactions_.addAll(other.transactions_);
+          }
+          onChanged();
+        }
+        if (refundToBuilder_ == null) {
+          if (!other.refundTo_.isEmpty()) {
+            if (refundTo_.isEmpty()) {
+              refundTo_ = other.refundTo_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureRefundToIsMutable();
+              refundTo_.addAll(other.refundTo_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.refundTo_.isEmpty()) {
+            if (refundToBuilder_.isEmpty()) {
+              refundToBuilder_.dispose();
+              refundToBuilder_ = null;
+              refundTo_ = other.refundTo_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              refundToBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getRefundToFieldBuilder() : null;
+            } else {
+              refundToBuilder_.addAllMessages(other.refundTo_);
+            }
+          }
+        }
+        if (other.hasMemo()) {
+          bitField0_ |= 0x00000008;
+          memo_ = other.memo_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (int i = 0; i < getRefundToCount(); i++) {
+          if (!getRefundTo(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.protocols.payments.Protos.Payment parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.protocols.payments.Protos.Payment) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString merchantData_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes merchant_data = 1;</code>
+       *
+       * <pre>
+       * From PaymentDetails.merchant_data
+       * </pre>
+       */
+      public boolean hasMerchantData() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional bytes merchant_data = 1;</code>
+       *
+       * <pre>
+       * From PaymentDetails.merchant_data
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getMerchantData() {
+        return merchantData_;
+      }
+      /**
+       * <code>optional bytes merchant_data = 1;</code>
+       *
+       * <pre>
+       * From PaymentDetails.merchant_data
+       * </pre>
+       */
+      public Builder setMerchantData(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        merchantData_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes merchant_data = 1;</code>
+       *
+       * <pre>
+       * From PaymentDetails.merchant_data
+       * </pre>
+       */
+      public Builder clearMerchantData() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        merchantData_ = getDefaultInstance().getMerchantData();
