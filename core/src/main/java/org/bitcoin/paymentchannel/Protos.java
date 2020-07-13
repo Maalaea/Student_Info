@@ -5380,3 +5380,2241 @@ public final class Protos {
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof org.bitcoin.paymentchannel.Protos.ProvideRefund) {
           return mergeFrom((org.bitcoin.paymentchannel.Protos.ProvideRefund)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.paymentchannel.Protos.ProvideRefund other) {
+        if (other == org.bitcoin.paymentchannel.Protos.ProvideRefund.getDefaultInstance()) return this;
+        if (other.hasMultisigKey()) {
+          setMultisigKey(other.getMultisigKey());
+        }
+        if (other.hasTx()) {
+          setTx(other.getTx());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasMultisigKey()) {
+          
+          return false;
+        }
+        if (!hasTx()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.paymentchannel.Protos.ProvideRefund parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.paymentchannel.Protos.ProvideRefund) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString multisigKey_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes multisig_key = 1;</code>
+       *
+       * <pre>
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted.  It is only used in the creation of the multisig contract.
+       * </pre>
+       */
+      public boolean hasMultisigKey() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes multisig_key = 1;</code>
+       *
+       * <pre>
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted.  It is only used in the creation of the multisig contract.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getMultisigKey() {
+        return multisigKey_;
+      }
+      /**
+       * <code>required bytes multisig_key = 1;</code>
+       *
+       * <pre>
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted.  It is only used in the creation of the multisig contract.
+       * </pre>
+       */
+      public Builder setMultisigKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        multisigKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes multisig_key = 1;</code>
+       *
+       * <pre>
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted.  It is only used in the creation of the multisig contract.
+       * </pre>
+       */
+      public Builder clearMultisigKey() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        multisigKey_ = getDefaultInstance().getMultisigKey();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString tx_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes tx = 2;</code>
+       *
+       * <pre>
+       * The serialized bytes of the return transaction in Satoshi format.
+       * * It must have exactly one input which spends the multisig output (see ProvideContract for
+       *   details of exactly what that output must look like). This output must have a sequence
+       *   number of 0.
+       * * It must have the lock time set to a time after the min_time_window_secs (from the
+       *   Initiate message).
+       * * It must have exactly one output which goes back to the primary.  This output's
+       *   scriptPubKey will be reused to create payment transactions.
+       * </pre>
+       */
+      public boolean hasTx() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes tx = 2;</code>
+       *
+       * <pre>
+       * The serialized bytes of the return transaction in Satoshi format.
+       * * It must have exactly one input which spends the multisig output (see ProvideContract for
+       *   details of exactly what that output must look like). This output must have a sequence
+       *   number of 0.
+       * * It must have the lock time set to a time after the min_time_window_secs (from the
+       *   Initiate message).
+       * * It must have exactly one output which goes back to the primary.  This output's
+       *   scriptPubKey will be reused to create payment transactions.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getTx() {
+        return tx_;
+      }
+      /**
+       * <code>required bytes tx = 2;</code>
+       *
+       * <pre>
+       * The serialized bytes of the return transaction in Satoshi format.
+       * * It must have exactly one input which spends the multisig output (see ProvideContract for
+       *   details of exactly what that output must look like). This output must have a sequence
+       *   number of 0.
+       * * It must have the lock time set to a time after the min_time_window_secs (from the
+       *   Initiate message).
+       * * It must have exactly one output which goes back to the primary.  This output's
+       *   scriptPubKey will be reused to create payment transactions.
+       * </pre>
+       */
+      public Builder setTx(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        tx_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes tx = 2;</code>
+       *
+       * <pre>
+       * The serialized bytes of the return transaction in Satoshi format.
+       * * It must have exactly one input which spends the multisig output (see ProvideContract for
+       *   details of exactly what that output must look like). This output must have a sequence
+       *   number of 0.
+       * * It must have the lock time set to a time after the min_time_window_secs (from the
+       *   Initiate message).
+       * * It must have exactly one output which goes back to the primary.  This output's
+       *   scriptPubKey will be reused to create payment transactions.
+       * </pre>
+       */
+      public Builder clearTx() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        tx_ = getDefaultInstance().getTx();
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.ProvideRefund)
+    }
+
+    static {
+      defaultInstance = new ProvideRefund(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.ProvideRefund)
+  }
+
+  public interface ReturnRefundOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:paymentchannels.ReturnRefund)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes signature = 1;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <code>required bytes signature = 1;</code>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * Protobuf type {@code paymentchannels.ReturnRefund}
+   *
+   * <pre>
+   * Sent from secondary to primary after it has done initial verification of the refund
+   * transaction. Contains the primary's signature which is required to spend the multisig contract
+   * to the refund transaction. Must be signed using SIGHASH_NONE|SIGHASH_ANYONECANPAY (and include
+   * the postfix type byte) to allow the client to add any outputs/inputs it wants as long as the
+   * input's sequence and transaction's nLockTime remain set.
+   * </pre>
+   */
+  public static final class ReturnRefund extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.ReturnRefund)
+      ReturnRefundOrBuilder {
+    // Use ReturnRefund.newBuilder() to construct.
+    private ReturnRefund(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ReturnRefund(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ReturnRefund defaultInstance;
+    public static ReturnRefund getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ReturnRefund getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ReturnRefund(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              signature_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ReturnRefund_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ReturnRefund_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.paymentchannel.Protos.ReturnRefund.class, org.bitcoin.paymentchannel.Protos.ReturnRefund.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ReturnRefund> PARSER =
+        new com.google.protobuf.AbstractParser<ReturnRefund>() {
+      public ReturnRefund parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ReturnRefund(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ReturnRefund> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int SIGNATURE_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>required bytes signature = 1;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes signature = 1;</code>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private void initFields() {
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, signature_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, signature_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ReturnRefund parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.paymentchannel.Protos.ReturnRefund prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.ReturnRefund}
+     *
+     * <pre>
+     * Sent from secondary to primary after it has done initial verification of the refund
+     * transaction. Contains the primary's signature which is required to spend the multisig contract
+     * to the refund transaction. Must be signed using SIGHASH_NONE|SIGHASH_ANYONECANPAY (and include
+     * the postfix type byte) to allow the client to add any outputs/inputs it wants as long as the
+     * input's sequence and transaction's nLockTime remain set.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.ReturnRefund)
+        org.bitcoin.paymentchannel.Protos.ReturnRefundOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ReturnRefund_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ReturnRefund_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.paymentchannel.Protos.ReturnRefund.class, org.bitcoin.paymentchannel.Protos.ReturnRefund.Builder.class);
+      }
+
+      // Construct using org.bitcoin.paymentchannel.Protos.ReturnRefund.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ReturnRefund_descriptor;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ReturnRefund getDefaultInstanceForType() {
+        return org.bitcoin.paymentchannel.Protos.ReturnRefund.getDefaultInstance();
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ReturnRefund build() {
+        org.bitcoin.paymentchannel.Protos.ReturnRefund result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ReturnRefund buildPartial() {
+        org.bitcoin.paymentchannel.Protos.ReturnRefund result = new org.bitcoin.paymentchannel.Protos.ReturnRefund(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.paymentchannel.Protos.ReturnRefund) {
+          return mergeFrom((org.bitcoin.paymentchannel.Protos.ReturnRefund)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.paymentchannel.Protos.ReturnRefund other) {
+        if (other == org.bitcoin.paymentchannel.Protos.ReturnRefund.getDefaultInstance()) return this;
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasSignature()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.paymentchannel.Protos.ReturnRefund parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.paymentchannel.Protos.ReturnRefund) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes signature = 1;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes signature = 1;</code>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <code>required bytes signature = 1;</code>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes signature = 1;</code>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.ReturnRefund)
+    }
+
+    static {
+      defaultInstance = new ReturnRefund(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.ReturnRefund)
+  }
+
+  public interface ProvideContractOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:paymentchannels.ProvideContract)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes tx = 1;</code>
+     *
+     * <pre>
+     * The serialized bytes of the transaction in Satoshi format.
+     * For version 1:
+     * * It must be signed and completely valid and ready for broadcast (ie it includes the
+     *   necessary fees) TODO: tell the client how much fee it needs
+     * * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+     *   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+     *   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+     * For version 2:
+     * * It must be signed and completely valid and ready for broadcast (ie it includes the
+     *   necessary fees) TODO: tell the client how much fee it needs
+     * * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+     *   primary's and the second being the secondary's.
+     * </pre>
+     */
+    boolean hasTx();
+    /**
+     * <code>required bytes tx = 1;</code>
+     *
+     * <pre>
+     * The serialized bytes of the transaction in Satoshi format.
+     * For version 1:
+     * * It must be signed and completely valid and ready for broadcast (ie it includes the
+     *   necessary fees) TODO: tell the client how much fee it needs
+     * * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+     *   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+     *   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+     * For version 2:
+     * * It must be signed and completely valid and ready for broadcast (ie it includes the
+     *   necessary fees) TODO: tell the client how much fee it needs
+     * * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+     *   primary's and the second being the secondary's.
+     * </pre>
+     */
+    com.google.protobuf.ByteString getTx();
+
+    /**
+     * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+     *
+     * <pre>
+     * To open the channel, an initial payment of the server-specified dust limit value must be
+     * provided. This ensures that the channel is never in an un-settleable state due to either
+     * no payment tx having been provided at all, or a payment that is smaller than the dust
+     * limit being provided.
+     * </pre>
+     */
+    boolean hasInitialPayment();
+    /**
+     * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+     *
+     * <pre>
+     * To open the channel, an initial payment of the server-specified dust limit value must be
+     * provided. This ensures that the channel is never in an un-settleable state due to either
+     * no payment tx having been provided at all, or a payment that is smaller than the dust
+     * limit being provided.
+     * </pre>
+     */
+    org.bitcoin.paymentchannel.Protos.UpdatePayment getInitialPayment();
+    /**
+     * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+     *
+     * <pre>
+     * To open the channel, an initial payment of the server-specified dust limit value must be
+     * provided. This ensures that the channel is never in an un-settleable state due to either
+     * no payment tx having been provided at all, or a payment that is smaller than the dust
+     * limit being provided.
+     * </pre>
+     */
+    org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder getInitialPaymentOrBuilder();
+
+    /**
+     * <code>optional bytes client_key = 3;</code>
+     *
+     * <pre>
+     * This field is added in protocol version 2 to send the client public key to the server.
+     * In version 1 it isn't used.
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted.  It is only used in the creation of the multisig contract.
+     * </pre>
+     */
+    boolean hasClientKey();
+    /**
+     * <code>optional bytes client_key = 3;</code>
+     *
+     * <pre>
+     * This field is added in protocol version 2 to send the client public key to the server.
+     * In version 1 it isn't used.
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted.  It is only used in the creation of the multisig contract.
+     * </pre>
+     */
+    com.google.protobuf.ByteString getClientKey();
+  }
+  /**
+   * Protobuf type {@code paymentchannels.ProvideContract}
+   *
+   * <pre>
+   * Sent from the primary to the secondary to complete initialization.
+   * </pre>
+   */
+  public static final class ProvideContract extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.ProvideContract)
+      ProvideContractOrBuilder {
+    // Use ProvideContract.newBuilder() to construct.
+    private ProvideContract(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ProvideContract(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ProvideContract defaultInstance;
+    public static ProvideContract getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ProvideContract getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ProvideContract(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              tx_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = initialPayment_.toBuilder();
+              }
+              initialPayment_ = input.readMessage(org.bitcoin.paymentchannel.Protos.UpdatePayment.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(initialPayment_);
+                initialPayment_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              clientKey_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideContract_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideContract_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.paymentchannel.Protos.ProvideContract.class, org.bitcoin.paymentchannel.Protos.ProvideContract.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ProvideContract> PARSER =
+        new com.google.protobuf.AbstractParser<ProvideContract>() {
+      public ProvideContract parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ProvideContract(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ProvideContract> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int TX_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString tx_;
+    /**
+     * <code>required bytes tx = 1;</code>
+     *
+     * <pre>
+     * The serialized bytes of the transaction in Satoshi format.
+     * For version 1:
+     * * It must be signed and completely valid and ready for broadcast (ie it includes the
+     *   necessary fees) TODO: tell the client how much fee it needs
+     * * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+     *   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+     *   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+     * For version 2:
+     * * It must be signed and completely valid and ready for broadcast (ie it includes the
+     *   necessary fees) TODO: tell the client how much fee it needs
+     * * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+     *   primary's and the second being the secondary's.
+     * </pre>
+     */
+    public boolean hasTx() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes tx = 1;</code>
+     *
+     * <pre>
+     * The serialized bytes of the transaction in Satoshi format.
+     * For version 1:
+     * * It must be signed and completely valid and ready for broadcast (ie it includes the
+     *   necessary fees) TODO: tell the client how much fee it needs
+     * * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+     *   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+     *   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+     * For version 2:
+     * * It must be signed and completely valid and ready for broadcast (ie it includes the
+     *   necessary fees) TODO: tell the client how much fee it needs
+     * * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+     *   primary's and the second being the secondary's.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getTx() {
+      return tx_;
+    }
+
+    public static final int INITIAL_PAYMENT_FIELD_NUMBER = 2;
+    private org.bitcoin.paymentchannel.Protos.UpdatePayment initialPayment_;
+    /**
+     * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+     *
+     * <pre>
+     * To open the channel, an initial payment of the server-specified dust limit value must be
+     * provided. This ensures that the channel is never in an un-settleable state due to either
+     * no payment tx having been provided at all, or a payment that is smaller than the dust
+     * limit being provided.
+     * </pre>
+     */
+    public boolean hasInitialPayment() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+     *
+     * <pre>
+     * To open the channel, an initial payment of the server-specified dust limit value must be
+     * provided. This ensures that the channel is never in an un-settleable state due to either
+     * no payment tx having been provided at all, or a payment that is smaller than the dust
+     * limit being provided.
+     * </pre>
+     */
+    public org.bitcoin.paymentchannel.Protos.UpdatePayment getInitialPayment() {
+      return initialPayment_;
+    }
+    /**
+     * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+     *
+     * <pre>
+     * To open the channel, an initial payment of the server-specified dust limit value must be
+     * provided. This ensures that the channel is never in an un-settleable state due to either
+     * no payment tx having been provided at all, or a payment that is smaller than the dust
+     * limit being provided.
+     * </pre>
+     */
+    public org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder getInitialPaymentOrBuilder() {
+      return initialPayment_;
+    }
+
+    public static final int CLIENT_KEY_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString clientKey_;
+    /**
+     * <code>optional bytes client_key = 3;</code>
+     *
+     * <pre>
+     * This field is added in protocol version 2 to send the client public key to the server.
+     * In version 1 it isn't used.
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted.  It is only used in the creation of the multisig contract.
+     * </pre>
+     */
+    public boolean hasClientKey() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional bytes client_key = 3;</code>
+     *
+     * <pre>
+     * This field is added in protocol version 2 to send the client public key to the server.
+     * In version 1 it isn't used.
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted.  It is only used in the creation of the multisig contract.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getClientKey() {
+      return clientKey_;
+    }
+
+    private void initFields() {
+      tx_ = com.google.protobuf.ByteString.EMPTY;
+      initialPayment_ = org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+      clientKey_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasTx()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasInitialPayment()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getInitialPayment().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, tx_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, initialPayment_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, clientKey_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, tx_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, initialPayment_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, clientKey_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideContract parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.paymentchannel.Protos.ProvideContract prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.ProvideContract}
+     *
+     * <pre>
+     * Sent from the primary to the secondary to complete initialization.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.ProvideContract)
+        org.bitcoin.paymentchannel.Protos.ProvideContractOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideContract_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideContract_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.paymentchannel.Protos.ProvideContract.class, org.bitcoin.paymentchannel.Protos.ProvideContract.Builder.class);
+      }
+
+      // Construct using org.bitcoin.paymentchannel.Protos.ProvideContract.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getInitialPaymentFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        tx_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (initialPaymentBuilder_ == null) {
+          initialPayment_ = org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+        } else {
+          initialPaymentBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        clientKey_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideContract_descriptor;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ProvideContract getDefaultInstanceForType() {
+        return org.bitcoin.paymentchannel.Protos.ProvideContract.getDefaultInstance();
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ProvideContract build() {
+        org.bitcoin.paymentchannel.Protos.ProvideContract result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ProvideContract buildPartial() {
+        org.bitcoin.paymentchannel.Protos.ProvideContract result = new org.bitcoin.paymentchannel.Protos.ProvideContract(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.tx_ = tx_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (initialPaymentBuilder_ == null) {
+          result.initialPayment_ = initialPayment_;
+        } else {
+          result.initialPayment_ = initialPaymentBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.clientKey_ = clientKey_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.paymentchannel.Protos.ProvideContract) {
+          return mergeFrom((org.bitcoin.paymentchannel.Protos.ProvideContract)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.paymentchannel.Protos.ProvideContract other) {
+        if (other == org.bitcoin.paymentchannel.Protos.ProvideContract.getDefaultInstance()) return this;
+        if (other.hasTx()) {
+          setTx(other.getTx());
+        }
+        if (other.hasInitialPayment()) {
+          mergeInitialPayment(other.getInitialPayment());
+        }
+        if (other.hasClientKey()) {
+          setClientKey(other.getClientKey());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasTx()) {
+          
+          return false;
+        }
+        if (!hasInitialPayment()) {
+          
+          return false;
+        }
+        if (!getInitialPayment().isInitialized()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.paymentchannel.Protos.ProvideContract parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.paymentchannel.Protos.ProvideContract) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString tx_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes tx = 1;</code>
+       *
+       * <pre>
+       * The serialized bytes of the transaction in Satoshi format.
+       * For version 1:
+       * * It must be signed and completely valid and ready for broadcast (ie it includes the
+       *   necessary fees) TODO: tell the client how much fee it needs
+       * * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+       *   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+       *   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+       * For version 2:
+       * * It must be signed and completely valid and ready for broadcast (ie it includes the
+       *   necessary fees) TODO: tell the client how much fee it needs
+       * * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+       *   primary's and the second being the secondary's.
+       * </pre>
+       */
+      public boolean hasTx() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes tx = 1;</code>
+       *
+       * <pre>
+       * The serialized bytes of the transaction in Satoshi format.
+       * For version 1:
+       * * It must be signed and completely valid and ready for broadcast (ie it includes the
+       *   necessary fees) TODO: tell the client how much fee it needs
+       * * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+       *   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+       *   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+       * For version 2:
+       * * It must be signed and completely valid and ready for broadcast (ie it includes the
+       *   necessary fees) TODO: tell the client how much fee it needs
+       * * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+       *   primary's and the second being the secondary's.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getTx() {
+        return tx_;
+      }
+      /**
+       * <code>required bytes tx = 1;</code>
+       *
+       * <pre>
+       * The serialized bytes of the transaction in Satoshi format.
+       * For version 1:
+       * * It must be signed and completely valid and ready for broadcast (ie it includes the
+       *   necessary fees) TODO: tell the client how much fee it needs
+       * * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+       *   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+       *   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+       * For version 2:
+       * * It must be signed and completely valid and ready for broadcast (ie it includes the
+       *   necessary fees) TODO: tell the client how much fee it needs
+       * * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+       *   primary's and the second being the secondary's.
+       * </pre>
+       */
+      public Builder setTx(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        tx_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes tx = 1;</code>
+       *
+       * <pre>
+       * The serialized bytes of the transaction in Satoshi format.
+       * For version 1:
+       * * It must be signed and completely valid and ready for broadcast (ie it includes the
+       *   necessary fees) TODO: tell the client how much fee it needs
+       * * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+       *   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+       *   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+       * For version 2:
+       * * It must be signed and completely valid and ready for broadcast (ie it includes the
+       *   necessary fees) TODO: tell the client how much fee it needs
+       * * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+       *   primary's and the second being the secondary's.
+       * </pre>
+       */
+      public Builder clearTx() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        tx_ = getDefaultInstance().getTx();
+        onChanged();
+        return this;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.UpdatePayment initialPayment_ = org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.UpdatePayment, org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder, org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder> initialPaymentBuilder_;
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      public boolean hasInitialPayment() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      public org.bitcoin.paymentchannel.Protos.UpdatePayment getInitialPayment() {
+        if (initialPaymentBuilder_ == null) {
+          return initialPayment_;
+        } else {
+          return initialPaymentBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      public Builder setInitialPayment(org.bitcoin.paymentchannel.Protos.UpdatePayment value) {
+        if (initialPaymentBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          initialPayment_ = value;
+          onChanged();
+        } else {
+          initialPaymentBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      public Builder setInitialPayment(
+          org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder builderForValue) {
+        if (initialPaymentBuilder_ == null) {
+          initialPayment_ = builderForValue.build();
+          onChanged();
+        } else {
+          initialPaymentBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      public Builder mergeInitialPayment(org.bitcoin.paymentchannel.Protos.UpdatePayment value) {
+        if (initialPaymentBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              initialPayment_ != org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance()) {
+            initialPayment_ =
+              org.bitcoin.paymentchannel.Protos.UpdatePayment.newBuilder(initialPayment_).mergeFrom(value).buildPartial();
+          } else {
+            initialPayment_ = value;
+          }
+          onChanged();
+        } else {
+          initialPaymentBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      public Builder clearInitialPayment() {
+        if (initialPaymentBuilder_ == null) {
+          initialPayment_ = org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+          onChanged();
+        } else {
+          initialPaymentBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      public org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder getInitialPaymentBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getInitialPaymentFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      public org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder getInitialPaymentOrBuilder() {
+        if (initialPaymentBuilder_ != null) {
+          return initialPaymentBuilder_.getMessageOrBuilder();
+        } else {
+          return initialPayment_;
+        }
+      }
+      /**
+       * <code>required .paymentchannels.UpdatePayment initial_payment = 2;</code>
+       *
+       * <pre>
+       * To open the channel, an initial payment of the server-specified dust limit value must be
+       * provided. This ensures that the channel is never in an un-settleable state due to either
+       * no payment tx having been provided at all, or a payment that is smaller than the dust
+       * limit being provided.
+       * </pre>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.UpdatePayment, org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder, org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder> 
+          getInitialPaymentFieldBuilder() {
+        if (initialPaymentBuilder_ == null) {
+          initialPaymentBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.UpdatePayment, org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder, org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder>(
+                  getInitialPayment(),
+                  getParentForChildren(),
+                  isClean());
+          initialPayment_ = null;
+        }
+        return initialPaymentBuilder_;
+      }
+
+      private com.google.protobuf.ByteString clientKey_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes client_key = 3;</code>
+       *
+       * <pre>
+       * This field is added in protocol version 2 to send the client public key to the server.
+       * In version 1 it isn't used.
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted.  It is only used in the creation of the multisig contract.
+       * </pre>
+       */
+      public boolean hasClientKey() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bytes client_key = 3;</code>
+       *
+       * <pre>
+       * This field is added in protocol version 2 to send the client public key to the server.
+       * In version 1 it isn't used.
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted.  It is only used in the creation of the multisig contract.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getClientKey() {
+        return clientKey_;
+      }
+      /**
+       * <code>optional bytes client_key = 3;</code>
+       *
+       * <pre>
+       * This field is added in protocol version 2 to send the client public key to the server.
+       * In version 1 it isn't used.
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted.  It is only used in the creation of the multisig contract.
+       * </pre>
+       */
+      public Builder setClientKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        clientKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes client_key = 3;</code>
+       *
+       * <pre>
+       * This field is added in protocol version 2 to send the client public key to the server.
+       * In version 1 it isn't used.
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted.  It is only used in the creation of the multisig contract.
+       * </pre>
+       */
+      public Builder clearClientKey() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        clientKey_ = getDefaultInstance().getClientKey();
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.ProvideContract)
+    }
+
+    static {
+      defaultInstance = new ProvideContract(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.ProvideContract)
+  }
+
+  public interface UpdatePaymentOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:paymentchannels.UpdatePayment)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required uint64 client_change_value = 1;</code>
+     *
+     * <pre>
+     * The value which is sent back to the primary.  The rest of the multisig output is left for
+     * the secondary to do with as they wish.
+     * </pre>
+     */
+    boolean hasClientChangeValue();
+    /**
+     * <code>required uint64 client_change_value = 1;</code>
+     *
+     * <pre>
+     * The value which is sent back to the primary.  The rest of the multisig output is left for
+     * the secondary to do with as they wish.
+     * </pre>
+     */
+    long getClientChangeValue();
+
+    /**
+     * <code>required bytes signature = 2;</code>
+     *
+     * <pre>
+     * A SIGHASH_SINGLE|SIGHASH_ANYONECANPAY signature (including the postfix type byte) which
+     * spends the primary's part of the multisig contract's output.  This signature only covers
+     * the primary's refund output and thus the secondary is free to do what they wish with their
+     * part of the multisig output.
+     * </pre>
+     */
+    boolean hasSignature();
+    /**
+     * <code>required bytes signature = 2;</code>
+     *
+     * <pre>
+     * A SIGHASH_SINGLE|SIGHASH_ANYONECANPAY signature (including the postfix type byte) which
+     * spends the primary's part of the multisig contract's output.  This signature only covers
+     * the primary's refund output and thus the secondary is free to do what they wish with their
+     * part of the multisig output.
+     * </pre>
+     */
+    com.google.protobuf.ByteString getSignature();
+
+    /**
+     * <code>optional bytes info = 3;</code>
+     *
+     * <pre>
+     * Information about this update. Used to extend this protocol.
+     * </pre>
+     */
+    boolean hasInfo();
+    /**
+     * <code>optional bytes info = 3;</code>
+     *
+     * <pre>
+     * Information about this update. Used to extend this protocol.
+     * </pre>
+     */
+    com.google.protobuf.ByteString getInfo();
+  }
+  /**
+   * Protobuf type {@code paymentchannels.UpdatePayment}
+   *
+   * <pre>
+   * This message can only be used by the primary after it has received a CHANNEL_OPEN message. It
+   * creates a new payment transaction. Note that we don't resubmit the entire TX, this is to avoid
+   * (re)parsing bugs and overhead. The payment transaction is created by the primary by:
+   * * Adding an input which spends the multisig contract
+   * * Setting this input's scriptSig to the given signature and a new signature created by the
+   *   primary (the primary should ensure the signature provided correctly spends the multisig
+   *   contract)
+   * * Adding an output who's scriptPubKey is the same as the refund output (the only output) in
+   *   the refund transaction
+   * * Setting this output's value to client_change_value (which must be lower than the most recent
+   *   client_change_value and lower than the multisig contract's output value)
+   * * Adding any number of additional outputs as desired (leaving sufficient fee, if necessary)
+   * * Adding any number of additional inputs as desired (eg to add more fee)
+   * </pre>
+   */
+  public static final class UpdatePayment extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.UpdatePayment)
+      UpdatePaymentOrBuilder {
+    // Use UpdatePayment.newBuilder() to construct.
+    private UpdatePayment(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private UpdatePayment(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final UpdatePayment defaultInstance;
+    public static UpdatePayment getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public UpdatePayment getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private UpdatePayment(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              clientChangeValue_ = input.readUInt64();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              signature_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              info_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_UpdatePayment_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_UpdatePayment_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.paymentchannel.Protos.UpdatePayment.class, org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<UpdatePayment> PARSER =
+        new com.google.protobuf.AbstractParser<UpdatePayment>() {
+      public UpdatePayment parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new UpdatePayment(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<UpdatePayment> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int CLIENT_CHANGE_VALUE_FIELD_NUMBER = 1;
+    private long clientChangeValue_;
+    /**
+     * <code>required uint64 client_change_value = 1;</code>
+     *
+     * <pre>
+     * The value which is sent back to the primary.  The rest of the multisig output is left for
+     * the secondary to do with as they wish.
+     * </pre>
+     */
+    public boolean hasClientChangeValue() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required uint64 client_change_value = 1;</code>
+     *
+     * <pre>
+     * The value which is sent back to the primary.  The rest of the multisig output is left for
+     * the secondary to do with as they wish.
+     * </pre>
+     */
+    public long getClientChangeValue() {
+      return clientChangeValue_;
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <code>required bytes signature = 2;</code>
+     *
+     * <pre>
+     * A SIGHASH_SINGLE|SIGHASH_ANYONECANPAY signature (including the postfix type byte) which
+     * spends the primary's part of the multisig contract's output.  This signature only covers
+     * the primary's refund output and thus the secondary is free to do what they wish with their
+     * part of the multisig output.
+     * </pre>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes signature = 2;</code>
+     *
+     * <pre>
+     * A SIGHASH_SINGLE|SIGHASH_ANYONECANPAY signature (including the postfix type byte) which
+     * spends the primary's part of the multisig contract's output.  This signature only covers
+     * the primary's refund output and thus the secondary is free to do what they wish with their
+     * part of the multisig output.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    public static final int INFO_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString info_;
+    /**
+     * <code>optional bytes info = 3;</code>
+     *
+     * <pre>
+     * Information about this update. Used to extend this protocol.
+     * </pre>
+     */
+    public boolean hasInfo() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional bytes info = 3;</code>
+     *
+     * <pre>
+     * Information about this update. Used to extend this protocol.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getInfo() {
+      return info_;
+    }
+
+    private void initFields() {
+      clientChangeValue_ = 0L;
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+      info_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasClientChangeValue()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeUInt64(1, clientChangeValue_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, signature_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, info_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(1, clientChangeValue_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, signature_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, info_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.UpdatePayment parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.paymentchannel.Protos.UpdatePayment prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.UpdatePayment}
+     *
+     * <pre>
+     * This message can only be used by the primary after it has received a CHANNEL_OPEN message. It
+     * creates a new payment transaction. Note that we don't resubmit the entire TX, this is to avoid
+     * (re)parsing bugs and overhead. The payment transaction is created by the primary by:
+     * * Adding an input which spends the multisig contract
+     * * Setting this input's scriptSig to the given signature and a new signature created by the
+     *   primary (the primary should ensure the signature provided correctly spends the multisig
+     *   contract)
+     * * Adding an output who's scriptPubKey is the same as the refund output (the only output) in
+     *   the refund transaction
+     * * Setting this output's value to client_change_value (which must be lower than the most recent
+     *   client_change_value and lower than the multisig contract's output value)
+     * * Adding any number of additional outputs as desired (leaving sufficient fee, if necessary)
+     * * Adding any number of additional inputs as desired (eg to add more fee)
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.UpdatePayment)
+        org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_UpdatePayment_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_UpdatePayment_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.paymentchannel.Protos.UpdatePayment.class, org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder.class);
+      }
+
+      // Construct using org.bitcoin.paymentchannel.Protos.UpdatePayment.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        clientChangeValue_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        info_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_UpdatePayment_descriptor;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.UpdatePayment getDefaultInstanceForType() {
+        return org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+      }
+
+      public org.bitcoin.paymentchannel.Protos.UpdatePayment build() {
+        org.bitcoin.paymentchannel.Protos.UpdatePayment result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.UpdatePayment buildPartial() {
+        org.bitcoin.paymentchannel.Protos.UpdatePayment result = new org.bitcoin.paymentchannel.Protos.UpdatePayment(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.clientChangeValue_ = clientChangeValue_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.signature_ = signature_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.info_ = info_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.paymentchannel.Protos.UpdatePayment) {
+          return mergeFrom((org.bitcoin.paymentchannel.Protos.UpdatePayment)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.paymentchannel.Protos.UpdatePayment other) {
+        if (other == org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance()) return this;
+        if (other.hasClientChangeValue()) {
+          setClientChangeValue(other.getClientChangeValue());
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        if (other.hasInfo()) {
+          setInfo(other.getInfo());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasClientChangeValue()) {
+          
+          return false;
+        }
+        if (!hasSignature()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.paymentchannel.Protos.UpdatePayment parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.paymentchannel.Protos.UpdatePayment) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private long clientChangeValue_ ;
+      /**
+       * <code>required uint64 client_change_value = 1;</code>
+       *
+       * <pre>
+       * The value which is sent back to the primary.  The rest of the multisig output is left for
+       * the secondary to do with as they wish.
+       * </pre>
+       */
+      public boolean hasClientChangeValue() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required uint64 client_change_value = 1;</code>
+       *
+       * <pre>
+       * The value which is sent back to the primary.  The rest of the multisig output is left for
+       * the secondary to do with as they wish.
+       * </pre>
+       */
+      public long getClientChangeValue() {
+        return clientChangeValue_;
+      }
+      /**
+       * <code>required uint64 client_change_value = 1;</code>
+       *
+       * <pre>
+       * The value which is sent back to the primary.  The rest of the multisig output is left for
+       * the secondary to do with as they wish.
+       * </pre>
+       */
+      public Builder setClientChangeValue(long value) {
+        bitField0_ |= 0x00000001;
+        clientChangeValue_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 client_change_value = 1;</code>
+       *
+       * <pre>
+       * The value which is sent back to the primary.  The rest of the multisig output is left for
+       * the secondary to do with as they wish.
+       * </pre>
+       */
+      public Builder clearClientChangeValue() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        clientChangeValue_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes signature = 2;</code>
+       *
+       * <pre>
+       * A SIGHASH_SINGLE|SIGHASH_ANYONECANPAY signature (including the postfix type byte) which
+       * spends the primary's part of the multisig contract's output.  This signature only covers
+       * the primary's refund output and thus the secondary is free to do what they wish with their
+       * part of the multisig output.
+       * </pre>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes signature = 2;</code>
+       *
+       * <pre>
+       * A SIGHASH_SINGLE|SIGHASH_ANYONECANPAY signature (including the postfix type byte) which
+       * spends the primary's part of the multisig contract's output.  This signature only covers
+       * the primary's refund output and thus the secondary is free to do what they wish with their
+       * part of the multisig output.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
