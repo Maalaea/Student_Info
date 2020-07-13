@@ -3127,3 +3127,2256 @@ public final class Protos {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.paymentchannel.Protos.ClientVersion prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.ClientVersion}
+     *
+     * <pre>
+     * Sent by primary to secondary on opening the connection. If anything is received before this is
+     * sent, the socket is closed.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.ClientVersion)
+        org.bitcoin.paymentchannel.Protos.ClientVersionOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ClientVersion_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ClientVersion_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.paymentchannel.Protos.ClientVersion.class, org.bitcoin.paymentchannel.Protos.ClientVersion.Builder.class);
+      }
+
+      // Construct using org.bitcoin.paymentchannel.Protos.ClientVersion.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        major_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        minor_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        previousChannelContractHash_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        timeWindowSecs_ = 86340L;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ClientVersion_descriptor;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ClientVersion getDefaultInstanceForType() {
+        return org.bitcoin.paymentchannel.Protos.ClientVersion.getDefaultInstance();
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ClientVersion build() {
+        org.bitcoin.paymentchannel.Protos.ClientVersion result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ClientVersion buildPartial() {
+        org.bitcoin.paymentchannel.Protos.ClientVersion result = new org.bitcoin.paymentchannel.Protos.ClientVersion(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.major_ = major_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.minor_ = minor_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.previousChannelContractHash_ = previousChannelContractHash_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.timeWindowSecs_ = timeWindowSecs_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.paymentchannel.Protos.ClientVersion) {
+          return mergeFrom((org.bitcoin.paymentchannel.Protos.ClientVersion)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.paymentchannel.Protos.ClientVersion other) {
+        if (other == org.bitcoin.paymentchannel.Protos.ClientVersion.getDefaultInstance()) return this;
+        if (other.hasMajor()) {
+          setMajor(other.getMajor());
+        }
+        if (other.hasMinor()) {
+          setMinor(other.getMinor());
+        }
+        if (other.hasPreviousChannelContractHash()) {
+          setPreviousChannelContractHash(other.getPreviousChannelContractHash());
+        }
+        if (other.hasTimeWindowSecs()) {
+          setTimeWindowSecs(other.getTimeWindowSecs());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasMajor()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.paymentchannel.Protos.ClientVersion parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.paymentchannel.Protos.ClientVersion) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int major_ ;
+      /**
+       * <code>required int32 major = 1;</code>
+       */
+      public boolean hasMajor() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int32 major = 1;</code>
+       */
+      public int getMajor() {
+        return major_;
+      }
+      /**
+       * <code>required int32 major = 1;</code>
+       */
+      public Builder setMajor(int value) {
+        bitField0_ |= 0x00000001;
+        major_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 major = 1;</code>
+       */
+      public Builder clearMajor() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        major_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int minor_ ;
+      /**
+       * <code>optional int32 minor = 2 [default = 0];</code>
+       */
+      public boolean hasMinor() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int32 minor = 2 [default = 0];</code>
+       */
+      public int getMinor() {
+        return minor_;
+      }
+      /**
+       * <code>optional int32 minor = 2 [default = 0];</code>
+       */
+      public Builder setMinor(int value) {
+        bitField0_ |= 0x00000002;
+        minor_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 minor = 2 [default = 0];</code>
+       */
+      public Builder clearMinor() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        minor_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString previousChannelContractHash_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes previous_channel_contract_hash = 3;</code>
+       *
+       * <pre>
+       * The hash of the multisig contract of a previous channel. This indicates that the primary
+       * wishes to reopen the given channel. If the server is willing to reopen it, it simply
+       * responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+       * follows SERVER_VERSION with an Initiate representing a new channel
+       * </pre>
+       */
+      public boolean hasPreviousChannelContractHash() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bytes previous_channel_contract_hash = 3;</code>
+       *
+       * <pre>
+       * The hash of the multisig contract of a previous channel. This indicates that the primary
+       * wishes to reopen the given channel. If the server is willing to reopen it, it simply
+       * responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+       * follows SERVER_VERSION with an Initiate representing a new channel
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getPreviousChannelContractHash() {
+        return previousChannelContractHash_;
+      }
+      /**
+       * <code>optional bytes previous_channel_contract_hash = 3;</code>
+       *
+       * <pre>
+       * The hash of the multisig contract of a previous channel. This indicates that the primary
+       * wishes to reopen the given channel. If the server is willing to reopen it, it simply
+       * responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+       * follows SERVER_VERSION with an Initiate representing a new channel
+       * </pre>
+       */
+      public Builder setPreviousChannelContractHash(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        previousChannelContractHash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes previous_channel_contract_hash = 3;</code>
+       *
+       * <pre>
+       * The hash of the multisig contract of a previous channel. This indicates that the primary
+       * wishes to reopen the given channel. If the server is willing to reopen it, it simply
+       * responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+       * follows SERVER_VERSION with an Initiate representing a new channel
+       * </pre>
+       */
+      public Builder clearPreviousChannelContractHash() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        previousChannelContractHash_ = getDefaultInstance().getPreviousChannelContractHash();
+        onChanged();
+        return this;
+      }
+
+      private long timeWindowSecs_ = 86340L;
+      /**
+       * <code>optional uint64 time_window_secs = 4 [default = 86340];</code>
+       *
+       * <pre>
+       * How many seconds should the channel be open, only used when a new channel is created.
+       * Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+       * </pre>
+       */
+      public boolean hasTimeWindowSecs() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional uint64 time_window_secs = 4 [default = 86340];</code>
+       *
+       * <pre>
+       * How many seconds should the channel be open, only used when a new channel is created.
+       * Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+       * </pre>
+       */
+      public long getTimeWindowSecs() {
+        return timeWindowSecs_;
+      }
+      /**
+       * <code>optional uint64 time_window_secs = 4 [default = 86340];</code>
+       *
+       * <pre>
+       * How many seconds should the channel be open, only used when a new channel is created.
+       * Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+       * </pre>
+       */
+      public Builder setTimeWindowSecs(long value) {
+        bitField0_ |= 0x00000008;
+        timeWindowSecs_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 time_window_secs = 4 [default = 86340];</code>
+       *
+       * <pre>
+       * How many seconds should the channel be open, only used when a new channel is created.
+       * Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+       * </pre>
+       */
+      public Builder clearTimeWindowSecs() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        timeWindowSecs_ = 86340L;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.ClientVersion)
+    }
+
+    static {
+      defaultInstance = new ClientVersion(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.ClientVersion)
+  }
+
+  public interface ServerVersionOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:paymentchannels.ServerVersion)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required int32 major = 1;</code>
+     */
+    boolean hasMajor();
+    /**
+     * <code>required int32 major = 1;</code>
+     */
+    int getMajor();
+
+    /**
+     * <code>optional int32 minor = 2 [default = 0];</code>
+     */
+    boolean hasMinor();
+    /**
+     * <code>optional int32 minor = 2 [default = 0];</code>
+     */
+    int getMinor();
+  }
+  /**
+   * Protobuf type {@code paymentchannels.ServerVersion}
+   *
+   * <pre>
+   * Send by secondary to primary upon receiving the ClientVersion message. If it is willing to
+   * speak the given major version, it sends back the same major version and the minor version it
+   * speaks. If it is not, it may send back a lower major version representing the highest version
+   * it is willing to speak, or sends a NO_ACCEPTABLE_VERSION Error. If the secondary sends back a
+   * lower major version, the secondary should either expect to continue with that version, or
+   * should immediately close the connection with a NO_ACCEPTABLE_VERSION Error. Backwards
+   * incompatible changes to the protocol bump the major version. Extensions bump the minor version
+   * </pre>
+   */
+  public static final class ServerVersion extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.ServerVersion)
+      ServerVersionOrBuilder {
+    // Use ServerVersion.newBuilder() to construct.
+    private ServerVersion(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ServerVersion(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ServerVersion defaultInstance;
+    public static ServerVersion getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ServerVersion getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ServerVersion(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              major_ = input.readInt32();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              minor_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ServerVersion_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ServerVersion_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.paymentchannel.Protos.ServerVersion.class, org.bitcoin.paymentchannel.Protos.ServerVersion.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ServerVersion> PARSER =
+        new com.google.protobuf.AbstractParser<ServerVersion>() {
+      public ServerVersion parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ServerVersion(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ServerVersion> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int MAJOR_FIELD_NUMBER = 1;
+    private int major_;
+    /**
+     * <code>required int32 major = 1;</code>
+     */
+    public boolean hasMajor() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required int32 major = 1;</code>
+     */
+    public int getMajor() {
+      return major_;
+    }
+
+    public static final int MINOR_FIELD_NUMBER = 2;
+    private int minor_;
+    /**
+     * <code>optional int32 minor = 2 [default = 0];</code>
+     */
+    public boolean hasMinor() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional int32 minor = 2 [default = 0];</code>
+     */
+    public int getMinor() {
+      return minor_;
+    }
+
+    private void initFields() {
+      major_ = 0;
+      minor_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasMajor()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, major_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(2, minor_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, major_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, minor_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ServerVersion parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.paymentchannel.Protos.ServerVersion prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.ServerVersion}
+     *
+     * <pre>
+     * Send by secondary to primary upon receiving the ClientVersion message. If it is willing to
+     * speak the given major version, it sends back the same major version and the minor version it
+     * speaks. If it is not, it may send back a lower major version representing the highest version
+     * it is willing to speak, or sends a NO_ACCEPTABLE_VERSION Error. If the secondary sends back a
+     * lower major version, the secondary should either expect to continue with that version, or
+     * should immediately close the connection with a NO_ACCEPTABLE_VERSION Error. Backwards
+     * incompatible changes to the protocol bump the major version. Extensions bump the minor version
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.ServerVersion)
+        org.bitcoin.paymentchannel.Protos.ServerVersionOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ServerVersion_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ServerVersion_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.paymentchannel.Protos.ServerVersion.class, org.bitcoin.paymentchannel.Protos.ServerVersion.Builder.class);
+      }
+
+      // Construct using org.bitcoin.paymentchannel.Protos.ServerVersion.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        major_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        minor_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ServerVersion_descriptor;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ServerVersion getDefaultInstanceForType() {
+        return org.bitcoin.paymentchannel.Protos.ServerVersion.getDefaultInstance();
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ServerVersion build() {
+        org.bitcoin.paymentchannel.Protos.ServerVersion result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ServerVersion buildPartial() {
+        org.bitcoin.paymentchannel.Protos.ServerVersion result = new org.bitcoin.paymentchannel.Protos.ServerVersion(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.major_ = major_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.minor_ = minor_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.paymentchannel.Protos.ServerVersion) {
+          return mergeFrom((org.bitcoin.paymentchannel.Protos.ServerVersion)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.paymentchannel.Protos.ServerVersion other) {
+        if (other == org.bitcoin.paymentchannel.Protos.ServerVersion.getDefaultInstance()) return this;
+        if (other.hasMajor()) {
+          setMajor(other.getMajor());
+        }
+        if (other.hasMinor()) {
+          setMinor(other.getMinor());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasMajor()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.paymentchannel.Protos.ServerVersion parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.paymentchannel.Protos.ServerVersion) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int major_ ;
+      /**
+       * <code>required int32 major = 1;</code>
+       */
+      public boolean hasMajor() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int32 major = 1;</code>
+       */
+      public int getMajor() {
+        return major_;
+      }
+      /**
+       * <code>required int32 major = 1;</code>
+       */
+      public Builder setMajor(int value) {
+        bitField0_ |= 0x00000001;
+        major_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 major = 1;</code>
+       */
+      public Builder clearMajor() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        major_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int minor_ ;
+      /**
+       * <code>optional int32 minor = 2 [default = 0];</code>
+       */
+      public boolean hasMinor() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional int32 minor = 2 [default = 0];</code>
+       */
+      public int getMinor() {
+        return minor_;
+      }
+      /**
+       * <code>optional int32 minor = 2 [default = 0];</code>
+       */
+      public Builder setMinor(int value) {
+        bitField0_ |= 0x00000002;
+        minor_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 minor = 2 [default = 0];</code>
+       */
+      public Builder clearMinor() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        minor_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.ServerVersion)
+    }
+
+    static {
+      defaultInstance = new ServerVersion(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.ServerVersion)
+  }
+
+  public interface InitiateOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:paymentchannels.Initiate)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes multisig_key = 1;</code>
+     *
+     * <pre>
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted. It is used only in the creation of the multisig contract, as outputs are
+     * created entirely by the secondary
+     * </pre>
+     */
+    boolean hasMultisigKey();
+    /**
+     * <code>required bytes multisig_key = 1;</code>
+     *
+     * <pre>
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted. It is used only in the creation of the multisig contract, as outputs are
+     * created entirely by the secondary
+     * </pre>
+     */
+    com.google.protobuf.ByteString getMultisigKey();
+
+    /**
+     * <code>required uint64 min_accepted_channel_size = 2;</code>
+     *
+     * <pre>
+     * Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+     * size it's willing to accept here. This can be lower to trade off resources against
+     * security but shouldn't be so low the transactions get rejected by the network as spam.
+     * Zero isn't a sensible value to have here, so we make the field required.
+     * </pre>
+     */
+    boolean hasMinAcceptedChannelSize();
+    /**
+     * <code>required uint64 min_accepted_channel_size = 2;</code>
+     *
+     * <pre>
+     * Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+     * size it's willing to accept here. This can be lower to trade off resources against
+     * security but shouldn't be so low the transactions get rejected by the network as spam.
+     * Zero isn't a sensible value to have here, so we make the field required.
+     * </pre>
+     */
+    long getMinAcceptedChannelSize();
+
+    /**
+     * <code>required uint64 expire_time_secs = 3;</code>
+     *
+     * <pre>
+     * Rough UNIX time for when the channel expires. This is determined by the block header
+     * timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+     * Channels could also be specified in terms of block heights but then how do you know the
+     * current chain height if you don't have internet access? Trust the server? Probably opens up
+     * attack vectors. We can assume the client has an independent clock, however. If the client
+     * considers this value too far off (eg more than a day), it may send an ERROR and close the
+     * channel.
+     * </pre>
+     */
+    boolean hasExpireTimeSecs();
+    /**
+     * <code>required uint64 expire_time_secs = 3;</code>
+     *
+     * <pre>
+     * Rough UNIX time for when the channel expires. This is determined by the block header
+     * timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+     * Channels could also be specified in terms of block heights but then how do you know the
+     * current chain height if you don't have internet access? Trust the server? Probably opens up
+     * attack vectors. We can assume the client has an independent clock, however. If the client
+     * considers this value too far off (eg more than a day), it may send an ERROR and close the
+     * channel.
+     * </pre>
+     */
+    long getExpireTimeSecs();
+
+    /**
+     * <code>required uint64 min_payment = 4;</code>
+     *
+     * <pre>
+     * The amount of money the server requires for the initial payment. The act of opening a channel
+     * always transfers some quantity of money to the server: it's impossible to have a channel with
+     * zero value transferred. This rule ensures that you can't get a channel that can't be settled
+     * due to having paid under the dust limit. Because the dust limit will float in future, the
+     * server tells the client what it thinks it is, and the client is supposed to sanity check this
+     * value.
+     * </pre>
+     */
+    boolean hasMinPayment();
+    /**
+     * <code>required uint64 min_payment = 4;</code>
+     *
+     * <pre>
+     * The amount of money the server requires for the initial payment. The act of opening a channel
+     * always transfers some quantity of money to the server: it's impossible to have a channel with
+     * zero value transferred. This rule ensures that you can't get a channel that can't be settled
+     * due to having paid under the dust limit. Because the dust limit will float in future, the
+     * server tells the client what it thinks it is, and the client is supposed to sanity check this
+     * value.
+     * </pre>
+     */
+    long getMinPayment();
+  }
+  /**
+   * Protobuf type {@code paymentchannels.Initiate}
+   *
+   * <pre>
+   * Sent from server to client once version nego is done.
+   * </pre>
+   */
+  public static final class Initiate extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.Initiate)
+      InitiateOrBuilder {
+    // Use Initiate.newBuilder() to construct.
+    private Initiate(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private Initiate(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Initiate defaultInstance;
+    public static Initiate getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public Initiate getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Initiate(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              multisigKey_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              minAcceptedChannelSize_ = input.readUInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              expireTimeSecs_ = input.readUInt64();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              minPayment_ = input.readUInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_Initiate_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_Initiate_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.paymentchannel.Protos.Initiate.class, org.bitcoin.paymentchannel.Protos.Initiate.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<Initiate> PARSER =
+        new com.google.protobuf.AbstractParser<Initiate>() {
+      public Initiate parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Initiate(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Initiate> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int MULTISIG_KEY_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString multisigKey_;
+    /**
+     * <code>required bytes multisig_key = 1;</code>
+     *
+     * <pre>
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted. It is used only in the creation of the multisig contract, as outputs are
+     * created entirely by the secondary
+     * </pre>
+     */
+    public boolean hasMultisigKey() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes multisig_key = 1;</code>
+     *
+     * <pre>
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted. It is used only in the creation of the multisig contract, as outputs are
+     * created entirely by the secondary
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getMultisigKey() {
+      return multisigKey_;
+    }
+
+    public static final int MIN_ACCEPTED_CHANNEL_SIZE_FIELD_NUMBER = 2;
+    private long minAcceptedChannelSize_;
+    /**
+     * <code>required uint64 min_accepted_channel_size = 2;</code>
+     *
+     * <pre>
+     * Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+     * size it's willing to accept here. This can be lower to trade off resources against
+     * security but shouldn't be so low the transactions get rejected by the network as spam.
+     * Zero isn't a sensible value to have here, so we make the field required.
+     * </pre>
+     */
+    public boolean hasMinAcceptedChannelSize() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required uint64 min_accepted_channel_size = 2;</code>
+     *
+     * <pre>
+     * Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+     * size it's willing to accept here. This can be lower to trade off resources against
+     * security but shouldn't be so low the transactions get rejected by the network as spam.
+     * Zero isn't a sensible value to have here, so we make the field required.
+     * </pre>
+     */
+    public long getMinAcceptedChannelSize() {
+      return minAcceptedChannelSize_;
+    }
+
+    public static final int EXPIRE_TIME_SECS_FIELD_NUMBER = 3;
+    private long expireTimeSecs_;
+    /**
+     * <code>required uint64 expire_time_secs = 3;</code>
+     *
+     * <pre>
+     * Rough UNIX time for when the channel expires. This is determined by the block header
+     * timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+     * Channels could also be specified in terms of block heights but then how do you know the
+     * current chain height if you don't have internet access? Trust the server? Probably opens up
+     * attack vectors. We can assume the client has an independent clock, however. If the client
+     * considers this value too far off (eg more than a day), it may send an ERROR and close the
+     * channel.
+     * </pre>
+     */
+    public boolean hasExpireTimeSecs() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required uint64 expire_time_secs = 3;</code>
+     *
+     * <pre>
+     * Rough UNIX time for when the channel expires. This is determined by the block header
+     * timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+     * Channels could also be specified in terms of block heights but then how do you know the
+     * current chain height if you don't have internet access? Trust the server? Probably opens up
+     * attack vectors. We can assume the client has an independent clock, however. If the client
+     * considers this value too far off (eg more than a day), it may send an ERROR and close the
+     * channel.
+     * </pre>
+     */
+    public long getExpireTimeSecs() {
+      return expireTimeSecs_;
+    }
+
+    public static final int MIN_PAYMENT_FIELD_NUMBER = 4;
+    private long minPayment_;
+    /**
+     * <code>required uint64 min_payment = 4;</code>
+     *
+     * <pre>
+     * The amount of money the server requires for the initial payment. The act of opening a channel
+     * always transfers some quantity of money to the server: it's impossible to have a channel with
+     * zero value transferred. This rule ensures that you can't get a channel that can't be settled
+     * due to having paid under the dust limit. Because the dust limit will float in future, the
+     * server tells the client what it thinks it is, and the client is supposed to sanity check this
+     * value.
+     * </pre>
+     */
+    public boolean hasMinPayment() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>required uint64 min_payment = 4;</code>
+     *
+     * <pre>
+     * The amount of money the server requires for the initial payment. The act of opening a channel
+     * always transfers some quantity of money to the server: it's impossible to have a channel with
+     * zero value transferred. This rule ensures that you can't get a channel that can't be settled
+     * due to having paid under the dust limit. Because the dust limit will float in future, the
+     * server tells the client what it thinks it is, and the client is supposed to sanity check this
+     * value.
+     * </pre>
+     */
+    public long getMinPayment() {
+      return minPayment_;
+    }
+
+    private void initFields() {
+      multisigKey_ = com.google.protobuf.ByteString.EMPTY;
+      minAcceptedChannelSize_ = 0L;
+      expireTimeSecs_ = 0L;
+      minPayment_ = 0L;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasMultisigKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasMinAcceptedChannelSize()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasExpireTimeSecs()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasMinPayment()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, multisigKey_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeUInt64(2, minAcceptedChannelSize_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeUInt64(3, expireTimeSecs_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeUInt64(4, minPayment_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, multisigKey_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, minAcceptedChannelSize_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(3, expireTimeSecs_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(4, minPayment_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.Initiate parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.paymentchannel.Protos.Initiate prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.Initiate}
+     *
+     * <pre>
+     * Sent from server to client once version nego is done.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.Initiate)
+        org.bitcoin.paymentchannel.Protos.InitiateOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_Initiate_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_Initiate_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.paymentchannel.Protos.Initiate.class, org.bitcoin.paymentchannel.Protos.Initiate.Builder.class);
+      }
+
+      // Construct using org.bitcoin.paymentchannel.Protos.Initiate.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        multisigKey_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        minAcceptedChannelSize_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        expireTimeSecs_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        minPayment_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_Initiate_descriptor;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.Initiate getDefaultInstanceForType() {
+        return org.bitcoin.paymentchannel.Protos.Initiate.getDefaultInstance();
+      }
+
+      public org.bitcoin.paymentchannel.Protos.Initiate build() {
+        org.bitcoin.paymentchannel.Protos.Initiate result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.Initiate buildPartial() {
+        org.bitcoin.paymentchannel.Protos.Initiate result = new org.bitcoin.paymentchannel.Protos.Initiate(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.multisigKey_ = multisigKey_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.minAcceptedChannelSize_ = minAcceptedChannelSize_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.expireTimeSecs_ = expireTimeSecs_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.minPayment_ = minPayment_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.paymentchannel.Protos.Initiate) {
+          return mergeFrom((org.bitcoin.paymentchannel.Protos.Initiate)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.paymentchannel.Protos.Initiate other) {
+        if (other == org.bitcoin.paymentchannel.Protos.Initiate.getDefaultInstance()) return this;
+        if (other.hasMultisigKey()) {
+          setMultisigKey(other.getMultisigKey());
+        }
+        if (other.hasMinAcceptedChannelSize()) {
+          setMinAcceptedChannelSize(other.getMinAcceptedChannelSize());
+        }
+        if (other.hasExpireTimeSecs()) {
+          setExpireTimeSecs(other.getExpireTimeSecs());
+        }
+        if (other.hasMinPayment()) {
+          setMinPayment(other.getMinPayment());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasMultisigKey()) {
+          
+          return false;
+        }
+        if (!hasMinAcceptedChannelSize()) {
+          
+          return false;
+        }
+        if (!hasExpireTimeSecs()) {
+          
+          return false;
+        }
+        if (!hasMinPayment()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.paymentchannel.Protos.Initiate parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.paymentchannel.Protos.Initiate) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString multisigKey_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes multisig_key = 1;</code>
+       *
+       * <pre>
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted. It is used only in the creation of the multisig contract, as outputs are
+       * created entirely by the secondary
+       * </pre>
+       */
+      public boolean hasMultisigKey() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes multisig_key = 1;</code>
+       *
+       * <pre>
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted. It is used only in the creation of the multisig contract, as outputs are
+       * created entirely by the secondary
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getMultisigKey() {
+        return multisigKey_;
+      }
+      /**
+       * <code>required bytes multisig_key = 1;</code>
+       *
+       * <pre>
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted. It is used only in the creation of the multisig contract, as outputs are
+       * created entirely by the secondary
+       * </pre>
+       */
+      public Builder setMultisigKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        multisigKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes multisig_key = 1;</code>
+       *
+       * <pre>
+       * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+       * are accepted. It is used only in the creation of the multisig contract, as outputs are
+       * created entirely by the secondary
+       * </pre>
+       */
+      public Builder clearMultisigKey() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        multisigKey_ = getDefaultInstance().getMultisigKey();
+        onChanged();
+        return this;
+      }
+
+      private long minAcceptedChannelSize_ ;
+      /**
+       * <code>required uint64 min_accepted_channel_size = 2;</code>
+       *
+       * <pre>
+       * Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+       * size it's willing to accept here. This can be lower to trade off resources against
+       * security but shouldn't be so low the transactions get rejected by the network as spam.
+       * Zero isn't a sensible value to have here, so we make the field required.
+       * </pre>
+       */
+      public boolean hasMinAcceptedChannelSize() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required uint64 min_accepted_channel_size = 2;</code>
+       *
+       * <pre>
+       * Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+       * size it's willing to accept here. This can be lower to trade off resources against
+       * security but shouldn't be so low the transactions get rejected by the network as spam.
+       * Zero isn't a sensible value to have here, so we make the field required.
+       * </pre>
+       */
+      public long getMinAcceptedChannelSize() {
+        return minAcceptedChannelSize_;
+      }
+      /**
+       * <code>required uint64 min_accepted_channel_size = 2;</code>
+       *
+       * <pre>
+       * Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+       * size it's willing to accept here. This can be lower to trade off resources against
+       * security but shouldn't be so low the transactions get rejected by the network as spam.
+       * Zero isn't a sensible value to have here, so we make the field required.
+       * </pre>
+       */
+      public Builder setMinAcceptedChannelSize(long value) {
+        bitField0_ |= 0x00000002;
+        minAcceptedChannelSize_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 min_accepted_channel_size = 2;</code>
+       *
+       * <pre>
+       * Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+       * size it's willing to accept here. This can be lower to trade off resources against
+       * security but shouldn't be so low the transactions get rejected by the network as spam.
+       * Zero isn't a sensible value to have here, so we make the field required.
+       * </pre>
+       */
+      public Builder clearMinAcceptedChannelSize() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        minAcceptedChannelSize_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long expireTimeSecs_ ;
+      /**
+       * <code>required uint64 expire_time_secs = 3;</code>
+       *
+       * <pre>
+       * Rough UNIX time for when the channel expires. This is determined by the block header
+       * timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+       * Channels could also be specified in terms of block heights but then how do you know the
+       * current chain height if you don't have internet access? Trust the server? Probably opens up
+       * attack vectors. We can assume the client has an independent clock, however. If the client
+       * considers this value too far off (eg more than a day), it may send an ERROR and close the
+       * channel.
+       * </pre>
+       */
+      public boolean hasExpireTimeSecs() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required uint64 expire_time_secs = 3;</code>
+       *
+       * <pre>
+       * Rough UNIX time for when the channel expires. This is determined by the block header
+       * timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+       * Channels could also be specified in terms of block heights but then how do you know the
+       * current chain height if you don't have internet access? Trust the server? Probably opens up
+       * attack vectors. We can assume the client has an independent clock, however. If the client
+       * considers this value too far off (eg more than a day), it may send an ERROR and close the
+       * channel.
+       * </pre>
+       */
+      public long getExpireTimeSecs() {
+        return expireTimeSecs_;
+      }
+      /**
+       * <code>required uint64 expire_time_secs = 3;</code>
+       *
+       * <pre>
+       * Rough UNIX time for when the channel expires. This is determined by the block header
+       * timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+       * Channels could also be specified in terms of block heights but then how do you know the
+       * current chain height if you don't have internet access? Trust the server? Probably opens up
+       * attack vectors. We can assume the client has an independent clock, however. If the client
+       * considers this value too far off (eg more than a day), it may send an ERROR and close the
+       * channel.
+       * </pre>
+       */
+      public Builder setExpireTimeSecs(long value) {
+        bitField0_ |= 0x00000004;
+        expireTimeSecs_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 expire_time_secs = 3;</code>
+       *
+       * <pre>
+       * Rough UNIX time for when the channel expires. This is determined by the block header
+       * timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+       * Channels could also be specified in terms of block heights but then how do you know the
+       * current chain height if you don't have internet access? Trust the server? Probably opens up
+       * attack vectors. We can assume the client has an independent clock, however. If the client
+       * considers this value too far off (eg more than a day), it may send an ERROR and close the
+       * channel.
+       * </pre>
+       */
+      public Builder clearExpireTimeSecs() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        expireTimeSecs_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long minPayment_ ;
+      /**
+       * <code>required uint64 min_payment = 4;</code>
+       *
+       * <pre>
+       * The amount of money the server requires for the initial payment. The act of opening a channel
+       * always transfers some quantity of money to the server: it's impossible to have a channel with
+       * zero value transferred. This rule ensures that you can't get a channel that can't be settled
+       * due to having paid under the dust limit. Because the dust limit will float in future, the
+       * server tells the client what it thinks it is, and the client is supposed to sanity check this
+       * value.
+       * </pre>
+       */
+      public boolean hasMinPayment() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>required uint64 min_payment = 4;</code>
+       *
+       * <pre>
+       * The amount of money the server requires for the initial payment. The act of opening a channel
+       * always transfers some quantity of money to the server: it's impossible to have a channel with
+       * zero value transferred. This rule ensures that you can't get a channel that can't be settled
+       * due to having paid under the dust limit. Because the dust limit will float in future, the
+       * server tells the client what it thinks it is, and the client is supposed to sanity check this
+       * value.
+       * </pre>
+       */
+      public long getMinPayment() {
+        return minPayment_;
+      }
+      /**
+       * <code>required uint64 min_payment = 4;</code>
+       *
+       * <pre>
+       * The amount of money the server requires for the initial payment. The act of opening a channel
+       * always transfers some quantity of money to the server: it's impossible to have a channel with
+       * zero value transferred. This rule ensures that you can't get a channel that can't be settled
+       * due to having paid under the dust limit. Because the dust limit will float in future, the
+       * server tells the client what it thinks it is, and the client is supposed to sanity check this
+       * value.
+       * </pre>
+       */
+      public Builder setMinPayment(long value) {
+        bitField0_ |= 0x00000008;
+        minPayment_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 min_payment = 4;</code>
+       *
+       * <pre>
+       * The amount of money the server requires for the initial payment. The act of opening a channel
+       * always transfers some quantity of money to the server: it's impossible to have a channel with
+       * zero value transferred. This rule ensures that you can't get a channel that can't be settled
+       * due to having paid under the dust limit. Because the dust limit will float in future, the
+       * server tells the client what it thinks it is, and the client is supposed to sanity check this
+       * value.
+       * </pre>
+       */
+      public Builder clearMinPayment() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        minPayment_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.Initiate)
+    }
+
+    static {
+      defaultInstance = new Initiate(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.Initiate)
+  }
+
+  public interface ProvideRefundOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:paymentchannels.ProvideRefund)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes multisig_key = 1;</code>
+     *
+     * <pre>
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted.  It is only used in the creation of the multisig contract.
+     * </pre>
+     */
+    boolean hasMultisigKey();
+    /**
+     * <code>required bytes multisig_key = 1;</code>
+     *
+     * <pre>
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted.  It is only used in the creation of the multisig contract.
+     * </pre>
+     */
+    com.google.protobuf.ByteString getMultisigKey();
+
+    /**
+     * <code>required bytes tx = 2;</code>
+     *
+     * <pre>
+     * The serialized bytes of the return transaction in Satoshi format.
+     * * It must have exactly one input which spends the multisig output (see ProvideContract for
+     *   details of exactly what that output must look like). This output must have a sequence
+     *   number of 0.
+     * * It must have the lock time set to a time after the min_time_window_secs (from the
+     *   Initiate message).
+     * * It must have exactly one output which goes back to the primary.  This output's
+     *   scriptPubKey will be reused to create payment transactions.
+     * </pre>
+     */
+    boolean hasTx();
+    /**
+     * <code>required bytes tx = 2;</code>
+     *
+     * <pre>
+     * The serialized bytes of the return transaction in Satoshi format.
+     * * It must have exactly one input which spends the multisig output (see ProvideContract for
+     *   details of exactly what that output must look like). This output must have a sequence
+     *   number of 0.
+     * * It must have the lock time set to a time after the min_time_window_secs (from the
+     *   Initiate message).
+     * * It must have exactly one output which goes back to the primary.  This output's
+     *   scriptPubKey will be reused to create payment transactions.
+     * </pre>
+     */
+    com.google.protobuf.ByteString getTx();
+  }
+  /**
+   * Protobuf type {@code paymentchannels.ProvideRefund}
+   *
+   * <pre>
+   * Sent from primary to secondary after Initiate to begin the refund transaction signing.
+   * </pre>
+   */
+  public static final class ProvideRefund extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.ProvideRefund)
+      ProvideRefundOrBuilder {
+    // Use ProvideRefund.newBuilder() to construct.
+    private ProvideRefund(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ProvideRefund(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ProvideRefund defaultInstance;
+    public static ProvideRefund getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ProvideRefund getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ProvideRefund(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              multisigKey_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              tx_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideRefund_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideRefund_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.paymentchannel.Protos.ProvideRefund.class, org.bitcoin.paymentchannel.Protos.ProvideRefund.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ProvideRefund> PARSER =
+        new com.google.protobuf.AbstractParser<ProvideRefund>() {
+      public ProvideRefund parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ProvideRefund(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ProvideRefund> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int MULTISIG_KEY_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString multisigKey_;
+    /**
+     * <code>required bytes multisig_key = 1;</code>
+     *
+     * <pre>
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted.  It is only used in the creation of the multisig contract.
+     * </pre>
+     */
+    public boolean hasMultisigKey() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes multisig_key = 1;</code>
+     *
+     * <pre>
+     * This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+     * are accepted.  It is only used in the creation of the multisig contract.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getMultisigKey() {
+      return multisigKey_;
+    }
+
+    public static final int TX_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString tx_;
+    /**
+     * <code>required bytes tx = 2;</code>
+     *
+     * <pre>
+     * The serialized bytes of the return transaction in Satoshi format.
+     * * It must have exactly one input which spends the multisig output (see ProvideContract for
+     *   details of exactly what that output must look like). This output must have a sequence
+     *   number of 0.
+     * * It must have the lock time set to a time after the min_time_window_secs (from the
+     *   Initiate message).
+     * * It must have exactly one output which goes back to the primary.  This output's
+     *   scriptPubKey will be reused to create payment transactions.
+     * </pre>
+     */
+    public boolean hasTx() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes tx = 2;</code>
+     *
+     * <pre>
+     * The serialized bytes of the return transaction in Satoshi format.
+     * * It must have exactly one input which spends the multisig output (see ProvideContract for
+     *   details of exactly what that output must look like). This output must have a sequence
+     *   number of 0.
+     * * It must have the lock time set to a time after the min_time_window_secs (from the
+     *   Initiate message).
+     * * It must have exactly one output which goes back to the primary.  This output's
+     *   scriptPubKey will be reused to create payment transactions.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getTx() {
+      return tx_;
+    }
+
+    private void initFields() {
+      multisigKey_ = com.google.protobuf.ByteString.EMPTY;
+      tx_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasMultisigKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTx()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, multisigKey_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, tx_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, multisigKey_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, tx_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ProvideRefund parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.paymentchannel.Protos.ProvideRefund prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.ProvideRefund}
+     *
+     * <pre>
+     * Sent from primary to secondary after Initiate to begin the refund transaction signing.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.ProvideRefund)
+        org.bitcoin.paymentchannel.Protos.ProvideRefundOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideRefund_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideRefund_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.paymentchannel.Protos.ProvideRefund.class, org.bitcoin.paymentchannel.Protos.ProvideRefund.Builder.class);
+      }
+
+      // Construct using org.bitcoin.paymentchannel.Protos.ProvideRefund.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        multisigKey_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        tx_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ProvideRefund_descriptor;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ProvideRefund getDefaultInstanceForType() {
+        return org.bitcoin.paymentchannel.Protos.ProvideRefund.getDefaultInstance();
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ProvideRefund build() {
+        org.bitcoin.paymentchannel.Protos.ProvideRefund result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.ProvideRefund buildPartial() {
+        org.bitcoin.paymentchannel.Protos.ProvideRefund result = new org.bitcoin.paymentchannel.Protos.ProvideRefund(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.multisigKey_ = multisigKey_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.tx_ = tx_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.paymentchannel.Protos.ProvideRefund) {
+          return mergeFrom((org.bitcoin.paymentchannel.Protos.ProvideRefund)other);
