@@ -892,3 +892,2238 @@ public final class Protos {
      * <code>optional .paymentchannels.Error error = 10;</code>
      */
     public org.bitcoin.paymentchannel.Protos.ErrorOrBuilder getErrorOrBuilder() {
+      return error_;
+    }
+
+    private void initFields() {
+      type_ = org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.MessageType.CLIENT_VERSION;
+      clientVersion_ = org.bitcoin.paymentchannel.Protos.ClientVersion.getDefaultInstance();
+      serverVersion_ = org.bitcoin.paymentchannel.Protos.ServerVersion.getDefaultInstance();
+      initiate_ = org.bitcoin.paymentchannel.Protos.Initiate.getDefaultInstance();
+      provideRefund_ = org.bitcoin.paymentchannel.Protos.ProvideRefund.getDefaultInstance();
+      returnRefund_ = org.bitcoin.paymentchannel.Protos.ReturnRefund.getDefaultInstance();
+      provideContract_ = org.bitcoin.paymentchannel.Protos.ProvideContract.getDefaultInstance();
+      updatePayment_ = org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+      paymentAck_ = org.bitcoin.paymentchannel.Protos.PaymentAck.getDefaultInstance();
+      settlement_ = org.bitcoin.paymentchannel.Protos.Settlement.getDefaultInstance();
+      error_ = org.bitcoin.paymentchannel.Protos.Error.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasType()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (hasClientVersion()) {
+        if (!getClientVersion().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasServerVersion()) {
+        if (!getServerVersion().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasInitiate()) {
+        if (!getInitiate().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasProvideRefund()) {
+        if (!getProvideRefund().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasReturnRefund()) {
+        if (!getReturnRefund().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasProvideContract()) {
+        if (!getProvideContract().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasUpdatePayment()) {
+        if (!getUpdatePayment().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasSettlement()) {
+        if (!getSettlement().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, type_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, clientVersion_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, serverVersion_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeMessage(4, initiate_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeMessage(5, provideRefund_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeMessage(6, returnRefund_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeMessage(7, provideContract_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeMessage(8, updatePayment_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeMessage(9, settlement_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        output.writeMessage(10, error_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeMessage(11, paymentAck_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, type_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, clientVersion_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, serverVersion_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, initiate_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, provideRefund_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, returnRefund_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(7, provideContract_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(8, updatePayment_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, settlement_);
+      }
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, error_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(11, paymentAck_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.TwoWayChannelMessage}
+     *
+     * <pre>
+     * This message is designed to be either sent raw over the network (e.g. length prefixed) or embedded inside another
+     * protocol that is being extended to support micropayments. In this file "primary" typically can be read as "client"
+     * and "secondary" as "server".
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.TwoWayChannelMessage)
+        org.bitcoin.paymentchannel.Protos.TwoWayChannelMessageOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_TwoWayChannelMessage_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_TwoWayChannelMessage_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.class, org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.Builder.class);
+      }
+
+      // Construct using org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getClientVersionFieldBuilder();
+          getServerVersionFieldBuilder();
+          getInitiateFieldBuilder();
+          getProvideRefundFieldBuilder();
+          getReturnRefundFieldBuilder();
+          getProvideContractFieldBuilder();
+          getUpdatePaymentFieldBuilder();
+          getPaymentAckFieldBuilder();
+          getSettlementFieldBuilder();
+          getErrorFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        type_ = org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.MessageType.CLIENT_VERSION;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (clientVersionBuilder_ == null) {
+          clientVersion_ = org.bitcoin.paymentchannel.Protos.ClientVersion.getDefaultInstance();
+        } else {
+          clientVersionBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (serverVersionBuilder_ == null) {
+          serverVersion_ = org.bitcoin.paymentchannel.Protos.ServerVersion.getDefaultInstance();
+        } else {
+          serverVersionBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        if (initiateBuilder_ == null) {
+          initiate_ = org.bitcoin.paymentchannel.Protos.Initiate.getDefaultInstance();
+        } else {
+          initiateBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        if (provideRefundBuilder_ == null) {
+          provideRefund_ = org.bitcoin.paymentchannel.Protos.ProvideRefund.getDefaultInstance();
+        } else {
+          provideRefundBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
+        if (returnRefundBuilder_ == null) {
+          returnRefund_ = org.bitcoin.paymentchannel.Protos.ReturnRefund.getDefaultInstance();
+        } else {
+          returnRefundBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000020);
+        if (provideContractBuilder_ == null) {
+          provideContract_ = org.bitcoin.paymentchannel.Protos.ProvideContract.getDefaultInstance();
+        } else {
+          provideContractBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000040);
+        if (updatePaymentBuilder_ == null) {
+          updatePayment_ = org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+        } else {
+          updatePaymentBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000080);
+        if (paymentAckBuilder_ == null) {
+          paymentAck_ = org.bitcoin.paymentchannel.Protos.PaymentAck.getDefaultInstance();
+        } else {
+          paymentAckBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        if (settlementBuilder_ == null) {
+          settlement_ = org.bitcoin.paymentchannel.Protos.Settlement.getDefaultInstance();
+        } else {
+          settlementBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
+        if (errorBuilder_ == null) {
+          error_ = org.bitcoin.paymentchannel.Protos.Error.getDefaultInstance();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000400);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_TwoWayChannelMessage_descriptor;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage getDefaultInstanceForType() {
+        return org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.getDefaultInstance();
+      }
+
+      public org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage build() {
+        org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage buildPartial() {
+        org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage result = new org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.type_ = type_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (clientVersionBuilder_ == null) {
+          result.clientVersion_ = clientVersion_;
+        } else {
+          result.clientVersion_ = clientVersionBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (serverVersionBuilder_ == null) {
+          result.serverVersion_ = serverVersion_;
+        } else {
+          result.serverVersion_ = serverVersionBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        if (initiateBuilder_ == null) {
+          result.initiate_ = initiate_;
+        } else {
+          result.initiate_ = initiateBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        if (provideRefundBuilder_ == null) {
+          result.provideRefund_ = provideRefund_;
+        } else {
+          result.provideRefund_ = provideRefundBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        if (returnRefundBuilder_ == null) {
+          result.returnRefund_ = returnRefund_;
+        } else {
+          result.returnRefund_ = returnRefundBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        if (provideContractBuilder_ == null) {
+          result.provideContract_ = provideContract_;
+        } else {
+          result.provideContract_ = provideContractBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        if (updatePaymentBuilder_ == null) {
+          result.updatePayment_ = updatePayment_;
+        } else {
+          result.updatePayment_ = updatePaymentBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        if (paymentAckBuilder_ == null) {
+          result.paymentAck_ = paymentAck_;
+        } else {
+          result.paymentAck_ = paymentAckBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        if (settlementBuilder_ == null) {
+          result.settlement_ = settlement_;
+        } else {
+          result.settlement_ = settlementBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        if (errorBuilder_ == null) {
+          result.error_ = error_;
+        } else {
+          result.error_ = errorBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage) {
+          return mergeFrom((org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage other) {
+        if (other == org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.getDefaultInstance()) return this;
+        if (other.hasType()) {
+          setType(other.getType());
+        }
+        if (other.hasClientVersion()) {
+          mergeClientVersion(other.getClientVersion());
+        }
+        if (other.hasServerVersion()) {
+          mergeServerVersion(other.getServerVersion());
+        }
+        if (other.hasInitiate()) {
+          mergeInitiate(other.getInitiate());
+        }
+        if (other.hasProvideRefund()) {
+          mergeProvideRefund(other.getProvideRefund());
+        }
+        if (other.hasReturnRefund()) {
+          mergeReturnRefund(other.getReturnRefund());
+        }
+        if (other.hasProvideContract()) {
+          mergeProvideContract(other.getProvideContract());
+        }
+        if (other.hasUpdatePayment()) {
+          mergeUpdatePayment(other.getUpdatePayment());
+        }
+        if (other.hasPaymentAck()) {
+          mergePaymentAck(other.getPaymentAck());
+        }
+        if (other.hasSettlement()) {
+          mergeSettlement(other.getSettlement());
+        }
+        if (other.hasError()) {
+          mergeError(other.getError());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasType()) {
+          
+          return false;
+        }
+        if (hasClientVersion()) {
+          if (!getClientVersion().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasServerVersion()) {
+          if (!getServerVersion().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasInitiate()) {
+          if (!getInitiate().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasProvideRefund()) {
+          if (!getProvideRefund().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasReturnRefund()) {
+          if (!getReturnRefund().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasProvideContract()) {
+          if (!getProvideContract().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasUpdatePayment()) {
+          if (!getUpdatePayment().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasSettlement()) {
+          if (!getSettlement().isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.MessageType type_ = org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.MessageType.CLIENT_VERSION;
+      /**
+       * <code>required .paymentchannels.TwoWayChannelMessage.MessageType type = 1;</code>
+       *
+       * <pre>
+       * This is required so if a new message type is added in future, old software aborts trying
+       * to read the message as early as possible. If the message doesn't parse, the socket should
+       * be closed.
+       * </pre>
+       */
+      public boolean hasType() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .paymentchannels.TwoWayChannelMessage.MessageType type = 1;</code>
+       *
+       * <pre>
+       * This is required so if a new message type is added in future, old software aborts trying
+       * to read the message as early as possible. If the message doesn't parse, the socket should
+       * be closed.
+       * </pre>
+       */
+      public org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.MessageType getType() {
+        return type_;
+      }
+      /**
+       * <code>required .paymentchannels.TwoWayChannelMessage.MessageType type = 1;</code>
+       *
+       * <pre>
+       * This is required so if a new message type is added in future, old software aborts trying
+       * to read the message as early as possible. If the message doesn't parse, the socket should
+       * be closed.
+       * </pre>
+       */
+      public Builder setType(org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.MessageType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required .paymentchannels.TwoWayChannelMessage.MessageType type = 1;</code>
+       *
+       * <pre>
+       * This is required so if a new message type is added in future, old software aborts trying
+       * to read the message as early as possible. If the message doesn't parse, the socket should
+       * be closed.
+       * </pre>
+       */
+      public Builder clearType() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        type_ = org.bitcoin.paymentchannel.Protos.TwoWayChannelMessage.MessageType.CLIENT_VERSION;
+        onChanged();
+        return this;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.ClientVersion clientVersion_ = org.bitcoin.paymentchannel.Protos.ClientVersion.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ClientVersion, org.bitcoin.paymentchannel.Protos.ClientVersion.Builder, org.bitcoin.paymentchannel.Protos.ClientVersionOrBuilder> clientVersionBuilder_;
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      public boolean hasClientVersion() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      public org.bitcoin.paymentchannel.Protos.ClientVersion getClientVersion() {
+        if (clientVersionBuilder_ == null) {
+          return clientVersion_;
+        } else {
+          return clientVersionBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      public Builder setClientVersion(org.bitcoin.paymentchannel.Protos.ClientVersion value) {
+        if (clientVersionBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          clientVersion_ = value;
+          onChanged();
+        } else {
+          clientVersionBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      public Builder setClientVersion(
+          org.bitcoin.paymentchannel.Protos.ClientVersion.Builder builderForValue) {
+        if (clientVersionBuilder_ == null) {
+          clientVersion_ = builderForValue.build();
+          onChanged();
+        } else {
+          clientVersionBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      public Builder mergeClientVersion(org.bitcoin.paymentchannel.Protos.ClientVersion value) {
+        if (clientVersionBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              clientVersion_ != org.bitcoin.paymentchannel.Protos.ClientVersion.getDefaultInstance()) {
+            clientVersion_ =
+              org.bitcoin.paymentchannel.Protos.ClientVersion.newBuilder(clientVersion_).mergeFrom(value).buildPartial();
+          } else {
+            clientVersion_ = value;
+          }
+          onChanged();
+        } else {
+          clientVersionBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      public Builder clearClientVersion() {
+        if (clientVersionBuilder_ == null) {
+          clientVersion_ = org.bitcoin.paymentchannel.Protos.ClientVersion.getDefaultInstance();
+          onChanged();
+        } else {
+          clientVersionBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      public org.bitcoin.paymentchannel.Protos.ClientVersion.Builder getClientVersionBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getClientVersionFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      public org.bitcoin.paymentchannel.Protos.ClientVersionOrBuilder getClientVersionOrBuilder() {
+        if (clientVersionBuilder_ != null) {
+          return clientVersionBuilder_.getMessageOrBuilder();
+        } else {
+          return clientVersion_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ClientVersion client_version = 2;</code>
+       *
+       * <pre>
+       * Now one optional field for each message. Only the field specified by type should be read.
+       * </pre>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ClientVersion, org.bitcoin.paymentchannel.Protos.ClientVersion.Builder, org.bitcoin.paymentchannel.Protos.ClientVersionOrBuilder> 
+          getClientVersionFieldBuilder() {
+        if (clientVersionBuilder_ == null) {
+          clientVersionBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.ClientVersion, org.bitcoin.paymentchannel.Protos.ClientVersion.Builder, org.bitcoin.paymentchannel.Protos.ClientVersionOrBuilder>(
+                  getClientVersion(),
+                  getParentForChildren(),
+                  isClean());
+          clientVersion_ = null;
+        }
+        return clientVersionBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.ServerVersion serverVersion_ = org.bitcoin.paymentchannel.Protos.ServerVersion.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ServerVersion, org.bitcoin.paymentchannel.Protos.ServerVersion.Builder, org.bitcoin.paymentchannel.Protos.ServerVersionOrBuilder> serverVersionBuilder_;
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      public boolean hasServerVersion() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ServerVersion getServerVersion() {
+        if (serverVersionBuilder_ == null) {
+          return serverVersion_;
+        } else {
+          return serverVersionBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      public Builder setServerVersion(org.bitcoin.paymentchannel.Protos.ServerVersion value) {
+        if (serverVersionBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          serverVersion_ = value;
+          onChanged();
+        } else {
+          serverVersionBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      public Builder setServerVersion(
+          org.bitcoin.paymentchannel.Protos.ServerVersion.Builder builderForValue) {
+        if (serverVersionBuilder_ == null) {
+          serverVersion_ = builderForValue.build();
+          onChanged();
+        } else {
+          serverVersionBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      public Builder mergeServerVersion(org.bitcoin.paymentchannel.Protos.ServerVersion value) {
+        if (serverVersionBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              serverVersion_ != org.bitcoin.paymentchannel.Protos.ServerVersion.getDefaultInstance()) {
+            serverVersion_ =
+              org.bitcoin.paymentchannel.Protos.ServerVersion.newBuilder(serverVersion_).mergeFrom(value).buildPartial();
+          } else {
+            serverVersion_ = value;
+          }
+          onChanged();
+        } else {
+          serverVersionBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      public Builder clearServerVersion() {
+        if (serverVersionBuilder_ == null) {
+          serverVersion_ = org.bitcoin.paymentchannel.Protos.ServerVersion.getDefaultInstance();
+          onChanged();
+        } else {
+          serverVersionBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ServerVersion.Builder getServerVersionBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getServerVersionFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ServerVersionOrBuilder getServerVersionOrBuilder() {
+        if (serverVersionBuilder_ != null) {
+          return serverVersionBuilder_.getMessageOrBuilder();
+        } else {
+          return serverVersion_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ServerVersion server_version = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ServerVersion, org.bitcoin.paymentchannel.Protos.ServerVersion.Builder, org.bitcoin.paymentchannel.Protos.ServerVersionOrBuilder> 
+          getServerVersionFieldBuilder() {
+        if (serverVersionBuilder_ == null) {
+          serverVersionBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.ServerVersion, org.bitcoin.paymentchannel.Protos.ServerVersion.Builder, org.bitcoin.paymentchannel.Protos.ServerVersionOrBuilder>(
+                  getServerVersion(),
+                  getParentForChildren(),
+                  isClean());
+          serverVersion_ = null;
+        }
+        return serverVersionBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.Initiate initiate_ = org.bitcoin.paymentchannel.Protos.Initiate.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.Initiate, org.bitcoin.paymentchannel.Protos.Initiate.Builder, org.bitcoin.paymentchannel.Protos.InitiateOrBuilder> initiateBuilder_;
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      public boolean hasInitiate() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.Initiate getInitiate() {
+        if (initiateBuilder_ == null) {
+          return initiate_;
+        } else {
+          return initiateBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      public Builder setInitiate(org.bitcoin.paymentchannel.Protos.Initiate value) {
+        if (initiateBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          initiate_ = value;
+          onChanged();
+        } else {
+          initiateBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      public Builder setInitiate(
+          org.bitcoin.paymentchannel.Protos.Initiate.Builder builderForValue) {
+        if (initiateBuilder_ == null) {
+          initiate_ = builderForValue.build();
+          onChanged();
+        } else {
+          initiateBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      public Builder mergeInitiate(org.bitcoin.paymentchannel.Protos.Initiate value) {
+        if (initiateBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+              initiate_ != org.bitcoin.paymentchannel.Protos.Initiate.getDefaultInstance()) {
+            initiate_ =
+              org.bitcoin.paymentchannel.Protos.Initiate.newBuilder(initiate_).mergeFrom(value).buildPartial();
+          } else {
+            initiate_ = value;
+          }
+          onChanged();
+        } else {
+          initiateBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      public Builder clearInitiate() {
+        if (initiateBuilder_ == null) {
+          initiate_ = org.bitcoin.paymentchannel.Protos.Initiate.getDefaultInstance();
+          onChanged();
+        } else {
+          initiateBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.Initiate.Builder getInitiateBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getInitiateFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.InitiateOrBuilder getInitiateOrBuilder() {
+        if (initiateBuilder_ != null) {
+          return initiateBuilder_.getMessageOrBuilder();
+        } else {
+          return initiate_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.Initiate initiate = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.Initiate, org.bitcoin.paymentchannel.Protos.Initiate.Builder, org.bitcoin.paymentchannel.Protos.InitiateOrBuilder> 
+          getInitiateFieldBuilder() {
+        if (initiateBuilder_ == null) {
+          initiateBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.Initiate, org.bitcoin.paymentchannel.Protos.Initiate.Builder, org.bitcoin.paymentchannel.Protos.InitiateOrBuilder>(
+                  getInitiate(),
+                  getParentForChildren(),
+                  isClean());
+          initiate_ = null;
+        }
+        return initiateBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.ProvideRefund provideRefund_ = org.bitcoin.paymentchannel.Protos.ProvideRefund.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ProvideRefund, org.bitcoin.paymentchannel.Protos.ProvideRefund.Builder, org.bitcoin.paymentchannel.Protos.ProvideRefundOrBuilder> provideRefundBuilder_;
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      public boolean hasProvideRefund() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ProvideRefund getProvideRefund() {
+        if (provideRefundBuilder_ == null) {
+          return provideRefund_;
+        } else {
+          return provideRefundBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      public Builder setProvideRefund(org.bitcoin.paymentchannel.Protos.ProvideRefund value) {
+        if (provideRefundBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          provideRefund_ = value;
+          onChanged();
+        } else {
+          provideRefundBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      public Builder setProvideRefund(
+          org.bitcoin.paymentchannel.Protos.ProvideRefund.Builder builderForValue) {
+        if (provideRefundBuilder_ == null) {
+          provideRefund_ = builderForValue.build();
+          onChanged();
+        } else {
+          provideRefundBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      public Builder mergeProvideRefund(org.bitcoin.paymentchannel.Protos.ProvideRefund value) {
+        if (provideRefundBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+              provideRefund_ != org.bitcoin.paymentchannel.Protos.ProvideRefund.getDefaultInstance()) {
+            provideRefund_ =
+              org.bitcoin.paymentchannel.Protos.ProvideRefund.newBuilder(provideRefund_).mergeFrom(value).buildPartial();
+          } else {
+            provideRefund_ = value;
+          }
+          onChanged();
+        } else {
+          provideRefundBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      public Builder clearProvideRefund() {
+        if (provideRefundBuilder_ == null) {
+          provideRefund_ = org.bitcoin.paymentchannel.Protos.ProvideRefund.getDefaultInstance();
+          onChanged();
+        } else {
+          provideRefundBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ProvideRefund.Builder getProvideRefundBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return getProvideRefundFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ProvideRefundOrBuilder getProvideRefundOrBuilder() {
+        if (provideRefundBuilder_ != null) {
+          return provideRefundBuilder_.getMessageOrBuilder();
+        } else {
+          return provideRefund_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideRefund provide_refund = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ProvideRefund, org.bitcoin.paymentchannel.Protos.ProvideRefund.Builder, org.bitcoin.paymentchannel.Protos.ProvideRefundOrBuilder> 
+          getProvideRefundFieldBuilder() {
+        if (provideRefundBuilder_ == null) {
+          provideRefundBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.ProvideRefund, org.bitcoin.paymentchannel.Protos.ProvideRefund.Builder, org.bitcoin.paymentchannel.Protos.ProvideRefundOrBuilder>(
+                  getProvideRefund(),
+                  getParentForChildren(),
+                  isClean());
+          provideRefund_ = null;
+        }
+        return provideRefundBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.ReturnRefund returnRefund_ = org.bitcoin.paymentchannel.Protos.ReturnRefund.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ReturnRefund, org.bitcoin.paymentchannel.Protos.ReturnRefund.Builder, org.bitcoin.paymentchannel.Protos.ReturnRefundOrBuilder> returnRefundBuilder_;
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      public boolean hasReturnRefund() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ReturnRefund getReturnRefund() {
+        if (returnRefundBuilder_ == null) {
+          return returnRefund_;
+        } else {
+          return returnRefundBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      public Builder setReturnRefund(org.bitcoin.paymentchannel.Protos.ReturnRefund value) {
+        if (returnRefundBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          returnRefund_ = value;
+          onChanged();
+        } else {
+          returnRefundBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000020;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      public Builder setReturnRefund(
+          org.bitcoin.paymentchannel.Protos.ReturnRefund.Builder builderForValue) {
+        if (returnRefundBuilder_ == null) {
+          returnRefund_ = builderForValue.build();
+          onChanged();
+        } else {
+          returnRefundBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000020;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      public Builder mergeReturnRefund(org.bitcoin.paymentchannel.Protos.ReturnRefund value) {
+        if (returnRefundBuilder_ == null) {
+          if (((bitField0_ & 0x00000020) == 0x00000020) &&
+              returnRefund_ != org.bitcoin.paymentchannel.Protos.ReturnRefund.getDefaultInstance()) {
+            returnRefund_ =
+              org.bitcoin.paymentchannel.Protos.ReturnRefund.newBuilder(returnRefund_).mergeFrom(value).buildPartial();
+          } else {
+            returnRefund_ = value;
+          }
+          onChanged();
+        } else {
+          returnRefundBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000020;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      public Builder clearReturnRefund() {
+        if (returnRefundBuilder_ == null) {
+          returnRefund_ = org.bitcoin.paymentchannel.Protos.ReturnRefund.getDefaultInstance();
+          onChanged();
+        } else {
+          returnRefundBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000020);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ReturnRefund.Builder getReturnRefundBuilder() {
+        bitField0_ |= 0x00000020;
+        onChanged();
+        return getReturnRefundFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ReturnRefundOrBuilder getReturnRefundOrBuilder() {
+        if (returnRefundBuilder_ != null) {
+          return returnRefundBuilder_.getMessageOrBuilder();
+        } else {
+          return returnRefund_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ReturnRefund return_refund = 6;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ReturnRefund, org.bitcoin.paymentchannel.Protos.ReturnRefund.Builder, org.bitcoin.paymentchannel.Protos.ReturnRefundOrBuilder> 
+          getReturnRefundFieldBuilder() {
+        if (returnRefundBuilder_ == null) {
+          returnRefundBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.ReturnRefund, org.bitcoin.paymentchannel.Protos.ReturnRefund.Builder, org.bitcoin.paymentchannel.Protos.ReturnRefundOrBuilder>(
+                  getReturnRefund(),
+                  getParentForChildren(),
+                  isClean());
+          returnRefund_ = null;
+        }
+        return returnRefundBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.ProvideContract provideContract_ = org.bitcoin.paymentchannel.Protos.ProvideContract.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ProvideContract, org.bitcoin.paymentchannel.Protos.ProvideContract.Builder, org.bitcoin.paymentchannel.Protos.ProvideContractOrBuilder> provideContractBuilder_;
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      public boolean hasProvideContract() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ProvideContract getProvideContract() {
+        if (provideContractBuilder_ == null) {
+          return provideContract_;
+        } else {
+          return provideContractBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      public Builder setProvideContract(org.bitcoin.paymentchannel.Protos.ProvideContract value) {
+        if (provideContractBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          provideContract_ = value;
+          onChanged();
+        } else {
+          provideContractBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      public Builder setProvideContract(
+          org.bitcoin.paymentchannel.Protos.ProvideContract.Builder builderForValue) {
+        if (provideContractBuilder_ == null) {
+          provideContract_ = builderForValue.build();
+          onChanged();
+        } else {
+          provideContractBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      public Builder mergeProvideContract(org.bitcoin.paymentchannel.Protos.ProvideContract value) {
+        if (provideContractBuilder_ == null) {
+          if (((bitField0_ & 0x00000040) == 0x00000040) &&
+              provideContract_ != org.bitcoin.paymentchannel.Protos.ProvideContract.getDefaultInstance()) {
+            provideContract_ =
+              org.bitcoin.paymentchannel.Protos.ProvideContract.newBuilder(provideContract_).mergeFrom(value).buildPartial();
+          } else {
+            provideContract_ = value;
+          }
+          onChanged();
+        } else {
+          provideContractBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      public Builder clearProvideContract() {
+        if (provideContractBuilder_ == null) {
+          provideContract_ = org.bitcoin.paymentchannel.Protos.ProvideContract.getDefaultInstance();
+          onChanged();
+        } else {
+          provideContractBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000040);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ProvideContract.Builder getProvideContractBuilder() {
+        bitField0_ |= 0x00000040;
+        onChanged();
+        return getProvideContractFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ProvideContractOrBuilder getProvideContractOrBuilder() {
+        if (provideContractBuilder_ != null) {
+          return provideContractBuilder_.getMessageOrBuilder();
+        } else {
+          return provideContract_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.ProvideContract provide_contract = 7;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.ProvideContract, org.bitcoin.paymentchannel.Protos.ProvideContract.Builder, org.bitcoin.paymentchannel.Protos.ProvideContractOrBuilder> 
+          getProvideContractFieldBuilder() {
+        if (provideContractBuilder_ == null) {
+          provideContractBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.ProvideContract, org.bitcoin.paymentchannel.Protos.ProvideContract.Builder, org.bitcoin.paymentchannel.Protos.ProvideContractOrBuilder>(
+                  getProvideContract(),
+                  getParentForChildren(),
+                  isClean());
+          provideContract_ = null;
+        }
+        return provideContractBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.UpdatePayment updatePayment_ = org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.UpdatePayment, org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder, org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder> updatePaymentBuilder_;
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      public boolean hasUpdatePayment() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.UpdatePayment getUpdatePayment() {
+        if (updatePaymentBuilder_ == null) {
+          return updatePayment_;
+        } else {
+          return updatePaymentBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      public Builder setUpdatePayment(org.bitcoin.paymentchannel.Protos.UpdatePayment value) {
+        if (updatePaymentBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          updatePayment_ = value;
+          onChanged();
+        } else {
+          updatePaymentBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      public Builder setUpdatePayment(
+          org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder builderForValue) {
+        if (updatePaymentBuilder_ == null) {
+          updatePayment_ = builderForValue.build();
+          onChanged();
+        } else {
+          updatePaymentBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      public Builder mergeUpdatePayment(org.bitcoin.paymentchannel.Protos.UpdatePayment value) {
+        if (updatePaymentBuilder_ == null) {
+          if (((bitField0_ & 0x00000080) == 0x00000080) &&
+              updatePayment_ != org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance()) {
+            updatePayment_ =
+              org.bitcoin.paymentchannel.Protos.UpdatePayment.newBuilder(updatePayment_).mergeFrom(value).buildPartial();
+          } else {
+            updatePayment_ = value;
+          }
+          onChanged();
+        } else {
+          updatePaymentBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000080;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      public Builder clearUpdatePayment() {
+        if (updatePaymentBuilder_ == null) {
+          updatePayment_ = org.bitcoin.paymentchannel.Protos.UpdatePayment.getDefaultInstance();
+          onChanged();
+        } else {
+          updatePaymentBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000080);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder getUpdatePaymentBuilder() {
+        bitField0_ |= 0x00000080;
+        onChanged();
+        return getUpdatePaymentFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder getUpdatePaymentOrBuilder() {
+        if (updatePaymentBuilder_ != null) {
+          return updatePaymentBuilder_.getMessageOrBuilder();
+        } else {
+          return updatePayment_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.UpdatePayment update_payment = 8;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.UpdatePayment, org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder, org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder> 
+          getUpdatePaymentFieldBuilder() {
+        if (updatePaymentBuilder_ == null) {
+          updatePaymentBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.UpdatePayment, org.bitcoin.paymentchannel.Protos.UpdatePayment.Builder, org.bitcoin.paymentchannel.Protos.UpdatePaymentOrBuilder>(
+                  getUpdatePayment(),
+                  getParentForChildren(),
+                  isClean());
+          updatePayment_ = null;
+        }
+        return updatePaymentBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.PaymentAck paymentAck_ = org.bitcoin.paymentchannel.Protos.PaymentAck.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.PaymentAck, org.bitcoin.paymentchannel.Protos.PaymentAck.Builder, org.bitcoin.paymentchannel.Protos.PaymentAckOrBuilder> paymentAckBuilder_;
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      public boolean hasPaymentAck() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.PaymentAck getPaymentAck() {
+        if (paymentAckBuilder_ == null) {
+          return paymentAck_;
+        } else {
+          return paymentAckBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      public Builder setPaymentAck(org.bitcoin.paymentchannel.Protos.PaymentAck value) {
+        if (paymentAckBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          paymentAck_ = value;
+          onChanged();
+        } else {
+          paymentAckBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      public Builder setPaymentAck(
+          org.bitcoin.paymentchannel.Protos.PaymentAck.Builder builderForValue) {
+        if (paymentAckBuilder_ == null) {
+          paymentAck_ = builderForValue.build();
+          onChanged();
+        } else {
+          paymentAckBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      public Builder mergePaymentAck(org.bitcoin.paymentchannel.Protos.PaymentAck value) {
+        if (paymentAckBuilder_ == null) {
+          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+              paymentAck_ != org.bitcoin.paymentchannel.Protos.PaymentAck.getDefaultInstance()) {
+            paymentAck_ =
+              org.bitcoin.paymentchannel.Protos.PaymentAck.newBuilder(paymentAck_).mergeFrom(value).buildPartial();
+          } else {
+            paymentAck_ = value;
+          }
+          onChanged();
+        } else {
+          paymentAckBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      public Builder clearPaymentAck() {
+        if (paymentAckBuilder_ == null) {
+          paymentAck_ = org.bitcoin.paymentchannel.Protos.PaymentAck.getDefaultInstance();
+          onChanged();
+        } else {
+          paymentAckBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.PaymentAck.Builder getPaymentAckBuilder() {
+        bitField0_ |= 0x00000100;
+        onChanged();
+        return getPaymentAckFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.PaymentAckOrBuilder getPaymentAckOrBuilder() {
+        if (paymentAckBuilder_ != null) {
+          return paymentAckBuilder_.getMessageOrBuilder();
+        } else {
+          return paymentAck_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.PaymentAck payment_ack = 11;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.PaymentAck, org.bitcoin.paymentchannel.Protos.PaymentAck.Builder, org.bitcoin.paymentchannel.Protos.PaymentAckOrBuilder> 
+          getPaymentAckFieldBuilder() {
+        if (paymentAckBuilder_ == null) {
+          paymentAckBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.PaymentAck, org.bitcoin.paymentchannel.Protos.PaymentAck.Builder, org.bitcoin.paymentchannel.Protos.PaymentAckOrBuilder>(
+                  getPaymentAck(),
+                  getParentForChildren(),
+                  isClean());
+          paymentAck_ = null;
+        }
+        return paymentAckBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.Settlement settlement_ = org.bitcoin.paymentchannel.Protos.Settlement.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.Settlement, org.bitcoin.paymentchannel.Protos.Settlement.Builder, org.bitcoin.paymentchannel.Protos.SettlementOrBuilder> settlementBuilder_;
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      public boolean hasSettlement() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.Settlement getSettlement() {
+        if (settlementBuilder_ == null) {
+          return settlement_;
+        } else {
+          return settlementBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      public Builder setSettlement(org.bitcoin.paymentchannel.Protos.Settlement value) {
+        if (settlementBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          settlement_ = value;
+          onChanged();
+        } else {
+          settlementBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      public Builder setSettlement(
+          org.bitcoin.paymentchannel.Protos.Settlement.Builder builderForValue) {
+        if (settlementBuilder_ == null) {
+          settlement_ = builderForValue.build();
+          onChanged();
+        } else {
+          settlementBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      public Builder mergeSettlement(org.bitcoin.paymentchannel.Protos.Settlement value) {
+        if (settlementBuilder_ == null) {
+          if (((bitField0_ & 0x00000200) == 0x00000200) &&
+              settlement_ != org.bitcoin.paymentchannel.Protos.Settlement.getDefaultInstance()) {
+            settlement_ =
+              org.bitcoin.paymentchannel.Protos.Settlement.newBuilder(settlement_).mergeFrom(value).buildPartial();
+          } else {
+            settlement_ = value;
+          }
+          onChanged();
+        } else {
+          settlementBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      public Builder clearSettlement() {
+        if (settlementBuilder_ == null) {
+          settlement_ = org.bitcoin.paymentchannel.Protos.Settlement.getDefaultInstance();
+          onChanged();
+        } else {
+          settlementBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.Settlement.Builder getSettlementBuilder() {
+        bitField0_ |= 0x00000200;
+        onChanged();
+        return getSettlementFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.SettlementOrBuilder getSettlementOrBuilder() {
+        if (settlementBuilder_ != null) {
+          return settlementBuilder_.getMessageOrBuilder();
+        } else {
+          return settlement_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.Settlement settlement = 9;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.Settlement, org.bitcoin.paymentchannel.Protos.Settlement.Builder, org.bitcoin.paymentchannel.Protos.SettlementOrBuilder> 
+          getSettlementFieldBuilder() {
+        if (settlementBuilder_ == null) {
+          settlementBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.Settlement, org.bitcoin.paymentchannel.Protos.Settlement.Builder, org.bitcoin.paymentchannel.Protos.SettlementOrBuilder>(
+                  getSettlement(),
+                  getParentForChildren(),
+                  isClean());
+          settlement_ = null;
+        }
+        return settlementBuilder_;
+      }
+
+      private org.bitcoin.paymentchannel.Protos.Error error_ = org.bitcoin.paymentchannel.Protos.Error.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.Error, org.bitcoin.paymentchannel.Protos.Error.Builder, org.bitcoin.paymentchannel.Protos.ErrorOrBuilder> errorBuilder_;
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      public boolean hasError() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.Error getError() {
+        if (errorBuilder_ == null) {
+          return error_;
+        } else {
+          return errorBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      public Builder setError(org.bitcoin.paymentchannel.Protos.Error value) {
+        if (errorBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          error_ = value;
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000400;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      public Builder setError(
+          org.bitcoin.paymentchannel.Protos.Error.Builder builderForValue) {
+        if (errorBuilder_ == null) {
+          error_ = builderForValue.build();
+          onChanged();
+        } else {
+          errorBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000400;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      public Builder mergeError(org.bitcoin.paymentchannel.Protos.Error value) {
+        if (errorBuilder_ == null) {
+          if (((bitField0_ & 0x00000400) == 0x00000400) &&
+              error_ != org.bitcoin.paymentchannel.Protos.Error.getDefaultInstance()) {
+            error_ =
+              org.bitcoin.paymentchannel.Protos.Error.newBuilder(error_).mergeFrom(value).buildPartial();
+          } else {
+            error_ = value;
+          }
+          onChanged();
+        } else {
+          errorBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000400;
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      public Builder clearError() {
+        if (errorBuilder_ == null) {
+          error_ = org.bitcoin.paymentchannel.Protos.Error.getDefaultInstance();
+          onChanged();
+        } else {
+          errorBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000400);
+        return this;
+      }
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.Error.Builder getErrorBuilder() {
+        bitField0_ |= 0x00000400;
+        onChanged();
+        return getErrorFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      public org.bitcoin.paymentchannel.Protos.ErrorOrBuilder getErrorOrBuilder() {
+        if (errorBuilder_ != null) {
+          return errorBuilder_.getMessageOrBuilder();
+        } else {
+          return error_;
+        }
+      }
+      /**
+       * <code>optional .paymentchannels.Error error = 10;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoin.paymentchannel.Protos.Error, org.bitcoin.paymentchannel.Protos.Error.Builder, org.bitcoin.paymentchannel.Protos.ErrorOrBuilder> 
+          getErrorFieldBuilder() {
+        if (errorBuilder_ == null) {
+          errorBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoin.paymentchannel.Protos.Error, org.bitcoin.paymentchannel.Protos.Error.Builder, org.bitcoin.paymentchannel.Protos.ErrorOrBuilder>(
+                  getError(),
+                  getParentForChildren(),
+                  isClean());
+          error_ = null;
+        }
+        return errorBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.TwoWayChannelMessage)
+    }
+
+    static {
+      defaultInstance = new TwoWayChannelMessage(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.TwoWayChannelMessage)
+  }
+
+  public interface ClientVersionOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:paymentchannels.ClientVersion)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required int32 major = 1;</code>
+     */
+    boolean hasMajor();
+    /**
+     * <code>required int32 major = 1;</code>
+     */
+    int getMajor();
+
+    /**
+     * <code>optional int32 minor = 2 [default = 0];</code>
+     */
+    boolean hasMinor();
+    /**
+     * <code>optional int32 minor = 2 [default = 0];</code>
+     */
+    int getMinor();
+
+    /**
+     * <code>optional bytes previous_channel_contract_hash = 3;</code>
+     *
+     * <pre>
+     * The hash of the multisig contract of a previous channel. This indicates that the primary
+     * wishes to reopen the given channel. If the server is willing to reopen it, it simply
+     * responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+     * follows SERVER_VERSION with an Initiate representing a new channel
+     * </pre>
+     */
+    boolean hasPreviousChannelContractHash();
+    /**
+     * <code>optional bytes previous_channel_contract_hash = 3;</code>
+     *
+     * <pre>
+     * The hash of the multisig contract of a previous channel. This indicates that the primary
+     * wishes to reopen the given channel. If the server is willing to reopen it, it simply
+     * responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+     * follows SERVER_VERSION with an Initiate representing a new channel
+     * </pre>
+     */
+    com.google.protobuf.ByteString getPreviousChannelContractHash();
+
+    /**
+     * <code>optional uint64 time_window_secs = 4 [default = 86340];</code>
+     *
+     * <pre>
+     * How many seconds should the channel be open, only used when a new channel is created.
+     * Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+     * </pre>
+     */
+    boolean hasTimeWindowSecs();
+    /**
+     * <code>optional uint64 time_window_secs = 4 [default = 86340];</code>
+     *
+     * <pre>
+     * How many seconds should the channel be open, only used when a new channel is created.
+     * Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+     * </pre>
+     */
+    long getTimeWindowSecs();
+  }
+  /**
+   * Protobuf type {@code paymentchannels.ClientVersion}
+   *
+   * <pre>
+   * Sent by primary to secondary on opening the connection. If anything is received before this is
+   * sent, the socket is closed.
+   * </pre>
+   */
+  public static final class ClientVersion extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.ClientVersion)
+      ClientVersionOrBuilder {
+    // Use ClientVersion.newBuilder() to construct.
+    private ClientVersion(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ClientVersion(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ClientVersion defaultInstance;
+    public static ClientVersion getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ClientVersion getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ClientVersion(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              major_ = input.readInt32();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              minor_ = input.readInt32();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              previousChannelContractHash_ = input.readBytes();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              timeWindowSecs_ = input.readUInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ClientVersion_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoin.paymentchannel.Protos.internal_static_paymentchannels_ClientVersion_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoin.paymentchannel.Protos.ClientVersion.class, org.bitcoin.paymentchannel.Protos.ClientVersion.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ClientVersion> PARSER =
+        new com.google.protobuf.AbstractParser<ClientVersion>() {
+      public ClientVersion parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ClientVersion(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ClientVersion> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int MAJOR_FIELD_NUMBER = 1;
+    private int major_;
+    /**
+     * <code>required int32 major = 1;</code>
+     */
+    public boolean hasMajor() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required int32 major = 1;</code>
+     */
+    public int getMajor() {
+      return major_;
+    }
+
+    public static final int MINOR_FIELD_NUMBER = 2;
+    private int minor_;
+    /**
+     * <code>optional int32 minor = 2 [default = 0];</code>
+     */
+    public boolean hasMinor() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional int32 minor = 2 [default = 0];</code>
+     */
+    public int getMinor() {
+      return minor_;
+    }
+
+    public static final int PREVIOUS_CHANNEL_CONTRACT_HASH_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString previousChannelContractHash_;
+    /**
+     * <code>optional bytes previous_channel_contract_hash = 3;</code>
+     *
+     * <pre>
+     * The hash of the multisig contract of a previous channel. This indicates that the primary
+     * wishes to reopen the given channel. If the server is willing to reopen it, it simply
+     * responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+     * follows SERVER_VERSION with an Initiate representing a new channel
+     * </pre>
+     */
+    public boolean hasPreviousChannelContractHash() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional bytes previous_channel_contract_hash = 3;</code>
+     *
+     * <pre>
+     * The hash of the multisig contract of a previous channel. This indicates that the primary
+     * wishes to reopen the given channel. If the server is willing to reopen it, it simply
+     * responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+     * follows SERVER_VERSION with an Initiate representing a new channel
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getPreviousChannelContractHash() {
+      return previousChannelContractHash_;
+    }
+
+    public static final int TIME_WINDOW_SECS_FIELD_NUMBER = 4;
+    private long timeWindowSecs_;
+    /**
+     * <code>optional uint64 time_window_secs = 4 [default = 86340];</code>
+     *
+     * <pre>
+     * How many seconds should the channel be open, only used when a new channel is created.
+     * Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+     * </pre>
+     */
+    public boolean hasTimeWindowSecs() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional uint64 time_window_secs = 4 [default = 86340];</code>
+     *
+     * <pre>
+     * How many seconds should the channel be open, only used when a new channel is created.
+     * Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+     * </pre>
+     */
+    public long getTimeWindowSecs() {
+      return timeWindowSecs_;
+    }
+
+    private void initFields() {
+      major_ = 0;
+      minor_ = 0;
+      previousChannelContractHash_ = com.google.protobuf.ByteString.EMPTY;
+      timeWindowSecs_ = 86340L;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasMajor()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, major_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(2, minor_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, previousChannelContractHash_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeUInt64(4, timeWindowSecs_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, major_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, minor_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, previousChannelContractHash_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(4, timeWindowSecs_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoin.paymentchannel.Protos.ClientVersion parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
