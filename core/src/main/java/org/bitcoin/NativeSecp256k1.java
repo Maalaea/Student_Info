@@ -438,4 +438,36 @@ public class NativeSecp256k1 {
         byte[] sigArr = retByteArray[0];
         int retVal = new BigInteger(new byte[] { retByteArray[1][0] }).intValue();
 
-        assertEquals(sigArr.length, 64, "Got bad signature le
+        assertEquals(sigArr.length, 64, "Got bad signature length.");
+
+        return retVal == 0 ? new byte[0] : sigArr;
+    }
+
+    private static native long secp256k1_ctx_clone(long context);
+
+    private static native int secp256k1_context_randomize(ByteBuffer byteBuff, long context);
+
+    private static native byte[][] secp256k1_privkey_tweak_add(ByteBuffer byteBuff, long context);
+
+    private static native byte[][] secp256k1_privkey_tweak_mul(ByteBuffer byteBuff, long context);
+
+    private static native byte[][] secp256k1_pubkey_tweak_add(ByteBuffer byteBuff, long context, int pubLen);
+
+    private static native byte[][] secp256k1_pubkey_tweak_mul(ByteBuffer byteBuff, long context, int pubLen);
+
+    private static native void secp256k1_destroy_context(long context);
+
+    private static native int secp256k1_ecdsa_verify(ByteBuffer byteBuff, long context, int sigLen, int pubLen);
+
+    private static native byte[][] secp256k1_ecdsa_sign(ByteBuffer byteBuff, long context);
+
+    private static native int secp256k1_ec_seckey_verify(ByteBuffer byteBuff, long context);
+
+    private static native byte[][] secp256k1_ec_pubkey_create(ByteBuffer byteBuff, long context);
+
+    private static native byte[][] secp256k1_ec_pubkey_parse(ByteBuffer byteBuff, long context, int inputLen);
+
+    private static native byte[][] secp256k1_schnorr_sign(ByteBuffer byteBuff, long context);
+
+    private static native byte[][] secp256k1_ecdh(ByteBuffer byteBuff, long context, int inputLen);
+}
