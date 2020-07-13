@@ -19,4 +19,44 @@ package org.bitcoin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ja
+import java.security.AccessControlException;
+
+/**
+ * This class holds the context reference used in native methods to handle ECDSA operations.
+ */
+public class Secp256k1Context {
+
+    private static final boolean enabled; // true if the library is loaded
+    private static final long context; // ref to pointer to context obj
+
+    private static final Logger log = LoggerFactory.getLogger(Secp256k1Context.class);
+
+    static { // static initializer
+        boolean isEnabled = true;
+        long contextRef = -1;
+        try {
+            System.loadLibrary("wallycore");
+            contextRef = secp256k1_init_context();
+        } catch (UnsatisfiedLinkError e) {
+            log.info(e.toString());
+            isEnabled = false;
+        } catch (AccessControlException e) {
+            log.debug(e.toString());
+            isEnabled = false;
+        }
+        enabled = isEnabled;
+        context = contextRef;
+    }
+
+    public static boolean isEnabled() {
+        return enabled;
+    }
+
+    public static long getContext() {
+        if (!enabled)
+            return -1; // sanity check
+        return context;
+    }
+
+    private static native long secp256k1_init_context();
+}
