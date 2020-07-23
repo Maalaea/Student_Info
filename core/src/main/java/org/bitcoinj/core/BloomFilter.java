@@ -288,3 +288,79 @@ public class BloomFilter extends Message {
             return BloomUpdate.UPDATE_NONE;
         else if (nFlags == 1)
             return BloomUpdate.UPDATE_ALL;
+        else if (nFlags == 2)
+            return BloomUpdate.UPDATE_P2PUBKEY_ONLY;
+        else
+            throw new IllegalStateException("Unknown flag combination");
+    }
+
+    /**
+     * Creates a new FilteredBlock from the given Block, using this filter to select transactions. Matches can cause the
+     * filter to be updated with the matched element, this ensures that when a filter is applied to a block, spends of
+     * matched transactions are also matched. However it means this filter can be mutated by the operation. The returned
+     * filtered block already has the matched transactions associated with it.
+     */
+    public synchronized FilteredBlock applyAndUpdate(Block block) {
+        List<Transaction> txns = block.getTransactions();
+        List<Sha256Hash> txHashes = new ArrayList<>(txns.size());
+        List<Transaction> matched = Lists.newArrayList();
+        byte[] bits = new byte[(int) Math.ceil(txns.size() / 8.0)];
+        for (int i = 0; i < txns.size(); i++) {
+            Transaction tx = txns.get(i);
+            txHashes.add(tx.getHash());
+            if (applyAndUpdate(tx)) {
+                Utils.setBitLE(bits, i);
+                matched.add(tx);
+            }
+        }
+        PartialMerkleTree pmt = PartialMerkleTree.buildFromLeaves(block.getParams(), bits, txHashes);
+        FilteredBlock filteredBlock = new FilteredBlock(block.getParams(), block.cloneAsHeader(), pmt);
+        for (Transaction transaction : matched)
+            filteredBlock.provideTransaction(transaction);
+        return filteredBlock;
+    }
+
+    public synchronized boolean applyAndUpdate(Transaction tx) {
+        if (contains(tx.getHash().getBytes()))
+            return true;
+        boolean found = false;
+        BloomUpdate flag = getUpdateFlag();
+        for (TransactionOutput output : tx.getOutputs()) {
+            Script script = output.getScriptPubKey();
+            for (ScriptChunk chunk : script.getChunks()) {
+                if (!chunk.isPushData())
+                    continue;
+                if (contains(chunk.data)) {
+                    boolean isSendingToPubKeys = script.isSentToRawPubKey() || script.isSentToMultiSig();
+                    if (flag == BloomUpdate.UPDATE_ALL || (flag == BloomUpdate.UPDATE_P2PUBKEY_ONLY && isSendingToPubKeys))
+                        insert(output.getOutPointFor().unsafeBitcoinSerialize());
+                    found = true;
+                }
+            }
+        }
+        if (found) return true;
+        for (TransactionInput input : tx.getInputs()) {
+            if (contains(input.getOutpoint().unsafeBitcoinSerialize())) {
+                return true;
+            }
+            for (ScriptChunk chunk : input.getScriptSig().getChunks()) {
+                if (chunk.isPushData() && contains(chunk.data))
+                    return true;
+            }
+        }
+        return false;
+    }
+    
+    @Override
+    public synchronized boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BloomFilter other = (BloomFilter) o;
+        return hashFuncs == other.hashFuncs && nTweak == other.nTweak && Arrays.equals(data, other.data);
+    }
+
+    @Override
+    public synchronized int hashCode() {
+        return Objects.hashCode(hashFuncs, nTweak, Arrays.hashCode(data));
+    }
+}
