@@ -835,3 +835,247 @@ public abstract class AbstractBlockChain {
      * found (ie they are not part of the same chain). Returns newChainHead or chainHead if they don't actually diverge
      * but are part of the same chain.
      */
+    private static StoredBlock findSplit(StoredBlock newChainHead, StoredBlock oldChainHead,
+                                         BlockStore store) throws BlockStoreException {
+        StoredBlock currentChainCursor = oldChainHead;
+        StoredBlock newChainCursor = newChainHead;
+        // Loop until we find the block both chains have in common. Example:
+        //
+        //    A -> B -> C -> D
+        //         \--> E -> F -> G
+        //
+        // findSplit will return block B. oldChainHead = D and newChainHead = G.
+        while (!currentChainCursor.equals(newChainCursor)) {
+            if (currentChainCursor.getHeight() > newChainCursor.getHeight()) {
+                currentChainCursor = currentChainCursor.getPrev(store);
+                checkNotNull(currentChainCursor, "Attempt to follow an orphan chain");
+            } else {
+                newChainCursor = newChainCursor.getPrev(store);
+                checkNotNull(newChainCursor, "Attempt to follow an orphan chain");
+            }
+        }
+        return currentChainCursor;
+    }
+
+    /**
+     * @return the height of the best known chain, convenience for <tt>getChainHead().getHeight()</tt>.
+     */
+    public final int getBestChainHeight() {
+        return getChainHead().getHeight();
+    }
+
+    public enum NewBlockType {
+        BEST_CHAIN,
+        SIDE_CHAIN
+    }
+
+    private static void sendTransactionsToListener(StoredBlock block, NewBlockType blockType,
+                                                   TransactionReceivedInBlockListener listener,
+                                                   int relativityOffset,
+                                                   List<Transaction> transactions,
+                                                   boolean clone,
+                                                   Set<Sha256Hash> falsePositives) throws VerificationException {
+        for (Transaction tx : transactions) {
+            try {
+                falsePositives.remove(tx.getHash());
+                if (clone)
+                    tx = tx.params.getDefaultSerializer().makeTransaction(tx.bitcoinSerialize());
+                listener.receiveFromBlock(tx, block, blockType, relativityOffset++);
+            } catch (ScriptException e) {
+                // We don't want scripts we don't understand to break the block chain so just note that this tx was
+                // not scanned here and continue.
+                log.warn("Failed to parse a script: " + e.toString());
+            } catch (ProtocolException e) {
+                // Failed to duplicate tx, should never happen.
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    protected void setChainHead(StoredBlock chainHead) throws BlockStoreException {
+        doSetChainHead(chainHead);
+        synchronized (chainHeadLock) {
+            this.chainHead = chainHead;
+        }
+    }
+
+    /**
+     * For each block in orphanBlocks, see if we can now fit it on top of the chain and if so, do so.
+     */
+    private void tryConnectingOrphans() throws VerificationException, BlockStoreException, PrunedException {
+        checkState(lock.isHeldByCurrentThread());
+        // For each block in our orphan list, try and fit it onto the head of the chain. If we succeed remove it
+        // from the list and keep going. If we changed the head of the list at the end of the round try again until
+        // we can't fit anything else on the top.
+        //
+        // This algorithm is kind of crappy, we should do a topo-sort then just connect them in order, but for small
+        // numbers of orphan blocks it does OK.
+        int blocksConnectedThisRound;
+        do {
+            blocksConnectedThisRound = 0;
+            Iterator<OrphanBlock> iter = orphanBlocks.values().iterator();
+            while (iter.hasNext()) {
+                OrphanBlock orphanBlock = iter.next();
+                // Look up the blocks previous.
+                StoredBlock prev = getStoredBlockInCurrentScope(orphanBlock.block.getPrevBlockHash());
+                if (prev == null) {
+                    // This is still an unconnected/orphan block.
+                    log.debug("Orphan block {} is not connectable right now", orphanBlock.block.getHash());
+                    continue;
+                }
+                // Otherwise we can connect it now.
+                // False here ensures we don't recurse infinitely downwards when connecting huge chains.
+                log.info("Connected orphan {}", orphanBlock.block.getHash());
+                add(orphanBlock.block, false, orphanBlock.filteredTxHashes, orphanBlock.filteredTxn);
+                iter.remove();
+                blocksConnectedThisRound++;
+            }
+            if (blocksConnectedThisRound > 0) {
+                log.info("Connected {} orphan blocks.", blocksConnectedThisRound);
+            }
+        } while (blocksConnectedThisRound > 0);
+    }
+
+    /**
+     * Returns the block at the head of the current best chain. This is the block which represents the greatest
+     * amount of cumulative work done.
+     */
+    public StoredBlock getChainHead() {
+        synchronized (chainHeadLock) {
+            return chainHead;
+        }
+    }
+
+    /**
+     * An orphan block is one that does not connect to the chain anywhere (ie we can't find its parent, therefore
+     * it's an orphan). Typically this occurs when we are downloading the chain and didn't reach the head yet, and/or
+     * if a block is solved whilst we are downloading. It's possible that we see a small amount of orphan blocks which
+     * chain together, this method tries walking backwards through the known orphan blocks to find the bottom-most.
+     *
+     * @return from or one of froms parents, or null if "from" does not identify an orphan block
+     */
+    @Nullable
+    public Block getOrphanRoot(Sha256Hash from) {
+        lock.lock();
+        try {
+            OrphanBlock cursor = orphanBlocks.get(from);
+            if (cursor == null)
+                return null;
+            OrphanBlock tmp;
+            while ((tmp = orphanBlocks.get(cursor.block.getPrevBlockHash())) != null) {
+                cursor = tmp;
+            }
+            return cursor.block;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Returns true if the given block is currently in the orphan blocks list. */
+    public boolean isOrphan(Sha256Hash block) {
+        lock.lock();
+        try {
+            return orphanBlocks.containsKey(block);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns an estimate of when the given block will be reached, assuming a perfect 10 minute average for each
+     * block. This is useful for turning transaction lock times into human readable times. Note that a height in
+     * the past will still be estimated, even though the time of solving is actually known (we won't scan backwards
+     * through the chain to obtain the right answer).
+     */
+    public Date estimateBlockTime(int height) {
+        synchronized (chainHeadLock) {
+            long offset = height - chainHead.getHeight();
+            long headTime = chainHead.getHeader().getTimeSeconds();
+            long estimated = (headTime * 1000) + (1000L * 60L * 10L * offset);
+            return new Date(estimated);
+        }
+    }
+
+    /**
+     * Returns a future that completes when the block chain has reached the given height. Yields the
+     * {@link StoredBlock} of the block that reaches that height first. The future completes on a peer thread.
+     */
+    public ListenableFuture<StoredBlock> getHeightFuture(final int height) {
+        final SettableFuture<StoredBlock> result = SettableFuture.create();
+        addNewBestBlockListener(Threading.SAME_THREAD, new NewBestBlockListener() {
+            @Override
+            public void notifyNewBestBlock(StoredBlock block) throws VerificationException {
+                if (block.getHeight() >= height) {
+                    removeNewBestBlockListener(this);
+                    result.set(block);
+                }
+            }
+        });
+        return result;
+    }
+
+
+
+    /**
+     * The false positive rate is the average over all blockchain transactions of:
+     *
+     * - 1.0 if the transaction was false-positive (was irrelevant to all listeners)
+     * - 0.0 if the transaction was relevant or filtered out
+     */
+    public double getFalsePositiveRate() {
+        return falsePositiveRate;
+    }
+
+    /*
+     * We completed handling of a filtered block. Update false-positive estimate based
+     * on the total number of transactions in the original block.
+     *
+     * count includes filtered transactions, transactions that were passed in and were relevant
+     * and transactions that were false positives (i.e. includes all transactions in the block).
+     */
+    protected void trackFilteredTransactions(int count) {
+        // Track non-false-positives in batch.  Each non-false-positive counts as
+        // 0.0 towards the estimate.
+        //
+        // This is slightly off because we are applying false positive tracking before non-FP tracking,
+        // which counts FP as if they came at the beginning of the block.  Assuming uniform FP
+        // spread in a block, this will somewhat underestimate the FP rate (5% for 1000 tx block).
+        double alphaDecay = Math.pow(1 - FP_ESTIMATOR_ALPHA, count);
+
+        // new_rate = alpha_decay * new_rate
+        falsePositiveRate = alphaDecay * falsePositiveRate;
+
+        double betaDecay = Math.pow(1 - FP_ESTIMATOR_BETA, count);
+
+        // trend = beta * (new_rate - old_rate) + beta_decay * trend
+        falsePositiveTrend =
+                FP_ESTIMATOR_BETA * count * (falsePositiveRate - previousFalsePositiveRate) +
+                betaDecay * falsePositiveTrend;
+
+        // new_rate += alpha_decay * trend
+        falsePositiveRate += alphaDecay * falsePositiveTrend;
+
+        // Stash new_rate in old_rate
+        previousFalsePositiveRate = falsePositiveRate;
+    }
+
+    /* Irrelevant transactions were received.  Update false-positive estimate. */
+    void trackFalsePositives(int count) {
+        // Track false positives in batch by adding alpha to the false positive estimate once per count.
+        // Each false positive counts as 1.0 towards the estimate.
+        falsePositiveRate += FP_ESTIMATOR_ALPHA * count;
+        if (count > 0)
+            log.debug("{} false positives, current rate = {} trend = {}", count, falsePositiveRate, falsePositiveTrend);
+    }
+
+    /** Resets estimates of false positives. Used when the filter is sent to the peer. */
+    public void resetFalsePositiveEstimate() {
+        falsePositiveRate = 0;
+        falsePositiveTrend = 0;
+        previousFalsePositiveRate = 0;
+    }
+
+    protected VersionTally getVersionTally() {
+        return versionTally;
+    }
+}
