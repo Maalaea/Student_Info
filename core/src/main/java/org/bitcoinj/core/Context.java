@@ -24,4 +24,38 @@ import static com.google.common.base.Preconditions.*;
 // TODO: Add a working directory notion to Context and make various subsystems that want to use files default to that directory (eg. Orchid, block stores, wallet, etc).
 // TODO: Auto-register the block chain object here, and then use it in the (newly deprecated) TransactionConfidence.getDepthInBlocks() method: the new version should take an AbstractBlockChain specifically.
 //       Also use the block chain object reference from the context in PeerGroup and remove the other constructors, as it's easy to forget to wire things up.
-// TODO: Move Threading.USER_THREAD to here and leave behind just a source code stub. 
+// TODO: Move Threading.USER_THREAD to here and leave behind just a source code stub. Allow different instantiations of the library to use different user threads.
+// TODO: Keep a URI to where library internal data files can be found, to abstract over the lack of JAR files on Android.
+// TODO: Stash anything else that resembles global library configuration in here and use it to clean up the rest of the API without breaking people.
+// TODO: Move the TorClient into Context, so different parts of the library can read data over Tor without having to request it directly. (or maybe a general socket factory??)
+
+/**
+ * <p>The Context object holds various objects and pieces of configuration that are scoped to a specific instantiation of
+ * bitcoinj for a specific network. You can get an instance of this class through calling {@link #get()}.</p>
+ *
+ * <p>Context is new in 0.13 and the library is currently in a transitional period: you should create a Context that
+ * wraps your chosen network parameters before using the rest of the library. However if you don't, things will still
+ * work as a Context will be created for you and stashed in thread local storage. The context is then propagated between
+ * library created threads as needed. This automagical propagation and creation is a temporary mechanism: one day it
+ * will be removed to avoid confusing edge cases that could occur if the developer does not fully understand it e.g.
+ * in the case where multiple instances of the library are in use simultaneously.</p>
+ */
+public class Context {
+    private static final Logger log = LoggerFactory.getLogger(Context.class);
+
+    public static final int DEFAULT_EVENT_HORIZON = 100;
+
+    final private TxConfidenceTable confidenceTable;
+    final private NetworkParameters params;
+    final private int eventHorizon;
+    final private boolean ensureMinRequiredFee;
+    final private Coin feePerKb;
+
+    /**
+     * Creates a new context object. For now, this will be done for you by the framework. Eventually you will be
+     * expected to do this yourself in the same manner as fetching a NetworkParameters object (at the start of your app).
+     *
+     * @param params The network parameters that will be associated with this context.
+     */
+    public Context(NetworkParameters params) {
+        log.info
