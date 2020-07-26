@@ -58,4 +58,42 @@ public class Context {
      * @param params The network parameters that will be associated with this context.
      */
     public Context(NetworkParameters params) {
-        log.info
+        log.info("Creating bitcoinj {} context.", VersionMessage.BITCOINJ_VERSION);
+        this.confidenceTable = new TxConfidenceTable();
+        this.params = params;
+        this.eventHorizon = DEFAULT_EVENT_HORIZON;
+        this.ensureMinRequiredFee = true;
+        this.feePerKb = Transaction.DEFAULT_TX_FEE;
+        lastConstructed = this;
+        slot.set(this);
+    }
+
+    /**
+     * Creates a new custom context object. This is mainly meant for unit tests for now.
+     *
+     * @param params The network parameters that will be associated with this context.
+     * @param eventHorizon Number of blocks after which the library will delete data and be unable to always process reorgs (see {@link #getEventHorizon()}.
+     * @param feePerKb The default fee per 1000 bytes of transaction data to pay when completing transactions. For details, see {@link SendRequest#feePerKb}.
+     * @param ensureMinRequiredFee Whether to ensure the minimum required fee by default when completing transactions. For details, see {@link SendRequest#ensureMinRequiredFee}.
+     */
+    public Context(NetworkParameters params, int eventHorizon, Coin feePerKb, boolean ensureMinRequiredFee) {
+        log.info("Creating bitcoinj {} context.", VersionMessage.BITCOINJ_VERSION);
+        this.confidenceTable = new TxConfidenceTable();
+        this.params = params;
+        this.eventHorizon = eventHorizon;
+        this.ensureMinRequiredFee = ensureMinRequiredFee;
+        this.feePerKb = feePerKb;
+        lastConstructed = this;
+        slot.set(this);
+    }
+
+    private static volatile Context lastConstructed;
+    private static boolean isStrictMode;
+    private static final ThreadLocal<Context> slot = new ThreadLocal<>();
+
+    /**
+     * Returns the current context that is associated with the <b>calling thread</b>. BitcoinJ is an API that has thread
+     * affinity: much like OpenGL it expects each thread that accesses it to have been configured with a global Context
+     * object. This method returns that. Note that to help you develop, this method will <i>also</i> propagate whichever
+     * context was created last onto the current thread, if it's missing. However it will print an error when doing so
+    
