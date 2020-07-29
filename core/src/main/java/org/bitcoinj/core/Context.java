@@ -187,4 +187,16 @@ public class Context {
     }
 
     /**
-     * The default fee per 10
+     * The default fee per 1000 bytes of transaction data to pay when completing transactions. For details, see {@link SendRequest#feePerKb}.
+     */
+    public Coin getFeePerKb() {
+        return feePerKb;
+    }
+
+    /**
+     * Whether to ensure the minimum required fee by default when completing transactions. For details, see {@link SendRequest#ensureMinRequiredFee}.
+     */
+    public boolean isEnsureMinRequiredFee() {
+        return ensureMinRequiredFee;
+    }
+}
