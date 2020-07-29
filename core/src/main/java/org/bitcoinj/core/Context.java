@@ -134,4 +134,57 @@ public class Context {
     }
 
     // A temporary internal shim designed to help us migrate internally in a way that doesn't wreck source compatibility.
-    public static Context getOrCreate(NetworkParameters p
+    public static Context getOrCreate(NetworkParameters params) {
+        Context context;
+        try {
+            context = get();
+        } catch (IllegalStateException e) {
+            log.warn("Implicitly creating context. This is a migration step and this message will eventually go away.");
+            context = new Context(params);
+            return context;
+        }
+        if (context.getParams() != params)
+            throw new IllegalStateException("Context does not match implicit network params: " + context.getParams() + " vs " + params);
+        return context;
+    }
+
+    /**
+     * Sets the given context as the current thread context. You should use this if you create your own threads that
+     * want to create core BitcoinJ objects. Generally, if a class can accept a Context in its constructor and might
+     * be used (even indirectly) by a thread, you will want to call this first. Your task may be simplified by using
+     * a {@link org.bitcoinj.utils.ContextPropagatingThreadFactory}.
+     */
+    public static void propagate(Context context) {
+        slot.set(checkNotNull(context));
+    }
+
+    /**
+     * Returns the {@link TxConfidenceTable} created by this context. The pool tracks advertised
+     * and downloaded transactions so their confidence can be measured as a proportion of how many peers announced it.
+     * With an un-tampered with internet connection, the more peers announce a transaction the more confidence you can
+     * have that it's really valid.
+     */
+    public TxConfidenceTable getConfidenceTable() {
+        return confidenceTable;
+    }
+
+    /**
+     * Returns the {@link org.bitcoinj.core.NetworkParameters} specified when this context was (auto) created. The
+     * network parameters defines various hard coded constants for a specific instance of a Bitcoin network, such as
+     * main net, testnet, etc.
+     */
+    public NetworkParameters getParams() {
+        return params;
+    }
+
+    /**
+     * The event horizon is the number of blocks after which various bits of the library consider a transaction to be
+     * so confirmed that it's safe to delete data. Re-orgs larger than the event horizon will not be correctly
+     * processed, so the default value is high (100).
+     */
+    public int getEventHorizon() {
+        return eventHorizon;
+    }
+
+    /**
+     * The default fee per 10
