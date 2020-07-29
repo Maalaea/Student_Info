@@ -96,4 +96,42 @@ public class Context {
      * affinity: much like OpenGL it expects each thread that accesses it to have been configured with a global Context
      * object. This method returns that. Note that to help you develop, this method will <i>also</i> propagate whichever
      * context was created last onto the current thread, if it's missing. However it will print an error when doing so
-    
+     * because propagation of contexts is meant to be done manually: this is so two libraries or subsystems that
+     * independently use bitcoinj (or possibly alt coin forks of it) can operate correctly.
+     *
+     * @throws java.lang.IllegalStateException if no context exists at all or if we are in strict mode and there is no context.
+     */
+    public static Context get() {
+        Context tls = slot.get();
+        if (tls == null) {
+            if (isStrictMode) {
+                log.error("Thread is missing a bitcoinj context.");
+                log.error("You should use Context.propagate() or a ContextPropagatingThreadFactory.");
+                throw new IllegalStateException("missing context");
+            }
+            if (lastConstructed == null)
+                throw new IllegalStateException("You must construct a Context object before using bitcoinj!");
+            slot.set(lastConstructed);
+            log.error("Performing thread fixup: you are accessing bitcoinj via a thread that has not had any context set on it.");
+            log.error("This error has been corrected for, but doing this makes your app less robust.");
+            log.error("You should use Context.propagate() or a ContextPropagatingThreadFactory.");
+            log.error("Please refer to the user guide for more information about this.");
+            log.error("Thread name is {}.", Thread.currentThread().getName());
+            // TODO: Actually write the user guide section about this.
+            // TODO: If the above TODO makes it past the 0.13 release, kick Mike and tell him he sucks.
+            return lastConstructed;
+        } else {
+            return tls;
+        }
+    }
+
+    /**
+     * Require that new threads use {@link #propagate(Context)} or {@link org.bitcoinj.utils.ContextPropagatingThreadFactory},
+     * rather than using a heuristic for the desired context.
+     */
+    public static void enableStrictMode() {
+        isStrictMode = true;
+    }
+
+    // A temporary internal shim designed to help us migrate internally in a way that doesn't wreck source compatibility.
+    public static Context getOrCreate(NetworkParameters p
