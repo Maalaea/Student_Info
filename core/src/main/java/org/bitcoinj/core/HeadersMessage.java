@@ -66,4 +66,35 @@ public class HeadersMessage extends Message {
 
     @Override
     protected void parse() throws ProtocolException {
-        long numHeaders =
+        long numHeaders = readVarInt();
+        if (numHeaders > MAX_HEADERS)
+            throw new ProtocolException("Too many headers: got " + numHeaders + " which is larger than " +
+                                         MAX_HEADERS);
+
+        blockHeaders = new ArrayList<>();
+        final BitcoinSerializer serializer = this.params.getSerializer(true);
+
+        for (int i = 0; i < numHeaders; ++i) {
+            final Block newBlockHeader = serializer.makeBlock(payload, cursor, UNKNOWN_LENGTH);
+            if (newBlockHeader.hasTransactions()) {
+                throw new ProtocolException("Block header does not end with a null byte");
+            }
+            cursor += newBlockHeader.optimalEncodingMessageSize;
+            blockHeaders.add(newBlockHeader);
+        }
+
+        if (length == UNKNOWN_LENGTH) {
+            length = cursor - offset;
+        }
+
+        if (log.isDebugEnabled()) {
+            for (int i = 0; i < numHeaders; ++i) {
+                log.debug(this.blockHeaders.get(i).toString());
+            }
+        }
+    }
+
+    public List<Block> getBlockHeaders() {
+        return blockHeaders;
+    }
+}
