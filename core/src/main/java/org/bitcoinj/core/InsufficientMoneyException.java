@@ -29,4 +29,15 @@ public class InsufficientMoneyException extends Exception {
     public final Coin missing;
 
     protected InsufficientMoneyException() {
-       
+        this.missing = null;
+    }
+
+    public InsufficientMoneyException(Coin missing) {
+        this(missing, "Insufficient money,  missing " + missing.toFriendlyString());
+    }
+
+    public InsufficientMoneyException(Coin missing, String message) {
+        super(message);
+        this.missing = checkNotNull(missing);
+    }
+}
