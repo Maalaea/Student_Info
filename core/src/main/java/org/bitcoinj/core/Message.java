@@ -43,4 +43,55 @@ public abstract class Message {
     // Useful to ensure serialize/deserialize are consistent with each other.
     private static final boolean SELF_CHECK = false;
 
-    // The offset
+    // The offset is how many bytes into the provided byte array this message payload starts at.
+    protected int offset;
+    // The cursor keeps track of where we are in the byte array as we parse it.
+    // Note that it's relative to the start of the array NOT the start of the message payload.
+    protected int cursor;
+
+    protected int length = UNKNOWN_LENGTH;
+
+    // The raw message payload bytes themselves.
+    protected byte[] payload;
+
+    protected boolean recached = false;
+    protected MessageSerializer serializer;
+
+    protected int protocolVersion;
+    public int transactionOptions = TransactionOptions.ALL; // FIXME: Hacked for serialisation
+
+    protected NetworkParameters params;
+
+    protected Message() {
+        serializer = DummySerializer.DEFAULT;
+    }
+
+    protected Message(NetworkParameters params) {
+        this.params = params;
+        serializer = params.getDefaultSerializer();
+    }
+
+    protected Message(NetworkParameters params, byte[] payload, int offset, int protocolVersion) throws ProtocolException {
+        this(params, payload, offset, protocolVersion, params.getDefaultSerializer(), UNKNOWN_LENGTH);
+    }
+
+    /**
+     * 
+     * @param params NetworkParameters object.
+     * @param payload Bitcoin protocol formatted byte array containing message content.
+     * @param offset The location of the first payload byte within the array.
+     * @param protocolVersion Bitcoin protocol version.
+     * @param serializer the serializer to use for this message.
+     * @param length The length of message payload if known.  Usually this is provided when deserializing of the wire
+     * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
+     * @throws ProtocolException
+     */
+    protected Message(NetworkParameters params, byte[] payload, int offset, int protocolVersion, MessageSerializer serializer, int length) throws ProtocolException {
+        this.serializer = serializer;
+        this.protocolVersion = protocolVersion;
+        this.params = params;
+        this.payload = payload;
+        this.cursor = this.offset = offset;
+        this.length = length;
+
+        parse();
