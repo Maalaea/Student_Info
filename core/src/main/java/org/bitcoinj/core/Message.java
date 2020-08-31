@@ -95,3 +95,56 @@ public abstract class Message {
         this.length = length;
 
         parse();
+
+        if (this.length == UNKNOWN_LENGTH)
+            checkState(false, "Length field has not been set in constructor for %s after parse.",
+                       getClass().getSimpleName());
+        
+        if (SELF_CHECK) {
+            selfCheck(payload, offset);
+        }
+        
+        if (!serializer.isParseRetainMode())
+            this.payload = null;
+    }
+
+    private void selfCheck(byte[] payload, int offset) {
+        if (!(this instanceof VersionMessage)) {
+            byte[] payloadBytes = new byte[cursor - offset];
+            System.arraycopy(payload, offset, payloadBytes, 0, cursor - offset);
+            byte[] reserialized = bitcoinSerialize();
+            if (!Arrays.equals(reserialized, payloadBytes))
+                throw new RuntimeException("Serialization is wrong: \n" +
+                        Utils.HEX.encode(reserialized) + " vs \n" +
+                        Utils.HEX.encode(payloadBytes));
+        }
+    }
+
+    protected Message(NetworkParameters params, byte[] payload, int offset) throws ProtocolException {
+        this(params, payload, offset, params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.CURRENT),
+             params.getDefaultSerializer(), UNKNOWN_LENGTH);
+    }
+
+    protected Message(NetworkParameters params, byte[] payload, int offset, MessageSerializer serializer, int length) throws ProtocolException {
+        this(params, payload, offset, params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.CURRENT),
+             serializer, length);
+    }
+
+    // These methods handle the serialization/deserialization using the custom Bitcoin protocol.
+
+    protected abstract void parse() throws ProtocolException;
+
+    /**
+     * <p>To be called before any change of internal values including any setters. This ensures any cached byte array is
+     * removed.<p/>
+     * <p>Child messages of this object(e.g. Transactions belonging to a Block) will not have their internal byte caches
+     * invalidated unless they are also modified internally.</p>
+     */
+    protected void unCache() {
+        payload = null;
+        recached = false;
+    }
+
+    protected void adjustLength(int newArraySize, int adjustment) {
+        if (length == UNKNOWN_LENGTH)
+            ret
