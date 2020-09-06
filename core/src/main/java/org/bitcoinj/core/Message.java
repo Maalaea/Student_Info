@@ -249,4 +249,69 @@ public abstract class Message {
     }
 
     /**
-     * Serialize this message to the provided OutputStream using the bitcoin wire forma
+     * Serialize this message to the provided OutputStream using the bitcoin wire format.
+     *
+     * @param stream
+     * @throws IOException
+     */
+    public final void bitcoinSerialize(OutputStream stream) throws IOException {
+        // 1st check for cached bytes.
+        if (payload != null && length != UNKNOWN_LENGTH) {
+            stream.write(payload, offset, length);
+            return;
+        }
+
+        bitcoinSerializeToStream(stream);
+    }
+
+    /**
+     * Serializes this message to the provided stream. If you just want the raw bytes use bitcoinSerialize().
+     */
+    protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {
+        log.error("Error: {} class has not implemented bitcoinSerializeToStream method.  Generating message with no payload", getClass());
+    }
+
+    /**
+     * This method is a NOP for all classes except Block and Transaction.  It is only declared in Message
+     * so BitcoinSerializer can avoid 2 instanceof checks + a casting.
+     */
+    public Sha256Hash getHash() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * This returns a correct value by parsing the message.
+     */
+    public final int getMessageSize() {
+        if (length == UNKNOWN_LENGTH)
+            checkState(false, "Length field has not been set in %s.", getClass().getSimpleName());
+        return length;
+    }
+
+    protected long readUint32() throws ProtocolException {
+        try {
+            long u = Utils.readUint32(payload, cursor);
+            cursor += 4;
+            return u;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ProtocolException(e);
+        }
+    }
+
+    protected long readInt64() throws ProtocolException {
+        try {
+            long u = Utils.readInt64(payload, cursor);
+            cursor += 8;
+            return u;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ProtocolException(e);
+        }
+    }
+
+    protected BigInteger readUint64() throws ProtocolException {
+        // Java does not have an unsigned 64 bit type. So scrape it off the wire then flip.
+        return new BigInteger(Utils.reverseBytes(readBytes(8)));
+    }
+
+    protected long readVarInt() throws ProtocolException {
+        return readVar
