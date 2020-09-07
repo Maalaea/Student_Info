@@ -314,4 +314,66 @@ public abstract class Message {
     }
 
     protected long readVarInt() throws ProtocolException {
-        return readVar
+        return readVarInt(0);
+    }
+
+    protected long readVarInt(int offset) throws ProtocolException {
+        try {
+            VarInt varint = new VarInt(payload, cursor + offset);
+            cursor += offset + varint.getOriginalSizeInBytes();
+            return varint.value;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new ProtocolException(e);
+        }
+    }
+
+    protected byte[] readBytes(int length) throws ProtocolException {
+        if (length > MAX_SIZE) {
+            throw new ProtocolException("Claimed value length too large: " + length);
+        }
+        try {
+            byte[] b = new byte[length];
+            System.arraycopy(payload, cursor, b, 0, length);
+            cursor += length;
+            return b;
+        } catch (IndexOutOfBoundsException e) {
+            throw new ProtocolException(e);
+        }
+    }
+    
+    protected byte[] readByteArray() throws ProtocolException {
+        long len = readVarInt();
+        return readBytes((int)len);
+    }
+
+    protected String readStr() throws ProtocolException {
+        long length = readVarInt();
+        return length == 0 ? "" : Utils.toString(readBytes((int) length), "UTF-8"); // optimization for empty strings
+    }
+
+    protected Sha256Hash readHash() throws ProtocolException {
+        // We have to flip it around, as it's been read off the wire in little endian.
+        // Not the most efficient way to do this but the clearest.
+        return Sha256Hash.wrapReversed(readBytes(32));
+    }
+
+    protected boolean hasMoreBytes() {
+        return cursor < payload.length;
+    }
+
+    /** Network parameters this message was created with. */
+    public NetworkParameters getParams() {
+        return params;
+    }
+
+    /**
+     * Set the serializer for this message when deserialized by Java.
+     */
+    private void readObject(java.io.ObjectInputStream in)
+        throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        if (null != params) {
+            this.serializer = params.getDefaultSerializer();
+        }
+    }
+}
