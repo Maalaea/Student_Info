@@ -58,4 +58,56 @@ public abstract class MessageSerializer {
     public abstract AddressMessage makeAddressMessage(byte[] payloadBytes, int length) throws ProtocolException, UnsupportedOperationException;
 
     /**
-     * Make
+     * Make an alert message from the payload. Extension point for alternative
+     * serialization format support.
+     */
+    public abstract Message makeAlertMessage(byte[] payloadBytes) throws ProtocolException, UnsupportedOperationException;
+
+
+    /**
+     * Make a block from the payload, using an offset of zero and the payload
+     * length as block length.
+     */
+    public final Block makeBlock(byte[] payloadBytes) throws ProtocolException {
+        return makeBlock(payloadBytes, 0, payloadBytes.length);
+    }
+
+    /**
+     * Make a block from the payload, using an offset of zero and the provided
+     * length as block length.
+     */
+    public final Block makeBlock(byte[] payloadBytes, int length) throws ProtocolException {
+        return makeBlock(payloadBytes, 0, length);
+    }
+
+    /**
+     * Make a block from the payload, using an offset of zero and the provided
+     * length as block length. Extension point for alternative
+     * serialization format support.
+     */
+    public abstract Block makeBlock(final byte[] payloadBytes, final int offset, final int length) throws ProtocolException, UnsupportedOperationException;
+
+    /**
+     * Make an filter message from the payload. Extension point for alternative
+     * serialization format support.
+     */
+    public abstract Message makeBloomFilter(byte[] payloadBytes) throws ProtocolException, UnsupportedOperationException;
+
+    /**
+     * Make a filtered block from the payload. Extension point for alternative
+     * serialization format support.
+     */
+    public abstract FilteredBlock makeFilteredBlock(byte[] payloadBytes) throws ProtocolException, UnsupportedOperationException;
+
+    /**
+     * Make an inventory message from the payload. Extension point for alternative
+     * serialization format support.
+     */
+    public abstract InventoryMessage makeInventoryMessage(byte[] payloadBytes, int length) throws ProtocolException, UnsupportedOperationException;
+
+    /**
+     * Make a transaction from the payload. Extension point for alternative
+     * serialization format support.
+     * 
+     * @throws UnsupportedOperationException if this serializer/deserializer
+     * 
