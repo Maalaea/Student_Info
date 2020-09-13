@@ -155,4 +155,13 @@ public abstract class MessageSerializer {
     public abstract void serialize(String name, byte[] message, OutputStream out) throws IOException, UnsupportedOperationException;
 
     /**
-     * Writes message to to the output stre
+     * Writes message to to the output stream.
+     * 
+     * @throws UnsupportedOperationException if this serializer/deserializer
+     * does not support serialization. This can occur either because it's a dummy
+     * serializer (i.e. for messages with no network parameters), or because
+     * it does not support serializing the given message.
+     */
+    public abstract void serialize(Message message, OutputStream out) throws IOException, UnsupportedOperationException;
+    
+}
