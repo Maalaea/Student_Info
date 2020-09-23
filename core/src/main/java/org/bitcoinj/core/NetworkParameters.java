@@ -61,4 +61,58 @@ public abstract class NetworkParameters {
     public static final String ID_UNITTESTNET = "org.bitcoinj.unittest";
 
     /** The string returned by getId() for elements regtest mode. */
-    public 
+    public static final String ID_ELEMENTS_REGTEST = "org.bitcoin.elementsregtest";
+
+    /** The string used by the payment protocol to represent the main net. */
+    public static final String PAYMENT_PROTOCOL_ID_MAINNET = "main";
+    /** The string used by the payment protocol to represent the test net. */
+    public static final String PAYMENT_PROTOCOL_ID_TESTNET = "test";
+    /** The string used by the payment protocol to represent unit testing (note that this is non-standard). */
+    public static final String PAYMENT_PROTOCOL_ID_UNIT_TESTS = "unittest";
+    public static final String PAYMENT_PROTOCOL_ID_REGTEST = "regtest";
+
+    /** The string used by the payment protocol to represent the test net. */
+    public static final String PAYMENT_PROTOCOL_ID_ELEMENTS_REGTEST = "elementsregtest";
+
+    // TODO: Seed nodes should be here as well.
+
+    protected Block genesisBlock;
+    protected BigInteger maxTarget;
+    protected int port;
+    protected long packetMagic;  // Indicates message origin network and is used to seek to the next message when stream state is unknown.
+    protected int addressHeader;
+    protected int p2shHeader;
+    protected int p2wpkhHeader;
+    protected int p2wshHeader;
+    protected int dumpedPrivateKeyHeader;
+    protected int interval;
+    protected int targetTimespan;
+    protected byte[] alertSigningKey;
+    protected int bip32HeaderPub;
+    protected int bip32HeaderPriv;
+    protected int bip49HeaderPub;
+    protected int bip49HeaderPriv;
+    protected int bip84HeaderPub;
+    protected int bip84HeaderPriv;
+
+    /** Used to check majorities for block version upgrade */
+    protected int majorityEnforceBlockUpgrade;
+    protected int majorityRejectBlockOutdated;
+    protected int majorityWindow;
+
+    /**
+     * See getId(). This may be null for old deserialized wallets. In that case we derive it heuristically
+     * by looking at the port number.
+     */
+    protected String id;
+
+    /**
+     * The depth of blocks required for a coinbase transaction to be spendable.
+     */
+    protected int spendableCoinbaseDepth;
+    protected int subsidyDecreaseBlockCount;
+
+    protected int[] acceptableAddressCodes;
+    protected String[] dnsSeeds;
+    protected int[] addrSeeds;
+    protected HttpDiscovery.Details[]
