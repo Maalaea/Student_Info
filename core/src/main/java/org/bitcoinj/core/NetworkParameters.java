@@ -154,4 +154,82 @@ public abstract class NetworkParameters {
     /**
      * Blocks with a timestamp after this should enforce BIP 16, aka "Pay to script hash". This BIP changed the
      * network rules in a soft-forking manner, that is, blocks that don't follow the rules are accepted but not
-     * mined upon and thus will be quickly re-orged out as long as the majority a
+     * mined upon and thus will be quickly re-orged out as long as the majority are enforcing the rule.
+     */
+    public static final int BIP16_ENFORCE_TIME = 1333238400;
+
+    /**
+     * The maximum number of coins to be generated
+     */
+    public static final long MAX_COINS = 21000000;
+
+    /**
+     * The maximum money to be generated
+     */
+    public static final Coin MAX_MONEY = COIN.multiply(MAX_COINS);
+
+    /** Alias for TestNet3Params.get(), use that instead. */
+    @Deprecated
+    public static NetworkParameters testNet() {
+        return TestNet3Params.get();
+    }
+
+    /** Alias for TestNet2Params.get(), use that instead. */
+    @Deprecated
+    public static NetworkParameters testNet2() {
+        return TestNet2Params.get();
+    }
+
+    /** Alias for TestNet3Params.get(), use that instead. */
+    @Deprecated
+    public static NetworkParameters testNet3() {
+        return TestNet3Params.get();
+    }
+
+    /** Alias for MainNetParams.get(), use that instead */
+    @Deprecated
+    public static NetworkParameters prodNet() {
+        return MainNetParams.get();
+    }
+
+    /** Returns a testnet params modified to allow any difficulty target. */
+    @Deprecated
+    public static NetworkParameters unitTests() {
+        return UnitTestParams.get();
+    }
+
+    /** Returns a standard regression test params (similar to unitTests) */
+    @Deprecated
+    public static NetworkParameters regTests() {
+        return RegTestParams.get();
+    }
+
+    /**
+     * A Java package style string acting as unique ID for these parameters
+     */
+    public String getId() {
+        return id;
+    }
+
+    public abstract String getPaymentProtocolId();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return getId().equals(((NetworkParameters)o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getId());
+    }
+
+    /** Returns the network parameters for the given string ID or NULL if not recognized. */
+    @Nullable
+    public static NetworkParameters fromID(String id) {
+        if (id.equals(ID_MAINNET)) {
+            return MainNetParams.get();
+        } else if (id.equals(ID_TESTNET)) {
+            return TestNet3Params.get();
+        } else if (id.equa
