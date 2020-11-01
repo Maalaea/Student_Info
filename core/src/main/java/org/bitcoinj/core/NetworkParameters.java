@@ -232,4 +232,66 @@ public abstract class NetworkParameters {
             return MainNetParams.get();
         } else if (id.equals(ID_TESTNET)) {
             return TestNet3Params.get();
-        } else if (id.equa
+        } else if (id.equals(ID_UNITTESTNET)) {
+            return UnitTestParams.get();
+        } else if (id.equals(ID_REGTEST)) {
+            return RegTestParams.get();
+        } else {
+            return null;
+        }
+    }
+
+    /** Returns the network parameters for the given string paymentProtocolID or NULL if not recognized. */
+    @Nullable
+    public static NetworkParameters fromPmtProtocolID(String pmtProtocolId) {
+        if (pmtProtocolId.equals(PAYMENT_PROTOCOL_ID_MAINNET)) {
+            return MainNetParams.get();
+        } else if (pmtProtocolId.equals(PAYMENT_PROTOCOL_ID_TESTNET)) {
+            return TestNet3Params.get();
+        } else if (pmtProtocolId.equals(PAYMENT_PROTOCOL_ID_UNIT_TESTS)) {
+            return UnitTestParams.get();
+        } else if (pmtProtocolId.equals(PAYMENT_PROTOCOL_ID_REGTEST)) {
+            return RegTestParams.get();
+        } else {
+            return null;
+        }
+    }
+
+    public int getSpendableCoinbaseDepth() {
+        return spendableCoinbaseDepth;
+    }
+
+    /**
+     * Throws an exception if the block's difficulty is not correct.
+     *
+     * @throws VerificationException if the block's difficulty is not correct.
+     */
+    public abstract void checkDifficultyTransitions(StoredBlock storedPrev, Block next, final BlockStore blockStore) throws VerificationException, BlockStoreException;
+
+    /**
+     * Returns true if the block height is either not a checkpoint, or is a checkpoint and the hash matches.
+     */
+    public boolean passesCheckpoint(int height, Sha256Hash hash) {
+        Sha256Hash checkpointHash = checkpoints.get(height);
+        return checkpointHash == null || checkpointHash.equals(hash);
+    }
+
+    /**
+     * Returns true if the given height has a recorded checkpoint.
+     */
+    public boolean isCheckpoint(int height) {
+        Sha256Hash checkpointHash = checkpoints.get(height);
+        return checkpointHash != null;
+    }
+
+    public int getSubsidyDecreaseBlockCount() {
+        return subsidyDecreaseBlockCount;
+    }
+
+    /** Returns DNS names that when resolved, give IP addresses of active peers. */
+    public String[] getDnsSeeds() {
+        return dnsSeeds;
+    }
+
+    /** Returns IP address of active peers. */
+    public int[] getA
