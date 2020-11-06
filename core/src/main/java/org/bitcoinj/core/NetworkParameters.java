@@ -359,4 +359,65 @@ public abstract class NetworkParameters {
 
     /**
      * How much time in seconds is supposed to pass between "interval" blocks. If the actual elapsed time is
-     * sign
+     * significantly different from this value, the network difficulty formula will produce a different value. Both
+     * test and main Bitcoin networks use 2 weeks (1209600 seconds).
+     */
+    public int getTargetTimespan() {
+        return targetTimespan;
+    }
+
+    /**
+     * The version codes that prefix addresses which are acceptable on this network. Although Satoshi intended these to
+     * be used for "versioning", in fact they are today used to discriminate what kind of data is contained in the
+     * address and to prevent accidentally sending coins across chains which would destroy them.
+     */
+    public int[] getAcceptableAddressCodes() {
+        return acceptableAddressCodes;
+    }
+
+    /**
+     * If we are running in testnet-in-a-box mode, we allow connections to nodes with 0 non-genesis blocks.
+     */
+    public boolean allowEmptyPeerChain() {
+        return true;
+    }
+
+    /** How many blocks pass between difficulty adjustment periods. Bitcoin standardises this to be 2016. */
+    public int getInterval() {
+        return interval;
+    }
+
+    /** Maximum target represents the easiest allowable proof of work. */
+    public BigInteger getMaxTarget() {
+        return maxTarget;
+    }
+
+    /**
+     * The key used to sign {@link org.bitcoinj.core.AlertMessage}s. You can use {@link org.bitcoinj.core.ECKey#verify(byte[], byte[], byte[])} to verify
+     * signatures using it.
+     */
+    public byte[] getAlertSigningKey() {
+        return alertSigningKey;
+    }
+
+    /** Returns the 4 byte header for BIP32 (HD) wallet - public key part. */
+    public int getBip32HeaderPub() {
+        return bip32HeaderPub;
+    }
+
+    /** Returns the 4 byte header for BIP32 (HD) wallet - private key part. */
+    public int getBip32HeaderPriv() {
+        return bip32HeaderPriv;
+    }
+
+    /** Returns the 4 byte header for BIP49 (HD) wallet - public key part. */
+    public int getBip49HeaderPub() {
+        return bip49HeaderPub;
+    }
+
+    /** Returns the 4 byte header for BIP49 (HD) wallet - private key part. */
+    public int getBip49HeaderPriv() {
+        return bip49HeaderPriv;
+    }
+
+    /** Returns the 
