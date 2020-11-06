@@ -294,4 +294,69 @@ public abstract class NetworkParameters {
     }
 
     /** Returns IP address of active peers. */
-    public int[] getA
+    public int[] getAddrSeeds() {
+        return addrSeeds;
+    }
+
+    /** Returns discovery objects for seeds implementing the Cartographer protocol. See {@link org.bitcoinj.net.discovery.HttpDiscovery} for more info. */
+    public HttpDiscovery.Details[] getHttpSeeds() {
+        return httpSeeds;
+    }
+
+    /**
+     * <p>Genesis block for this chain.</p>
+     *
+     * <p>The first block in every chain is a well known constant shared between all Bitcoin implemenetations. For a
+     * block to be valid, it must be eventually possible to work backwards to the genesis block by following the
+     * prevBlockHash pointers in the block headers.</p>
+     *
+     * <p>The genesis blocks for both test and main networks contain the timestamp of when they were created,
+     * and a message in the coinbase transaction. It says, <i>"The Times 03/Jan/2009 Chancellor on brink of second
+     * bailout for banks"</i>.</p>
+     */
+    public Block getGenesisBlock() {
+        return genesisBlock;
+    }
+
+    /** Default TCP port on which to connect to nodes. */
+    public int getPort() {
+        return port;
+    }
+
+    /** The header bytes that identify the start of a packet on this network. */
+    public long getPacketMagic() {
+        return packetMagic;
+    }
+
+    /**
+     * First byte of a base58 encoded address. See {@link org.bitcoinj.core.Address}. This is the same as acceptableAddressCodes[0] and
+     * is the one used for "normal" addresses. Other types of address may be encountered with version codes found in
+     * the acceptableAddressCodes array.
+     */
+    public int getAddressHeader() {
+        return addressHeader;
+    }
+
+    /**
+     * First byte of a base58 encoded P2SH address.  P2SH addresses are defined as part of BIP0013.
+     */
+    public int getP2SHHeader() {
+        return p2shHeader;
+    }
+
+    public int getP2WPKHHeader() {
+        return p2wpkhHeader;
+    }
+
+    public int getP2WSHHeader() {
+        return p2wshHeader;
+    }
+
+    /** First byte of a base58 encoded dumped private key. See {@link org.bitcoinj.core.DumpedPrivateKey}. */
+    public int getDumpedPrivateKeyHeader() {
+        return dumpedPrivateKeyHeader;
+    }
+
+    /**
+     * How much time in seconds is supposed to pass between "interval" blocks. If the actual elapsed time is
+     * sign
