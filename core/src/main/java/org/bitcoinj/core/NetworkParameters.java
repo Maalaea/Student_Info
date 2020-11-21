@@ -420,4 +420,69 @@ public abstract class NetworkParameters {
         return bip49HeaderPriv;
     }
 
-    /** Returns the 
+    /** Returns the 4 byte header for BIP84 (HD) wallet - public key part. */
+    public int getBip84HeaderPub() {
+        return bip84HeaderPub;
+    }
+
+    /** Returns the 4 byte header for BIP84 (HD) wallet - private key part. */
+    public int getBip84HeaderPriv() {
+        return bip84HeaderPriv;
+    }
+
+    /**
+     * Returns the number of coins that will be produced in total, on this
+     * network. Where not applicable, a very large number of coins is returned
+     * instead (i.e. the main coin issue for Dogecoin).
+     */
+    public abstract Coin getMaxMoney();
+
+    /**
+     * Any standard (ie pay-to-address) output smaller than this value will
+     * most likely be rejected by the network.
+     */
+    public abstract Coin getMinNonDustOutput();
+
+    /**
+     * The monetary object for this currency.
+     */
+    public abstract MonetaryFormat getMonetaryFormat();
+
+    /**
+     * Scheme part for URIs, for example "bitcoin".
+     */
+    public abstract String getUriScheme();
+
+    /**
+     * Returns whether this network has a maximum number of coins (finite supply) or
+     * not. Always returns true for Bitcoin, but exists to be overriden for other
+     * networks.
+     */
+    public abstract boolean hasMaxMoney();
+
+    /**
+     * Return the default serializer for this network. This is a shared serializer.
+     * @return
+     */
+    public final MessageSerializer getDefaultSerializer() {
+        // Construct a default serializer if we don't have one
+        if (null == this.defaultSerializer) {
+            // Don't grab a lock unless we absolutely need it
+            synchronized(this) {
+                // Now we have a lock, double check there's still no serializer
+                // and create one if so.
+                if (null == this.defaultSerializer) {
+                    // As the serializers are intended to be immutable, creating
+                    // two due to a race condition should not be a problem, however
+                    // to be safe we ensure only one exists for each network.
+                    this.defaultSerializer = getSerializer(false);
+                }
+            }
+        }
+        return defaultSerializer;
+    }
+
+    /**
+     * Construct and return a custom serializer.
+     */
+ 
