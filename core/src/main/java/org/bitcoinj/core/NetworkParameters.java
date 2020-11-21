@@ -485,4 +485,61 @@ public abstract class NetworkParameters {
     /**
      * Construct and return a custom serializer.
      */
- 
+    public abstract BitcoinSerializer getSerializer(boolean parseRetain);
+
+    /**
+     * The number of blocks in the last {@link getMajorityWindow()} blocks
+     * at which to trigger a notice to the user to upgrade their client, where
+     * the client does not understand those blocks.
+     */
+    public int getMajorityEnforceBlockUpgrade() {
+        return majorityEnforceBlockUpgrade;
+    }
+
+    /**
+     * The number of blocks in the last {@link getMajorityWindow()} blocks
+     * at which to enforce the requirement that all new blocks are of the
+     * newer type (i.e. outdated blocks are rejected).
+     */
+    public int getMajorityRejectBlockOutdated() {
+        return majorityRejectBlockOutdated;
+    }
+
+    /**
+     * The sampling window from which the version numbers of blocks are taken
+     * in order to determine if a new block version is now the majority.
+     */
+    public int getMajorityWindow() {
+        return majorityWindow;
+    }
+
+    /**
+     * The flags indicating which block validation tests should be applied to
+     * the given block. Enables support for alternative blockchains which enable
+     * tests based on different criteria.
+     *
+     * @param block block to determine flags for.
+     * @param height height of the block, if known, null otherwise. Returned
+     * tests should be a safe subset if block height is unknown.
+     */
+    public EnumSet<Block.VerifyFlag> getBlockVerificationFlags(final Block block,
+            final VersionTally tally, final Integer height) {
+        final EnumSet<Block.VerifyFlag> flags = EnumSet.noneOf(Block.VerifyFlag.class);
+
+        if (block.isBIP34()) {
+            final Integer count = tally.getCountAtOrAbove(Block.BLOCK_VERSION_BIP34);
+            if (null != count && count >= getMajorityEnforceBlockUpgrade()) {
+                flags.add(Block.VerifyFlag.HEIGHT_IN_COINBASE);
+            }
+        }
+        return flags;
+    }
+
+    /**
+     * The flags indicating which script validation tests should be applied to
+     * the given transaction. Enables support for alternative blockchains which enable
+     * tests based on different criteria.
+     *
+     * @param block block the transaction belongs to.
+     * @param transaction to determine flags for.
+    
