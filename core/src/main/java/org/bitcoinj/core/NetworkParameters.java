@@ -542,4 +542,42 @@ public abstract class NetworkParameters {
      *
      * @param block block the transaction belongs to.
      * @param transaction to determine flags for.
-    
+     * @param height height of the block, if known, null otherwise. Returned
+     * tests should be a safe subset if block height is unknown.
+     */
+    public EnumSet<Script.VerifyFlag> getTransactionVerificationFlags(final Block block,
+            final Transaction transaction, final VersionTally tally, final Integer height) {
+        final EnumSet<Script.VerifyFlag> verifyFlags = EnumSet.noneOf(Script.VerifyFlag.class);
+        if (block.getTimeSeconds() >= NetworkParameters.BIP16_ENFORCE_TIME)
+            verifyFlags.add(Script.VerifyFlag.P2SH);
+
+        // Start enforcing CHECKLOCKTIMEVERIFY, (BIP65) for block.nVersion=4
+        // blocks, when 75% of the network has upgraded:
+        if (block.getVersion() >= Block.BLOCK_VERSION_BIP65 &&
+            tally.getCountAtOrAbove(Block.BLOCK_VERSION_BIP65) > this.getMajorityEnforceBlockUpgrade()) {
+            verifyFlags.add(Script.VerifyFlag.CHECKLOCKTIMEVERIFY);
+        }
+
+        return verifyFlags;
+    }
+
+    public abstract int getProtocolVersionNum(final ProtocolVersion version);
+
+    public static enum ProtocolVersion {
+        MINIMUM(70000),
+        PONG(60001),
+        BLOOM_FILTER(70000),
+        WITNESS_VERSION(70012),
+        CURRENT(70012);
+
+        private final int bitcoinProtocol;
+
+        ProtocolVersion(final int bitcoinProtocol) {
+            this.bitcoinProtocol = bitcoinProtocol;
+        }
+
+        public int getBitcoinProtocolVersion() {
+            return bitcoinProtocol;
+        }
+    }
+}
