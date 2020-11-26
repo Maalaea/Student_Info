@@ -70,4 +70,60 @@ public class PartialMerkleTree extends Message {
     }
 
     /**
-     * Constructs a new PMT with the given bit set (little e
+     * Constructs a new PMT with the given bit set (little endian) and the raw list of hashes including internal hashes,
+     * taking ownership of the list.
+     */
+    public PartialMerkleTree(NetworkParameters params, byte[] bits, List<Sha256Hash> hashes, int origTxCount) {
+        super(params);
+        this.matchedChildBits = bits;
+        this.hashes = hashes;
+        this.transactionCount = origTxCount;
+    }
+
+    /**
+     * Calculates a PMT given the list of leaf hashes and which leaves need to be included. The relevant interior hashes
+     * are calculated and a new PMT returned.
+     */
+    public static PartialMerkleTree buildFromLeaves(NetworkParameters params, byte[] includeBits, List<Sha256Hash> allLeafHashes) {
+        // Calculate height of the tree.
+        int height = 0;
+        while (getTreeWidth(allLeafHashes.size(), height) > 1)
+            height++;
+        List<Boolean> bitList = new ArrayList<>();
+        List<Sha256Hash> hashes = new ArrayList<>();
+        traverseAndBuild(height, 0, allLeafHashes, includeBits, bitList, hashes);
+        byte[] bits = new byte[(int)Math.ceil(bitList.size() / 8.0)];
+        for (int i = 0; i < bitList.size(); i++)
+            if (bitList.get(i))
+                Utils.setBitLE(bits, i);
+        return new PartialMerkleTree(params, bits, hashes, allLeafHashes.size());
+    }
+
+    @Override
+    public void bitcoinSerializeToStream(OutputStream stream) throws IOException {
+        uint32ToByteStreamLE(transactionCount, stream);
+
+        stream.write(new VarInt(hashes.size()).encode());
+        for (Sha256Hash hash : hashes)
+            stream.write(hash.getReversedBytes());
+
+        stream.write(new VarInt(matchedChildBits.length).encode());
+        stream.write(matchedChildBits);
+    }
+
+    @Override
+    protected void parse() throws ProtocolException {
+        transactionCount = (int)readUint32();
+
+        int nHashes = (int) readVarInt();
+        hashes = new ArrayList<>(nHashes);
+        for (int i = 0; i < nHashes; i++)
+            hashes.add(readHash());
+
+        int nFlagBytes = (int) readVarInt();
+        matchedChildBits = readBytes(nFlagBytes);
+
+        length = cursor - offset;
+    }
+
+    // Based on CPartialMerkleTree::TraverseAndBuild in Bit
