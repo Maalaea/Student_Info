@@ -44,4 +44,58 @@ public class PeerAddress extends ChildMessage {
 
     private InetAddress addr;
     private String hostname; // Used for .onion addresses
-  
+    private int port;
+    private BigInteger services;
+    private long time;
+
+    /**
+     * Construct a peer address from a serialized payload.
+     */
+    public PeerAddress(NetworkParameters params, byte[] payload, int offset, int protocolVersion) throws ProtocolException {
+        super(params, payload, offset, protocolVersion);
+    }
+
+    /**
+     * Construct a peer address from a serialized payload.
+     * @param params NetworkParameters object.
+     * @param payload Bitcoin protocol formatted byte array containing message content.
+     * @param offset The location of the first payload byte within the array.
+     * @param protocolVersion Bitcoin protocol version.
+     * @param serializer the serializer to use for this message.
+     * @throws ProtocolException
+     */
+    public PeerAddress(NetworkParameters params, byte[] payload, int offset, int protocolVersion, Message parent, MessageSerializer serializer) throws ProtocolException {
+        super(params, payload, offset, protocolVersion, parent, serializer, UNKNOWN_LENGTH);
+    }
+
+    /**
+     * Construct a peer address from a memorized or hardcoded address.
+     */
+    public PeerAddress(NetworkParameters params, InetAddress addr, int port, int protocolVersion, BigInteger services) {
+        super(params);
+        this.addr = checkNotNull(addr);
+        this.port = port;
+        this.protocolVersion = protocolVersion;
+        this.services = services;
+        length = protocolVersion > 31402 ? MESSAGE_SIZE : MESSAGE_SIZE - 4;
+    }
+
+    /**
+     * Constructs a peer address from the given IP address and port. Version number is default for the given parameters.
+     */
+    public PeerAddress(NetworkParameters params, InetAddress addr, int port) {
+        this(params, addr, port, params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.CURRENT),
+                BigInteger.ZERO);
+    }
+
+    /**
+     * Constructs a peer address from the given IP address. Port and version number are default for the given
+     * parameters.
+     */
+    public PeerAddress(NetworkParameters params, InetAddress addr) {
+        this(params, addr, MainNetParams.get().getPort());
+    }
+
+    /**
+     * Constructs a peer address from an {@link InetSocketAddress}. An InetSocketAddress can take in as parameters an
+     *
