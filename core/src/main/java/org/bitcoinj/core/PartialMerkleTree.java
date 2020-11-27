@@ -126,4 +126,57 @@ public class PartialMerkleTree extends Message {
         length = cursor - offset;
     }
 
-    // Based on CPartialMerkleTree::TraverseAndBuild in Bit
+    // Based on CPartialMerkleTree::TraverseAndBuild in Bitcoin Core.
+    private static void traverseAndBuild(int height, int pos, List<Sha256Hash> allLeafHashes, byte[] includeBits,
+                                         List<Boolean> matchedChildBits, List<Sha256Hash> resultHashes) {
+        boolean parentOfMatch = false;
+        // Is this node a parent of at least one matched hash?
+        for (int p = pos << height; p < (pos+1) << height && p < allLeafHashes.size(); p++) {
+            if (Utils.checkBitLE(includeBits, p)) {
+                parentOfMatch = true;
+                break;
+            }
+        }
+        // Store as a flag bit.
+        matchedChildBits.add(parentOfMatch);
+        if (height == 0 || !parentOfMatch) {
+            // If at height 0, or nothing interesting below, store hash and stop.
+            resultHashes.add(calcHash(height, pos, allLeafHashes));
+        } else {
+            // Otherwise descend into the subtrees.
+            int h = height - 1;
+            int p = pos * 2;
+            traverseAndBuild(h, p, allLeafHashes, includeBits, matchedChildBits, resultHashes);
+            if (p + 1 < getTreeWidth(allLeafHashes.size(), h))
+                traverseAndBuild(h, p + 1, allLeafHashes, includeBits, matchedChildBits, resultHashes);
+        }
+    }
+
+    private static Sha256Hash calcHash(int height, int pos, List<Sha256Hash> hashes) {
+        if (height == 0) {
+            // Hash at height 0 is just the regular tx hash itself.
+            return hashes.get(pos);
+        }
+        int h = height - 1;
+        int p = pos * 2;
+        Sha256Hash left = calcHash(h, p, hashes);
+        // Calculate right hash if not beyond the end of the array - copy left hash otherwise.
+        Sha256Hash right;
+        if (p + 1 < getTreeWidth(hashes.size(), h)) {
+            right = calcHash(h, p + 1, hashes);
+        } else {
+            right = left;
+        }
+        return combineLeftRight(left.getBytes(), right.getBytes());
+    }
+
+    // helper function to efficiently calculate the number of nodes at given height in the merkle tree
+    private static int getTreeWidth(int transactionCount, int height) {
+        return (transactionCount + (1 << height) - 1) >> height;
+    }
+    
+    private static class ValuesUsed {
+        public int bitsUsed = 0, hashesUsed = 0;
+    }
+    
+    // recursive function that
