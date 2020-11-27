@@ -179,4 +179,45 @@ public class PartialMerkleTree extends Message {
         public int bitsUsed = 0, hashesUsed = 0;
     }
     
-    // recursive function that
+    // recursive function that traverses tree nodes, consuming the bits and hashes produced by TraverseAndBuild.
+    // it returns the hash of the respective node.
+    private Sha256Hash recursiveExtractHashes(int height, int pos, ValuesUsed used, List<Sha256Hash> matchedHashes) throws VerificationException {
+        if (used.bitsUsed >= matchedChildBits.length*8) {
+            // overflowed the bits array - failure
+            throw new VerificationException("PartialMerkleTree overflowed its bits array");
+        }
+        boolean parentOfMatch = checkBitLE(matchedChildBits, used.bitsUsed++);
+        if (height == 0 || !parentOfMatch) {
+            // if at height 0, or nothing interesting below, use stored hash and do not descend
+            if (used.hashesUsed >= hashes.size()) {
+                // overflowed the hash array - failure
+                throw new VerificationException("PartialMerkleTree overflowed its hash array");
+            }
+            Sha256Hash hash = hashes.get(used.hashesUsed++);
+            if (height == 0 && parentOfMatch) // in case of height 0, we have a matched txid
+                matchedHashes.add(hash);
+            return hash;
+        } else {
+            // otherwise, descend into the subtrees to extract matched txids and hashes
+            byte[] left = recursiveExtractHashes(height - 1, pos * 2, used, matchedHashes).getBytes(), right;
+            if (pos * 2 + 1 < getTreeWidth(transactionCount, height-1)) {
+                right = recursiveExtractHashes(height - 1, pos * 2 + 1, used, matchedHashes).getBytes();
+                if (Arrays.equals(right, left))
+                    throw new VerificationException("Invalid merkle tree with duplicated left/right branches");
+            } else {
+                right = left;
+            }
+            // and combine them before returning
+            return combineLeftRight(left, right);
+        }
+    }
+
+    private static Sha256Hash combineLeftRight(byte[] left, byte[] right) {
+        return Sha256Hash.wrapReversed(Sha256Hash.hashTwice(
+            reverseBytes(left), 0, 32,
+            reverseBytes(right), 0, 32));
+    }
+
+    /**
+     * Extracts tx hashes that are in this merkle tree
+     * and returns the merkle root of th
