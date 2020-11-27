@@ -257,4 +257,33 @@ public class PartialMerkleTree extends Message {
                 used.hashesUsed != hashes.size())
             throw new VerificationException("Got a CPartialMerkleTree that didn't need all the data it provided");
         
-        retu
+        return merkleRoot;
+    }
+
+    public int getTransactionCount() {
+        return transactionCount;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PartialMerkleTree other = (PartialMerkleTree) o;
+        return transactionCount == other.transactionCount && hashes.equals(other.hashes)
+            && Arrays.equals(matchedChildBits, other.matchedChildBits);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(transactionCount, hashes, Arrays.hashCode(matchedChildBits));
+    }
+
+    @Override
+    public String toString() {
+        return "PartialMerkleTree{" +
+                "transactionCount=" + transactionCount +
+                ", matchedChildBits=" + Arrays.toString(matchedChildBits) +
+                ", hashes=" + hashes +
+                '}';
+    }
+}
