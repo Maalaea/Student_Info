@@ -148,4 +148,76 @@ public class PeerAddress extends ChildMessage {
     protected void parse() throws ProtocolException {
         // Format of a serialized address:
         //   uint32 timestamp
-        //   uint64 services   (fla
+        //   uint64 services   (flags determining what the node can do)
+        //   16 bytes ip address
+        //   2 bytes port num
+        if (protocolVersion > 31402)
+            time = readUint32();
+        else
+            time = -1;
+        services = readUint64();
+        byte[] addrBytes = readBytes(16);
+        try {
+            addr = InetAddress.getByAddress(addrBytes);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        }
+        port = ((0xFF & payload[cursor++]) << 8) | (0xFF & payload[cursor++]);
+        // The 4 byte difference is the uint32 timestamp that was introduced in version 31402 
+        length = protocolVersion > 31402 ? MESSAGE_SIZE : MESSAGE_SIZE - 4;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public InetAddress getAddr() {
+        return addr;
+    }
+
+    public InetSocketAddress getSocketAddress() {
+        return new InetSocketAddress(getAddr(), getPort());
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public BigInteger getServices() {
+        return services;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    @Override
+    public String toString() {
+        if (hostname != null) {
+            return "[" + hostname + "]:" + port;
+        }
+        return "[" + addr.getHostAddress() + "]:" + port;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PeerAddress other = (PeerAddress) o;
+        return other.addr.equals(addr) && other.port == port && other.time == time && other.services.equals(services);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(addr, port, time, services);
+    }
+    
+    public InetSocketAddress toSocketAddress() {
+        // Reconstruct the InetSocketAddress properly
+        if (hostname != null) {
+            return InetSocketAddress.createUnresolved(hostname, port);
+        } else {
+            return new InetSocketAddress(addr, port);
+        }
+    }
+}
