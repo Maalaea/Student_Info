@@ -220,4 +220,41 @@ public class PartialMerkleTree extends Message {
 
     /**
      * Extracts tx hashes that are in this merkle tree
-     * and returns the merkle root of th
+     * and returns the merkle root of this tree.
+     * 
+     * The returned root should be checked against the
+     * merkle root contained in the block header for security.
+     * 
+     * @param matchedHashesOut A list which will contain the matched txn (will be cleared).
+     * @return the merkle root of this merkle tree
+     * @throws ProtocolException if this partial merkle tree is invalid
+     */
+    public Sha256Hash getTxnHashAndMerkleRoot(List<Sha256Hash> matchedHashesOut) throws VerificationException {
+        matchedHashesOut.clear();
+        
+        // An empty set will not work
+        if (transactionCount == 0)
+            throw new VerificationException("Got a CPartialMerkleTree with 0 transactions");
+        // check for excessively high numbers of transactions
+        if (transactionCount > Block.MAX_BLOCK_SIZE / 60) // 60 is the lower bound for the size of a serialized CTransaction
+            throw new VerificationException("Got a CPartialMerkleTree with more transactions than is possible");
+        // there can never be more hashes provided than one for every txid
+        if (hashes.size() > transactionCount)
+            throw new VerificationException("Got a CPartialMerkleTree with more hashes than transactions");
+        // there must be at least one bit per node in the partial tree, and at least one node per hash
+        if (matchedChildBits.length*8 < hashes.size())
+            throw new VerificationException("Got a CPartialMerkleTree with fewer matched bits than hashes");
+        // calculate height of tree
+        int height = 0;
+        while (getTreeWidth(transactionCount, height) > 1)
+            height++;
+        // traverse the partial tree
+        ValuesUsed used = new ValuesUsed();
+        Sha256Hash merkleRoot = recursiveExtractHashes(height, 0, used, matchedHashesOut);
+        // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)
+        if ((used.bitsUsed+7)/8 != matchedChildBits.length ||
+                // verify that all hashes were consumed
+                used.hashesUsed != hashes.size())
+            throw new VerificationException("Got a CPartialMerkleTree that didn't need all the data it provided");
+        
+        retu
