@@ -1314,3 +1314,549 @@ public class Peer extends PeerSocketHandler {
         getdata.addBlock(blockHash);
         return sendSingleGetData(getdata);
     }
+
+    /**
+     * Asks the connected peer for the given transaction from its memory pool. Transactions in the chain cannot be
+     * retrieved this way because peers don't have a transaction ID to transaction-pos-on-disk index, and besides,
+     * in future many peers will delete old transaction data they don't need.
+     */
+    @SuppressWarnings("unchecked")
+    // The 'unchecked conversion' warning being suppressed here comes from the sendSingleGetData() formally returning
+    // ListenableFuture instead of ListenableFuture<Transaction>. This is okay as sendSingleGetData() actually returns
+    // ListenableFuture<Transaction> in this context. Note that sendSingleGetData() is also used for Blocks.
+    public ListenableFuture<Transaction> getPeerMempoolTransaction(Sha256Hash hash) {
+        // This does not need to be locked.
+        // TODO: Unit test this method.
+        log.info("Request to fetch peer mempool tx  {}", hash);
+        GetDataMessage getdata = new GetDataMessage(params);
+        getdata.addTransaction(hash);
+        return sendSingleGetData(getdata);
+    }
+
+    /** Sends a getdata with a single item in it. */
+    private ListenableFuture sendSingleGetData(GetDataMessage getdata) {
+        // This does not need to be locked.
+        Preconditions.checkArgument(getdata.getItems().size() == 1);
+        GetDataRequest req = new GetDataRequest(getdata.getItems().get(0).hash, SettableFuture.create());
+        getDataFutures.add(req);
+        sendMessage(getdata);
+        return req.future;
+    }
+
+    /** Sends a getaddr request to the peer and returns a future that completes with the answer once the peer has replied. */
+    public ListenableFuture<AddressMessage> getAddr() {
+        SettableFuture<AddressMessage> future = SettableFuture.create();
+        synchronized (getAddrFutures) {
+            getAddrFutures.add(future);
+        }
+        sendMessage(new GetAddrMessage(params));
+        return future;
+    }
+
+    /**
+     * When downloading the block chain, the bodies will be skipped for blocks created before the given date. Any
+     * transactions relevant to the wallet will therefore not be found, but if you know your wallet has no such
+     * transactions it doesn't matter and can save a lot of bandwidth and processing time. Note that the times of blocks
+     * isn't known until their headers are available and they are requested in chunks, so some headers may be downloaded
+     * twice using this scheme, but this optimization can still be a large win for newly created wallets.
+     *
+     * @param secondsSinceEpoch Time in seconds since the epoch or 0 to reset to always downloading block bodies.
+     */
+    public void setDownloadParameters(long secondsSinceEpoch, boolean useFilteredBlocks) {
+        lock.lock();
+        try {
+            if (secondsSinceEpoch == 0) {
+                fastCatchupTimeSecs = params.getGenesisBlock().getTimeSeconds();
+                downloadBlockBodies = true;
+            } else {
+                fastCatchupTimeSecs = secondsSinceEpoch;
+                // If the given time is before the current chains head block time, then this has no effect (we already
+                // downloaded everything we need).
+                if (blockChain != null && fastCatchupTimeSecs > blockChain.getChainHead().getHeader().getTimeSeconds())
+                    downloadBlockBodies = false;
+            }
+            this.useFilteredBlocks = useFilteredBlocks;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Links the given wallet to this peer. If you have multiple peers, you should use a {@link PeerGroup} to manage
+     * them and use the {@link PeerGroup#addWallet(Wallet)} method instead of registering the wallet with each peer
+     * independently, otherwise the wallet will receive duplicate notifications.
+     */
+    public void addWallet(Wallet wallet) {
+        wallets.add(wallet);
+    }
+
+    /** Unlinks the given wallet from peer. See {@link Peer#addWallet(Wallet)}. */
+    public void removeWallet(Wallet wallet) {
+        wallets.remove(wallet);
+    }
+
+    // Keep track of the last request we made to the peer in blockChainDownloadLocked so we can avoid redundant and harmful
+    // getblocks requests.
+    @GuardedBy("lock")
+    private Sha256Hash lastGetBlocksBegin, lastGetBlocksEnd;
+
+    @GuardedBy("lock")
+    private void blockChainDownloadLocked(Sha256Hash toHash) {
+        checkState(lock.isHeldByCurrentThread());
+        // The block chain download process is a bit complicated. Basically, we start with one or more blocks in a
+        // chain that we have from a previous session. We want to catch up to the head of the chain BUT we don't know
+        // where that chain is up to or even if the top block we have is even still in the chain - we
+        // might have got ourselves onto a fork that was later resolved by the network.
+        //
+        // To solve this, we send the peer a block locator which is just a list of block hashes. It contains the
+        // blocks we know about, but not all of them, just enough of them so the peer can figure out if we did end up
+        // on a fork and if so, what the earliest still valid block we know about is likely to be.
+        //
+        // Once it has decided which blocks we need, it will send us an inv with up to 500 block messages. We may
+        // have some of them already if we already have a block chain and just need to catch up. Once we request the
+        // last block, if there are still more to come it sends us an "inv" containing only the hash of the head
+        // block.
+        //
+        // That causes us to download the head block but then we find (in processBlock) that we can't connect
+        // it to the chain yet because we don't have the intermediate blocks. So we rerun this function building a
+        // new block locator describing where we're up to.
+        //
+        // The getblocks with the new locator gets us another inv with another bunch of blocks. We download them once
+        // again. This time when the peer sends us an inv with the head block, we already have it so we won't download
+        // it again - but we recognize this case as special and call back into blockChainDownloadLocked to continue the
+        // process.
+        //
+        // So this is a complicated process but it has the advantage that we can download a chain of enormous length
+        // in a relatively stateless manner and with constant memory usage.
+        //
+        // All this is made more complicated by the desire to skip downloading the bodies of blocks that pre-date the
+        // 'fast catchup time', which is usually set to the creation date of the earliest key in the wallet. Because
+        // we know there are no transactions using our keys before that date, we need only the headers. To do that we
+        // use the "getheaders" command. Once we find we've gone past the target date, we throw away the downloaded
+        // headers and then request the blocks from that point onwards. "getheaders" does not send us an inv, it just
+        // sends us the data we requested in a "headers" message.
+
+        // TODO: Block locators should be abstracted out rather than special cased here.
+        List<Sha256Hash> blockLocator = new ArrayList<>(51);
+        // For now we don't do the exponential thinning as suggested here:
+        //
+        //   https://en.bitcoin.it/wiki/Protocol_specification#getblocks
+        //
+        // This is because it requires scanning all the block chain headers, which is very slow. Instead we add the top
+        // 100 block headers. If there is a re-org deeper than that, we'll end up downloading the entire chain. We
+        // must always put the genesis block as the first entry.
+        BlockStore store = checkNotNull(blockChain).getBlockStore();
+        StoredBlock chainHead = blockChain.getChainHead();
+        Sha256Hash chainHeadHash = chainHead.getHeader().getHash();
+        // Did we already make this request? If so, don't do it again.
+        if (Objects.equal(lastGetBlocksBegin, chainHeadHash) && Objects.equal(lastGetBlocksEnd, toHash)) {
+            log.info("blockChainDownloadLocked({}): ignoring duplicated request: {}", toHash, chainHeadHash);
+            for (Sha256Hash hash : pendingBlockDownloads)
+                log.info("Pending block download: {}", hash);
+            log.info(Throwables.getStackTraceAsString(new Throwable()));
+            return;
+        }
+        if (log.isDebugEnabled())
+            log.debug("{}: blockChainDownloadLocked({}) current head = {}",
+                    this, toHash, chainHead.getHeader().getHashAsString());
+        StoredBlock cursor = chainHead;
+        for (int i = 100; cursor != null && i > 0; i--) {
+            //
+            blockLocator.add(cursor.getHeader().getHash());
+            try {
+                cursor = cursor.getPrev(store);
+            } catch (BlockStoreException e) {
+                log.error("Failed to walk the block chain whilst constructing a locator");
+                throw new RuntimeException(e);
+            }
+        }
+        // Only add the locator if we didn't already do so. If the chain is < 50 blocks we already reached it.
+        if (cursor != null)
+            blockLocator.add(params.getGenesisBlock().getHash());
+
+        // Record that we requested this range of blocks so we can filter out duplicate requests in the event of a
+        // block being solved during chain download.
+        lastGetBlocksBegin = chainHeadHash;
+        lastGetBlocksEnd = toHash;
+
+        if (downloadBlockBodies) {
+            GetBlocksMessage message = new GetBlocksMessage(params, blockLocator, toHash);
+            sendMessage(message);
+        } else {
+            // Downloading headers for a while instead of full blocks.
+            GetHeadersMessage message = new GetHeadersMessage(params, blockLocator, toHash);
+            sendMessage(message);
+        }
+    }
+
+    /**
+     * Starts an asynchronous download of the block chain. The chain download is deemed to be complete once we've
+     * downloaded the same number of blocks that the peer advertised having in its version handshake message.
+     */
+    public void startBlockChainDownload() {
+        setDownloadData(true);
+        // TODO: peer might still have blocks that we don't have, and even have a heavier
+        // chain even if the chain block count is lower.
+        final int blocksLeft = getPeerBlockHeightDifference();
+        if (blocksLeft >= 0) {
+            for (final ListenerRegistration<ChainDownloadStartedEventListener> registration : chainDownloadStartedEventListeners) {
+                registration.executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        registration.listener.onChainDownloadStarted(Peer.this, blocksLeft);
+                    }
+                });
+            }
+            // When we just want as many blocks as possible, we can set the target hash to zero.
+            lock.lock();
+            try {
+                blockChainDownloadLocked(Sha256Hash.ZERO_HASH);
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
+
+    private class PendingPing {
+        // The future that will be invoked when the pong is heard back.
+        public SettableFuture<Long> future;
+        // The random nonce that lets us tell apart overlapping pings/pongs.
+        public final long nonce;
+        // Measurement of the time elapsed.
+        public final long startTimeMsec;
+
+        public PendingPing(long nonce) {
+            future = SettableFuture.create();
+            this.nonce = nonce;
+            startTimeMsec = Utils.currentTimeMillis();
+        }
+
+        public void complete() {
+            if (!future.isDone()) {
+                Long elapsed = Utils.currentTimeMillis() - startTimeMsec;
+                Peer.this.addPingTimeData(elapsed);
+                log.debug("{}: ping time is {} msec", Peer.this.toString(), elapsed);
+                future.set(elapsed);
+            }
+        }
+    }
+
+    /** Adds a ping time sample to the averaging window. */
+    private void addPingTimeData(long sample) {
+        lastPingTimesLock.lock();
+        try {
+            if (lastPingTimes == null) {
+                lastPingTimes = new long[PING_MOVING_AVERAGE_WINDOW];
+                // Initialize the averaging window to the first sample.
+                Arrays.fill(lastPingTimes, sample);
+            } else {
+                // Shift all elements backwards by one.
+                System.arraycopy(lastPingTimes, 1, lastPingTimes, 0, lastPingTimes.length - 1);
+                // And append the new sample to the end.
+                lastPingTimes[lastPingTimes.length - 1] = sample;
+            }
+        } finally {
+            lastPingTimesLock.unlock();
+        }
+    }
+
+    /**
+     * Sends the peer a ping message and returns a future that will be invoked when the pong is received back.
+     * The future provides a number which is the number of milliseconds elapsed between the ping and the pong.
+     * Once the pong is received the value returned by {@link org.bitcoinj.core.Peer#getLastPingTime()} is
+     * updated.
+     * @throws ProtocolException if the peer version is too low to support measurable pings.
+     */
+    public ListenableFuture<Long> ping() throws ProtocolException {
+        return ping((long) (Math.random() * Long.MAX_VALUE));
+    }
+
+    protected ListenableFuture<Long> ping(long nonce) throws ProtocolException {
+        final VersionMessage ver = vPeerVersionMessage;
+        if (!ver.isPingPongSupported())
+            throw new ProtocolException("Peer version is too low for measurable pings: " + ver);
+        PendingPing pendingPing = new PendingPing(nonce);
+        pendingPings.add(pendingPing);
+        sendMessage(new Ping(pendingPing.nonce));
+        return pendingPing.future;
+    }
+
+    /**
+     * Returns the elapsed time of the last ping/pong cycle. If {@link org.bitcoinj.core.Peer#ping()} has never
+     * been called or we did not hear back the "pong" message yet, returns {@link Long#MAX_VALUE}.
+     */
+    public long getLastPingTime() {
+        lastPingTimesLock.lock();
+        try {
+            if (lastPingTimes == null)
+                return Long.MAX_VALUE;
+            return lastPingTimes[lastPingTimes.length - 1];
+        } finally {
+            lastPingTimesLock.unlock();
+        }
+    }
+
+    /**
+     * Returns a moving average of the last N ping/pong cycles. If {@link org.bitcoinj.core.Peer#ping()} has never
+     * been called or we did not hear back the "pong" message yet, returns {@link Long#MAX_VALUE}. The moving average
+     * window is 5 buckets.
+     */
+    public long getPingTime() {
+        lastPingTimesLock.lock();
+        try {
+            if (lastPingTimes == null)
+                return Long.MAX_VALUE;
+            long sum = 0;
+            for (long i : lastPingTimes) sum += i;
+            return (long)((double) sum / lastPingTimes.length);
+        } finally {
+            lastPingTimesLock.unlock();
+        }
+    }
+
+    private void processPing(Ping m) {
+        if (m.hasNonce())
+            sendMessage(new Pong(m.getNonce()));
+    }
+
+    protected void processPong(Pong m) {
+        // Iterates over a snapshot of the list, so we can run unlocked here.
+        for (PendingPing ping : pendingPings) {
+            if (m.getNonce() == ping.nonce) {
+                pendingPings.remove(ping);
+                // This line may trigger an event listener that re-runs ping().
+                ping.complete();
+                return;
+            }
+        }
+    }
+
+    /**
+     * Returns the difference between our best chain height and the peers, which can either be positive if we are
+     * behind the peer, or negative if the peer is ahead of us.
+     */
+    public int getPeerBlockHeightDifference() {
+        checkNotNull(blockChain, "No block chain configured");
+        // Chain will overflow signed int blocks in ~41,000 years.
+        int chainHeight = (int) getBestHeight();
+        // chainHeight should not be zero/negative because we shouldn't have given the user a Peer that is to another
+        // client-mode node, nor should it be unconnected. If that happens it means the user overrode us somewhere or
+        // there is a bug in the peer management code.
+        checkState(params.allowEmptyPeerChain() || chainHeight > 0, "Connected to peer with zero/negative chain height", chainHeight);
+        return chainHeight - blockChain.getBestChainHeight();
+    }
+
+    private boolean isNotFoundMessageSupported() {
+        return vPeerVersionMessage.clientVersion >= NotFoundMessage.MIN_PROTOCOL_VERSION;
+    }
+
+    /**
+     * Returns true if this peer will try and download things it is sent in "inv" messages. Normally you only need
+     * one peer to be downloading data. Defaults to true.
+     */
+    public boolean isDownloadData() {
+        return vDownloadData;
+    }
+
+    /**
+     * If set to false, the peer won't try and fetch blocks and transactions it hears about. Normally, only one
+     * peer should download missing blocks. Defaults to true. Changing this value from false to true may trigger
+     * a request to the remote peer for the contents of its memory pool, if Bloom filtering is active.
+     */
+    public void setDownloadData(boolean downloadData) {
+        this.vDownloadData = downloadData;
+    }
+
+    /** Returns version data announced by the remote peer. */
+    public VersionMessage getPeerVersionMessage() {
+        return vPeerVersionMessage;
+    }
+
+    /** Returns version data we announce to our remote peers. */
+    public VersionMessage getVersionMessage() {
+        return versionMessage;
+    }
+
+    /**
+     * @return the height of the best chain as claimed by peer: sum of its ver announcement and blocks announced since.
+     */
+    public long getBestHeight() {
+        return vPeerVersionMessage.bestHeight + blocksAnnounced.get();
+    }
+
+    /**
+     * The minimum P2P protocol version that is accepted. If the peer speaks a protocol version lower than this, it
+     * will be disconnected.
+     * @return true if the peer was disconnected as a result
+     */
+    public boolean setMinProtocolVersion(int minProtocolVersion) {
+        this.vMinProtocolVersion = minProtocolVersion;
+        VersionMessage ver = getPeerVersionMessage();
+        if (ver != null && ver.clientVersion < minProtocolVersion) {
+            log.warn("{}: Disconnecting due to new min protocol version {}, got: {}", this, minProtocolVersion, ver.clientVersion);
+            close();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * <p>Sets a Bloom filter on this connection. This will cause the given {@link BloomFilter} object to be sent to the
+     * remote peer and if either a memory pool has been set using the constructor or the
+     * vDownloadData property is true, a {@link MemoryPoolMessage} is sent as well to trigger downloading of any
+     * pending transactions that may be relevant.</p>
+     *
+     * <p>The Peer does not automatically request filters from any wallets added using {@link Peer#addWallet(Wallet)}.
+     * This is to allow callers to avoid redundantly recalculating the same filter repeatedly when using multiple peers
+     * and multiple wallets together.</p>
+     *
+     * <p>Therefore, you should not use this method if your app uses a {@link PeerGroup}. It is called for you.</p>
+     *
+     * <p>If the remote peer doesn't support Bloom filtering, then this call is ignored. Once set you presently cannot
+     * unset a filter, though the underlying p2p protocol does support it.</p>
+     */
+    public void setBloomFilter(BloomFilter filter) {
+        setBloomFilter(filter, true);
+    }
+
+    /**
+     * <p>Sets a Bloom filter on this connection. This will cause the given {@link BloomFilter} object to be sent to the
+     * remote peer and if requested, a {@link MemoryPoolMessage} is sent as well to trigger downloading of any
+     * pending transactions that may be relevant.</p>
+     *
+     * <p>The Peer does not automatically request filters from any wallets added using {@link Peer#addWallet(Wallet)}.
+     * This is to allow callers to avoid redundantly recalculating the same filter repeatedly when using multiple peers
+     * and multiple wallets together.</p>
+     *
+     * <p>Therefore, you should not use this method if your app uses a {@link PeerGroup}. It is called for you.</p>
+     *
+     * <p>If the remote peer doesn't support Bloom filtering, then this call is ignored. Once set you presently cannot
+     * unset a filter, though the underlying p2p protocol does support it.</p>
+     */
+    public void setBloomFilter(BloomFilter filter, boolean andQueryMemPool) {
+        checkNotNull(filter, "Clearing filters is not currently supported");
+        final VersionMessage ver = vPeerVersionMessage;
+        if (ver == null || !ver.isBloomFilteringSupported())
+            return;
+        vBloomFilter = filter;
+        log.debug("{}: Sending Bloom filter{}", this, andQueryMemPool ? " and querying mempool" : "");
+        sendMessage(filter);
+        if (andQueryMemPool)
+            sendMessage(new MemoryPoolMessage());
+        maybeRestartChainDownload();
+    }
+
+    private void maybeRestartChainDownload() {
+        lock.lock();
+        try {
+            if (awaitingFreshFilter == null)
+                return;
+            if (!vDownloadData) {
+                // This branch should be harmless but I want to know how often it happens in reality.
+                log.warn("Lost download peer status whilst awaiting fresh filter.");
+                return;
+            }
+            // Ping/pong to wait for blocks that are still being streamed to us to finish being downloaded and
+            // discarded.
+            ping().addListener(new Runnable() {
+                @Override
+                public void run() {
+                    lock.lock();
+                    checkNotNull(awaitingFreshFilter);
+                    GetDataMessage getdata = new GetDataMessage(params);
+                    for (Sha256Hash hash : awaitingFreshFilter)
+                        getdata.addFilteredBlock(hash);
+                    awaitingFreshFilter = null;
+                    lock.unlock();
+
+                    log.info("Restarting chain download");
+                    sendMessage(getdata);
+                    // TODO: This bizarre ping-after-getdata hack probably isn't necessary.
+                    // It's to ensure we know when the end of a filtered block stream of txns is, but we should just be
+                    // able to match txns with the merkleblock. Ask Matt why it's written this way.
+                    sendMessage(new Ping((long) (Math.random() * Long.MAX_VALUE)));
+                }
+            }, Threading.SAME_THREAD);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the last {@link BloomFilter} set by {@link Peer#setBloomFilter(BloomFilter)}. Bloom filters tell
+     * the remote node what transactions to send us, in a compact manner.
+     */
+    public BloomFilter getBloomFilter() {
+        return vBloomFilter;
+    }
+
+    /**
+     * Sends a query to the remote peer asking for the unspent transaction outputs (UTXOs) for the given outpoints,
+     * with the memory pool included. The result should be treated only as a hint: it's possible for the returned
+     * outputs to be fictional and not exist in any transaction, and it's possible for them to be spent the moment
+     * after the query returns. <b>Most peers do not support this request. You will need to connect to Bitcoin XT
+     * peers if you want this to work.</b>
+     *
+     * @throws ProtocolException if this peer doesn't support the protocol.
+     */
+    public ListenableFuture<UTXOsMessage> getUTXOs(List<TransactionOutPoint> outPoints) {
+        return getUTXOs(outPoints, true);
+    }
+
+    /**
+     * Sends a query to the remote peer asking for the unspent transaction outputs (UTXOs) for the given outpoints.
+     * The result should be treated only as a hint: it's possible for the returned outputs to be fictional and not
+     * exist in any transaction, and it's possible for them to be spent the moment after the query returns.
+     * <b>Most peers do not support this request. You will need to connect to Bitcoin XT peers if you want
+     * this to work.</b>
+     *
+     * @param includeMempool If true (the default) the results take into account the contents of the memory pool too.
+     * @throws ProtocolException if this peer doesn't support the protocol.
+     */
+    public ListenableFuture<UTXOsMessage> getUTXOs(List<TransactionOutPoint> outPoints, boolean includeMempool) {
+        lock.lock();
+        try {
+            VersionMessage peerVer = getPeerVersionMessage();
+            if (peerVer.clientVersion < GetUTXOsMessage.MIN_PROTOCOL_VERSION)
+                throw new ProtocolException("Peer does not support getutxos protocol version");
+            if ((peerVer.localServices & GetUTXOsMessage.SERVICE_FLAGS_REQUIRED) != GetUTXOsMessage.SERVICE_FLAGS_REQUIRED)
+                throw new ProtocolException("Peer does not support getutxos protocol flag: find Bitcoin XT nodes.");
+            SettableFuture<UTXOsMessage> future = SettableFuture.create();
+            // Add to the list of in flight requests.
+            if (getutxoFutures == null)
+                getutxoFutures = new LinkedList<>();
+            getutxoFutures.add(future);
+            sendMessage(new GetUTXOsMessage(params, outPoints, includeMempool));
+            return future;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns true if this peer will use getdata/notfound messages to walk backwards through transaction dependencies
+     * before handing the transaction off to the wallet. The wallet can do risk analysis on pending/recent transactions
+     * to try and discover if a pending tx might be at risk of double spending.
+     */
+    public boolean isDownloadTxDependencies() {
+        return vDownloadTxDependencyDepth > 0;
+    }
+
+    /**
+     * Sets if this peer will use getdata/notfound messages to walk backwards through transaction dependencies
+     * before handing the transaction off to the wallet. The wallet can do risk analysis on pending/recent transactions
+     * to try and discover if a pending tx might be at risk of double spending.
+     */
+    public void setDownloadTxDependencies(boolean enable) {
+        vDownloadTxDependencyDepth = enable ? Integer.MAX_VALUE : 0;
+    }
+
+    /**
+     * Sets if this peer will use getdata/notfound messages to walk backwards through transaction dependencies
+     * before handing the transaction off to the wallet. The wallet can do risk analysis on pending/recent transactions
+     * to try and discover if a pending tx might be at risk of double spending.
+     */
+    public void setDownloadTxDependencies(int depth) {
+        vDownloadTxDependencyDepth = depth;
+    }
+}
