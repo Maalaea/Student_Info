@@ -98,4 +98,54 @@ public class PeerAddress extends ChildMessage {
 
     /**
      * Constructs a peer address from an {@link InetSocketAddress}. An InetSocketAddress can take in as parameters an
-     *
+     * InetAddress or a String hostname. If you want to connect to a .onion, set the hostname to the .onion address.
+     */
+    public PeerAddress(NetworkParameters params, InetSocketAddress addr) {
+        this(params, addr.getAddress(), addr.getPort());
+    }
+
+    /**
+     * Constructs a peer address from a stringified hostname+port. Use this if you want to connect to a Tor .onion address.
+     */
+    public PeerAddress(NetworkParameters params, String hostname, int port) {
+        super(params);
+        this.hostname = hostname;
+        this.port = port;
+        this.protocolVersion = params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.CURRENT);
+        this.services = BigInteger.ZERO;
+    }
+
+    public static PeerAddress localhost(NetworkParameters params) {
+        return new PeerAddress(params, InetAddresses.forString("127.0.0.1"), params.getPort());
+    }
+
+    @Override
+    protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {
+        if (protocolVersion >= 31402) {
+            //TODO this appears to be dynamic because the client only ever sends out it's own address
+            //so assumes itself to be up.  For a fuller implementation this needs to be dynamic only if
+            //the address refers to this client.
+            int secs = (int) (Utils.currentTimeSeconds());
+            uint32ToByteStreamLE(secs, stream);
+        }
+        uint64ToByteStreamLE(services, stream);  // nServices.
+        // Java does not provide any utility to map an IPv4 address into IPv6 space, so we have to do it by hand.
+        byte[] ipBytes = addr.getAddress();
+        if (ipBytes.length == 4) {
+            byte[] v6addr = new byte[16];
+            System.arraycopy(ipBytes, 0, v6addr, 12, 4);
+            v6addr[10] = (byte) 0xFF;
+            v6addr[11] = (byte) 0xFF;
+            ipBytes = v6addr;
+        }
+        stream.write(ipBytes);
+        // And write out the port. Unlike the rest of the protocol, address and port is in big endian byte order.
+        stream.write((byte) (0xFF & port >> 8));
+        stream.write((byte) (0xFF & port));
+    }
+
+    @Override
+    protected void parse() throws ProtocolException {
+        // Format of a serialized address:
+        //   uint32 timestamp
+        //   uint64 services   (fla
