@@ -31,4 +31,29 @@ public interface PeerFilterProvider {
     long getEarliestKeyCreationTime();
 
     /**
-     * Called on all registered filter p
+     * Called on all registered filter providers before getBloomFilterElementCount and getBloomFilter are called.
+     * Once called, the provider should ensure that the items it will want to insert into the filter don't change.
+     * The reason is that all providers will have their element counts queried, and then a filter big enough for
+     * all of them will be specified. So the provider must use consistent state. There is guaranteed to be a matching
+     * call to endBloomFilterCalculation that can be used to e.g. unlock a lock.
+     */
+    void beginBloomFilterCalculation();
+
+
+    /**
+     * Gets the number of elements that will be added to a bloom filter returned by
+     * {@link PeerFilterProvider#getBloomFilter(int, double, long)}
+     */
+    int getBloomFilterElementCount();
+
+    /**
+     * Gets a bloom filter that contains all the necessary elements for the listener to receive relevant transactions.
+     * Default value should be an empty bloom filter with the given size, falsePositiveRate, and nTweak.
+     */
+    BloomFilter getBloomFilter(int size, double falsePositiveRate, long nTweak);
+
+    /** Whether this filter provider depends on the server updating the filter on all matches */
+    boolean isRequiringUpdateAllBloomFilter();
+
+    void endBloomFilterCalculation();
+}
