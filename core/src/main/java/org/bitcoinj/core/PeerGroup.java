@@ -139,4 +139,42 @@ public class PeerGroup implements TransactionBroadcaster {
     // The version message to use for new connections.
     @GuardedBy("lock") private VersionMessage versionMessage;
     // Maximum depth up to which pending transaction dependencies are downloaded, or 0 for disabled.
-    @
+    @GuardedBy("lock") private int downloadTxDependencyDepth;
+    // How many connections we want to have open at the current time. If we lose connections, we'll try opening more
+    // until we reach this count.
+    @GuardedBy("lock") private int maxConnections;
+    // Minimum protocol version we will allow ourselves to connect to: require Bloom filtering.
+    private volatile int vMinRequiredProtocolVersion;
+
+    /** How many milliseconds to wait after receiving a pong before sending another ping. */
+    public static final long DEFAULT_PING_INTERVAL_MSEC = 2000;
+    @GuardedBy("lock") private long pingIntervalMsec = DEFAULT_PING_INTERVAL_MSEC;
+
+    @GuardedBy("lock") private boolean useLocalhostPeerWhenPossible = true;
+    @GuardedBy("lock") private boolean ipv6Unreachable = false;
+
+    @GuardedBy("lock") private long fastCatchupTimeSecs;
+    private final CopyOnWriteArrayList<Wallet> wallets;
+    private final CopyOnWriteArrayList<PeerFilterProvider> peerFilterProviders;
+
+    // This event listener is added to every peer. It's here so when we announce transactions via an "inv", every
+    // peer can fetch them.
+    private final PeerListener peerListener = new PeerListener();
+
+    private int minBroadcastConnections = 0;
+    private final ScriptsChangeEventListener walletScriptEventListener = new ScriptsChangeEventListener() {
+        @Override public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+            recalculateFastCatchupAndFilter(FilterRecalculateMode.SEND_IF_CHANGED);
+        }
+    };
+
+    private final KeyChainEventListener walletKeyEventListener = new KeyChainEventListener() {
+        @Override public void onKeysAdded(List<ECKey> keys) {
+            recalculateFastCatchupAndFilter(FilterRecalculateMode.SEND_IF_CHANGED);
+        }
+    };
+
+    private final WalletCoinsReceivedEventListener walletCoinsReceivedEventListener = new WalletCoinsReceivedEventListener() {
+        @Override
+        public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+            // We received a relevant transaction. We MAY ne
