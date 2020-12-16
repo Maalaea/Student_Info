@@ -110,4 +110,33 @@ public class PeerGroup implements TransactionBroadcaster {
     private final CopyOnWriteArrayList<Peer> pendingPeers;
     private final ClientConnectionManager channels;
 
-    // The peer that has been s
+    // The peer that has been selected for the purposes of downloading announced data.
+    @GuardedBy("lock") private Peer downloadPeer;
+    // Callback for events related to chain download.
+    @Nullable @GuardedBy("lock") private PeerDataEventListener downloadListener;
+    private final CopyOnWriteArrayList<ListenerRegistration<BlocksDownloadedEventListener>> peersBlocksDownloadedEventListeners
+        = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<ListenerRegistration<ChainDownloadStartedEventListener>> peersChainDownloadStartedEventListeners
+        = new CopyOnWriteArrayList<>();
+    /** Callbacks for events related to peers connecting */
+    protected final CopyOnWriteArrayList<ListenerRegistration<PeerConnectedEventListener>> peerConnectedEventListeners
+        = new CopyOnWriteArrayList<>();
+    /** Callbacks for events related to peer connection/disconnection */
+    protected final CopyOnWriteArrayList<ListenerRegistration<PeerDiscoveredEventListener>> peerDiscoveredEventListeners
+        = new CopyOnWriteArrayList<>();
+    /** Callbacks for events related to peers disconnecting */
+    protected final CopyOnWriteArrayList<ListenerRegistration<PeerDisconnectedEventListener>> peerDisconnectedEventListeners
+        = new CopyOnWriteArrayList<>();
+    /** Callbacks for events related to peer data being received */
+    private final CopyOnWriteArrayList<ListenerRegistration<GetDataEventListener>> peerGetDataEventListeners
+        = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<ListenerRegistration<PreMessageReceivedEventListener>> peersPreMessageReceivedEventListeners
+        = new CopyOnWriteArrayList<>();
+    protected final CopyOnWriteArrayList<ListenerRegistration<OnTransactionBroadcastListener>> peersTransactionBroadastEventListeners
+        = new CopyOnWriteArrayList<>();
+    // Peer discovery sources, will be polled occasionally if there aren't enough inactives.
+    private final CopyOnWriteArraySet<PeerDiscovery> peerDiscoverers;
+    // The version message to use for new connections.
+    @GuardedBy("lock") private VersionMessage versionMessage;
+    // Maximum depth up to which pending transaction dependencies are downloaded, or 0 for disabled.
+    @
