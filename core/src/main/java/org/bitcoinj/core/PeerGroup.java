@@ -177,4 +177,28 @@ public class PeerGroup implements TransactionBroadcaster {
     private final WalletCoinsReceivedEventListener walletCoinsReceivedEventListener = new WalletCoinsReceivedEventListener() {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-            // We received a relevant transaction. We MAY ne
+            // We received a relevant transaction. We MAY need to recalculate and resend the Bloom filter, but only
+            // if we have received a transaction that includes a relevant pay-to-pubkey output.
+            //
+            // The reason is that pay-to-pubkey outputs, when spent, will not repeat any data we can predict in their
+            // inputs. So a remote peer will update the Bloom filter for us when such an output is seen matching the
+            // existing filter, so that it includes the tx hash in which the pay-to-pubkey output was observed. Thus
+            // the spending transaction will always match (due to the outpoint structure).
+            //
+            // Unfortunately, whilst this is required for correct sync of the chain in blocks, there are two edge cases.
+            //
+            // (1) If a wallet receives a relevant, confirmed p2pubkey output that was not broadcast across the network,
+            // for example in a coinbase transaction, then the node that's serving us the chain will update its filter
+            // but the rest will not. If another transaction then spends it, the other nodes won't match/relay it.
+            //
+            // (2) If we receive a p2pubkey output broadcast across the network, all currently connected nodes will see
+            // it and update their filter themselves, but any newly connected nodes will receive the last filter we
+            // calculated, which would not include this transaction.
+            //
+            // For this reason we check if the transaction contained any relevant pay to pubkeys and force a recalc
+            // and possibly retransmit if so. The recalculation process will end up including the tx hash into the
+            // filter. In case (1), we need to retransmit the filter to the connected peers. In case (2), we don't
+            // and shouldn't, we should just recalculate and cache the new filter for next time.
+            for (TransactionOutput output : tx.getOutputs()) {
+                if (output.getScriptPubKey().isSentToRawPubKey() && output.isMine(wallet)) {
+                    if (tx.getConfidence().getConfidenceType() == TransactionConfi
