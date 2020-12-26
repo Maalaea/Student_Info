@@ -201,4 +201,48 @@ public class PeerGroup implements TransactionBroadcaster {
             // and shouldn't, we should just recalculate and cache the new filter for next time.
             for (TransactionOutput output : tx.getOutputs()) {
                 if (output.getScriptPubKey().isSentToRawPubKey() && output.isMine(wallet)) {
-                    if (tx.getConfidence().getConfidenceType() == TransactionConfi
+                    if (tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                        recalculateFastCatchupAndFilter(FilterRecalculateMode.SEND_IF_CHANGED);
+                    else
+                        recalculateFastCatchupAndFilter(FilterRecalculateMode.DONT_SEND);
+                    return;
+                }
+            }
+        }
+    };
+
+    // Exponential backoff for peers starts at 1 second and maxes at 10 minutes.
+    private final ExponentialBackoff.Params peerBackoffParams = new ExponentialBackoff.Params(1000, 1.5f, 10 * 60 * 1000);
+    // Tracks failures globally in case of a network failure.
+    @GuardedBy("lock") private ExponentialBackoff groupBackoff = new ExponentialBackoff(new ExponentialBackoff.Params(1000, 1.5f, 10 * 1000));
+
+    // This is a synchronized set, so it locks on itself. We use it to prevent TransactionBroadcast objects from
+    // being garbage collected if nothing in the apps code holds on to them transitively. See the discussion
+    // in broadcastTransaction.
+    private final Set<TransactionBroadcast> runningBroadcasts;
+
+    private class PeerListener implements GetDataEventListener, BlocksDownloadedEventListener {
+
+        public PeerListener() {
+        }
+
+        @Override
+        public List<Message> getData(Peer peer, GetDataMessage m) {
+            return handleGetData(m);
+        }
+
+        @Override
+        public void onBlocksDownloaded(Peer peer, Block block, @Nullable FilteredBlock filteredBlock, int blocksLeft) {
+            if (chain == null) return;
+            final double rate = chain.getFalsePositiveRate();
+            final double target = bloomFilterMerger.getBloomFilterFPRate() * MAX_FP_RATE_INCREASE;
+            if (rate > target) {
+                // TODO: Avoid hitting this path if the remote peer didn't acknowledge applying a new filter yet.
+                if (log.isDebugEnabled())
+                    log.debug("Force update Bloom filter due to high false positive rate ({} vs {})", rate, target);
+                recalculateFastCatchupAndFilter(FilterRecalculateMode.FORCE_SEND_FOR_REFRESH);
+            }
+        }
+    }
+
+    private class PeerStartupListener implements PeerConnected
