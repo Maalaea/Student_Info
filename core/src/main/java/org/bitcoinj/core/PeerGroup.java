@@ -245,4 +245,47 @@ public class PeerGroup implements TransactionBroadcaster {
         }
     }
 
-    private class PeerStartupListener implements PeerConnected
+    private class PeerStartupListener implements PeerConnectedEventListener, PeerDisconnectedEventListener {
+        @Override
+        public void onPeerConnected(Peer peer, int peerCount) {
+            handleNewPeer(peer);
+        }
+
+        @Override
+        public void onPeerDisconnected(Peer peer, int peerCount) {
+            // The channel will be automatically removed from channels.
+            handlePeerDeath(peer, null);
+        }
+    }
+
+    private final PeerStartupListener startupListener = new PeerStartupListener();
+
+    /**
+     * The default Bloom filter false positive rate, which is selected to be extremely low such that you hardly ever
+     * download false positives. This provides maximum performance. Although this default can be overridden to push
+     * the FP rate higher, due to <a href="https://groups.google.com/forum/#!msg/bitcoinj/Ys13qkTwcNg/9qxnhwnkeoIJ">
+     * various complexities</a> there are still ways a remote peer can deanonymize the users wallet. This is why the
+     * FP rate is chosen for performance rather than privacy. If a future version of bitcoinj fixes the known
+     * de-anonymization attacks this FP rate may rise again (or more likely, become expressed as a bandwidth allowance).
+     */
+    public static final double DEFAULT_BLOOM_FILTER_FP_RATE = 0.00001;
+    /** Maximum increase in FP rate before forced refresh of the bloom filter */
+    public static final double MAX_FP_RATE_INCREASE = 10.0f;
+    // An object that calculates bloom filters given a list of filter providers, whilst tracking some state useful
+    // for privacy purposes.
+    private final FilterMerger bloomFilterMerger;
+
+    /** The default timeout between when a connection attempt begins and version message exchange completes */
+    public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
+    private volatile int vConnectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT_MILLIS;
+    
+    /** Whether bloom filter support is enabled when using a non FullPrunedBlockchain*/
+    private volatile boolean vBloomFilteringEnabled = true;
+
+    /** See {@link #PeerGroup(Context)} */
+    public PeerGroup(NetworkParameters params) {
+        this(params, null);
+    }
+
+    /**
+     * Creates a PeerGroup with the given context. No chain is provided so this 
