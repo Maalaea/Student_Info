@@ -334,4 +334,50 @@ public class PeerGroup implements TransactionBroadcaster {
         maxConnections = 0;
 
         int height = chain == null ? 0 : chain.getBestChainHeight();
-        versionMessage = new VersionMessage(
+        versionMessage = new VersionMessage(params, height);
+        // We never request that the remote node wait for a bloom filter yet, as we have no wallets
+        versionMessage.relayTxesBeforeFilter = true;
+
+        downloadTxDependencyDepth = Integer.MAX_VALUE;
+
+        inactives = new PriorityQueue<>(1, new Comparator<PeerAddress>() {
+            @SuppressWarnings("FieldAccessNotGuarded")   // only called when inactives is accessed, and lock is held then.
+            @Override
+            public int compare(PeerAddress a, PeerAddress b) {
+                checkState(lock.isHeldByCurrentThread());
+                int result = backoffMap.get(a).compareTo(backoffMap.get(b));
+                // Sort by port if otherwise equals - for testing
+                if (result == 0)
+                    result = Ints.compare(a.getPort(), b.getPort());
+                return result;
+            }
+        });
+        backoffMap = new HashMap<>();
+        peers = new CopyOnWriteArrayList<>();
+        pendingPeers = new CopyOnWriteArrayList<>();
+        channels = connectionManager;
+        peerDiscoverers = new CopyOnWriteArraySet<>();
+        runningBroadcasts = Collections.synchronizedSet(new HashSet<TransactionBroadcast>());
+        bloomFilterMerger = new FilterMerger(DEFAULT_BLOOM_FILTER_FP_RATE);
+        vMinRequiredProtocolVersion = params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.BLOOM_FILTER);
+    }
+
+    private CountDownLatch executorStartupLatch = new CountDownLatch(1);
+
+    protected ListeningScheduledExecutorService createPrivateExecutor() {
+        ListeningScheduledExecutorService result = MoreExecutors.listeningDecorator(
+                new ScheduledThreadPoolExecutor(1, new ContextPropagatingThreadFactory("PeerGroup Thread"))
+        );
+        // Hack: jam the executor so jobs just queue up until the user calls start() on us. For example, adding a wallet
+        // results in a bloom filter recalc being queued, but we don't want to do that until we're actually started.
+        result.execute(new Runnable() {
+            @Override
+            public void run() {
+                Uninterruptibles.awaitUninterruptibly(executorStartupLatch);
+            }
+        });
+        return result;
+    }
+
+    /**
+     * This is how many milliseconds we wait for peer discoveries to retur
