@@ -380,4 +380,65 @@ public class PeerGroup implements TransactionBroadcaster {
     }
 
     /**
-     * This is how many milliseconds we wait for peer discoveries to retur
+     * This is how many milliseconds we wait for peer discoveries to return their results.
+     */
+    public void setPeerDiscoveryTimeoutMillis(long peerDiscoveryTimeoutMillis) {
+        this.vPeerDiscoveryTimeoutMillis = peerDiscoveryTimeoutMillis;
+    }
+
+    /**
+     * Adjusts the desired number of connections that we will create to peers. Note that if there are already peers
+     * open and the new value is lower than the current number of peers, those connections will be terminated. Likewise
+     * if there aren't enough current connections to meet the new requested max size, some will be added.
+     */
+    public void setMaxConnections(int maxConnections) {
+        int adjustment;
+        lock.lock();
+        try {
+            this.maxConnections = maxConnections;
+            if (!isRunning()) return;
+        } finally {
+            lock.unlock();
+        }
+        // We may now have too many or too few open connections. Add more or drop some to get to the right amount.
+        adjustment = maxConnections - channels.getConnectedClientCount();
+        if (adjustment > 0)
+            triggerConnections();
+
+        if (adjustment < 0)
+            channels.closeConnections(-adjustment);
+    }
+
+    /**
+     * Configure download of pending transaction dependencies. A change of values only takes effect for newly connected
+     * peers.
+     */
+    public void setDownloadTxDependencies(int depth) {
+        lock.lock();
+        try {
+            this.downloadTxDependencyDepth = depth;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private Runnable triggerConnectionsJob = new Runnable() {
+        private boolean firstRun = true;
+        private final static long MIN_PEER_DISCOVERY_INTERVAL = 1000L;
+
+        @Override
+        public void run() {
+            try {
+                go();
+            } catch (Throwable e) {
+                log.error("Exception when trying to build connections", e);  // The executor swallows exceptions :(
+            }
+        }
+
+        public void go() {
+            if (!vRunning) return;
+
+            boolean doDiscovery = false;
+            long now = Utils.currentTimeMillis();
+            lock.lock();
+            t
