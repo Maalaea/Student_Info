@@ -441,4 +441,49 @@ public class PeerGroup implements TransactionBroadcaster {
             boolean doDiscovery = false;
             long now = Utils.currentTimeMillis();
             lock.lock();
-            t
+            try {
+                // First run: try and use a local node if there is one, for the additional security it can provide.
+                // But, not on Android as there are none for this platform: it could only be a malicious app trying
+                // to hijack our traffic.
+                if (!Utils.isAndroidRuntime() && useLocalhostPeerWhenPossible && maybeCheckForLocalhostPeer() && firstRun) {
+                    log.info("Localhost peer detected, trying to use it instead of P2P discovery");
+                    maxConnections = 0;
+                    connectToLocalHost();
+                    return;
+                }
+
+                boolean havePeerWeCanTry = !inactives.isEmpty() && backoffMap.get(inactives.peek()).getRetryTime() <= now;
+                doDiscovery = !havePeerWeCanTry;
+            } finally {
+                firstRun = false;
+                lock.unlock();
+            }
+
+            // Don't hold the lock across discovery as this process can be very slow.
+            boolean discoverySuccess = false;
+            if (doDiscovery) {
+                try {
+                    discoverySuccess = discoverPeers() > 0;
+                } catch (PeerDiscoveryException e) {
+                    log.error("Peer discovery failure", e);
+                }
+            }
+
+            long retryTime;
+            PeerAddress addrToTry;
+            lock.lock();
+            try {
+                if (doDiscovery) {
+                    // Require that we have enough connections, to consider this
+                    // a success, or we just constantly test for new peers
+                    if (discoverySuccess && countConnectedAndPendingPeers() >= getMaxConnections()) {
+                        groupBackoff.trackSuccess();
+                    } else {
+                        groupBackoff.trackFailure();
+                    }
+                }
+                // Inactives is sorted by backoffMap time.
+                if (inactives.isEmpty()) {
+                    if (countConnectedAndPendingPeers() < getMaxConnections()) {
+                        long interval = Math.max(groupBackoff.getRetryTime() - now, MIN_PEER_DISCOVERY_INTERVAL);
+             
