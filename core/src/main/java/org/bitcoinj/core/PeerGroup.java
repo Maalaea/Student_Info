@@ -486,4 +486,53 @@ public class PeerGroup implements TransactionBroadcaster {
                 if (inactives.isEmpty()) {
                     if (countConnectedAndPendingPeers() < getMaxConnections()) {
                         long interval = Math.max(groupBackoff.getRetryTime() - now, MIN_PEER_DISCOVERY_INTERVAL);
-             
+                        log.info("Peer discovery didn't provide us any more peers, will try again in "
+                            + interval + "ms.");
+                        executor.schedule(this, interval, TimeUnit.MILLISECONDS);
+                    } else {
+                        // We have enough peers and discovery provided no more, so just settle down. Most likely we
+                        // were given a fixed set of addresses in some test scenario.
+                    }
+                    return;
+                } else {
+                    do {
+                        addrToTry = inactives.poll();
+                    } while (ipv6Unreachable && addrToTry.getAddr() instanceof Inet6Address);
+                    retryTime = backoffMap.get(addrToTry).getRetryTime();
+                }
+                retryTime = Math.max(retryTime, groupBackoff.getRetryTime());
+                if (retryTime > now) {
+                    long delay = retryTime - now;
+                    log.info("Waiting {} msec before next connect attempt {}", delay, addrToTry == null ? "" : "to " + addrToTry);
+                    inactives.add(addrToTry);
+                    executor.schedule(this, delay, TimeUnit.MILLISECONDS);
+                    return;
+                }
+                connectTo(addrToTry, false, vConnectTimeoutMillis);
+            } finally {
+                lock.unlock();
+            }
+            if (countConnectedAndPendingPeers() < getMaxConnections()) {
+                executor.execute(this);   // Try next peer immediately.
+            }
+        }
+    };
+
+    private void triggerConnections() {
+        // Run on a background thread due to the need to potentially retry and back off in the background.
+        if (!executor.isShutdown())
+            executor.execute(triggerConnectionsJob);
+    }
+
+    /** The maximum number of connections that we will create to peers. */
+    public int getMaxConnections() {
+        lock.lock();
+        try {
+            return maxConnections;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private List<Message> handleGetData(GetDataMessage m) {
+        // Scans the wallets and memory poo
