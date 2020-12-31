@@ -591,4 +591,43 @@ public class PeerGroup implements TransactionBroadcaster {
 
     /**
      * Sets information that identifies this software to remote nodes. This is a convenience wrapper for creating 
-     * a new {@link VersionMessage}, calling {@link VersionMessage#appendToSubVer(String, Str
+     * a new {@link VersionMessage}, calling {@link VersionMessage#appendToSubVer(String, String, String)} on it,
+     * and then calling {@link PeerGroup#setVersionMessage(VersionMessage)} on the result of that. See the docs for
+     * {@link VersionMessage#appendToSubVer(String, String, String)} for information on what the fields should contain.
+     */
+    public void setUserAgent(String name, String version, @Nullable String comments) {
+        //TODO Check that height is needed here (it wasnt, but it should be, no?)
+        int height = chain == null ? 0 : chain.getBestChainHeight();
+        VersionMessage ver = new VersionMessage(params, height);
+        ver.relayTxesBeforeFilter = false;
+        updateVersionMessageRelayTxesBeforeFilter(ver);
+        ver.appendToSubVer(name, version, comments);
+        setVersionMessage(ver);
+    }
+    
+    // Updates the relayTxesBeforeFilter flag of ver
+    private void updateVersionMessageRelayTxesBeforeFilter(VersionMessage ver) {
+        // We will provide the remote node with a bloom filter (ie they shouldn't relay yet)
+        // if chain == null || !chain.shouldVerifyTransactions() and a wallet is added and bloom filters are enabled
+        // Note that the default here means that no tx invs will be received if no wallet is ever added
+        lock.lock();
+        try {
+            boolean spvMode = chain != null && !chain.shouldVerifyTransactions();
+            boolean willSendFilter = spvMode && peerFilterProviders.size() > 0 && vBloomFilteringEnabled;
+            ver.relayTxesBeforeFilter = !willSendFilter;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Sets information that identifies this software to remote nodes. This is a convenience wrapper for creating
+     * a new {@link VersionMessage}, calling {@link VersionMessage#appendToSubVer(String, String, String)} on it,
+     * and then calling {@link PeerGroup#setVersionMessage(VersionMessage)} on the result of that. See the docs for
+     * {@link VersionMessage#appendToSubVer(String, String, String)} for information on what the fields should contain.
+     */
+    public void setUserAgent(String name, String version) {
+        setUserAgent(name, version, null);
+    }
+
+    /** Use the more spec
