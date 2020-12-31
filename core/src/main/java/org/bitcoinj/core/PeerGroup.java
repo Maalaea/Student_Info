@@ -535,4 +535,60 @@ public class PeerGroup implements TransactionBroadcaster {
     }
 
     private List<Message> handleGetData(GetDataMessage m) {
-        // Scans the wallets and memory poo
+        // Scans the wallets and memory pool for transactions in the getdata message and returns them.
+        // Runs on peer threads.
+        lock.lock();
+        try {
+            LinkedList<Message> transactions = new LinkedList<>();
+            LinkedList<InventoryItem> items = new LinkedList<>(m.getItems());
+            Iterator<InventoryItem> it = items.iterator();
+            while (it.hasNext()) {
+                InventoryItem item = it.next();
+                // Check the wallets.
+                for (Wallet w : wallets) {
+                    Transaction tx = w.getTransaction(item.hash);
+                    if (tx == null) continue;
+                    transactions.add(tx);
+                    it.remove();
+                    break;
+                }
+            }
+            return transactions;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Sets the {@link VersionMessage} that will be announced on newly created connections. A version message is
+     * primarily interesting because it lets you customize the "subVer" field which is used a bit like the User-Agent
+     * field from HTTP. It means your client tells the other side what it is, see
+     * <a href="https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki">BIP 14</a>.
+     *
+     * The VersionMessage you provide is copied and the best chain height/time filled in for each new connection,
+     * therefore you don't have to worry about setting that. The provided object is really more of a template.
+     */
+    public void setVersionMessage(VersionMessage ver) {
+        lock.lock();
+        try {
+            versionMessage = ver;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the version message provided by setVersionMessage or a default if none was given.
+     */
+    public VersionMessage getVersionMessage() {
+        lock.lock();
+        try {
+            return versionMessage;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Sets information that identifies this software to remote nodes. This is a convenience wrapper for creating 
+     * a new {@link VersionMessage}, calling {@link VersionMessage#appendToSubVer(String, Str
