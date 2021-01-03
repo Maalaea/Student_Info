@@ -670,4 +670,52 @@ public class PeerGroup implements TransactionBroadcaster {
         peersBlocksDownloadedEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
         for (Peer peer : getConnectedPeers())
             peer.addBlocksDownloadedEventListener(executor, listener);
-        for (Peer peer : getP
+        for (Peer peer : getPendingPeers())
+            peer.addBlocksDownloadedEventListener(executor, listener);
+    }
+
+    /** See {@link Peer#addBlocksDownloadedEventListener(BlocksDownloadedEventListener)} */
+    public void addChainDownloadStartedEventListener(ChainDownloadStartedEventListener listener) {
+        addChainDownloadStartedEventListener(Threading.USER_THREAD, listener);
+    }
+
+    /**
+     * <p>Adds a listener that will be notified on the given executor when
+     * chain download starts.</p>
+     */
+    public void addChainDownloadStartedEventListener(Executor executor, ChainDownloadStartedEventListener listener) {
+        peersChainDownloadStartedEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
+        for (Peer peer : getConnectedPeers())
+            peer.addChainDownloadStartedEventListener(executor, listener);
+        for (Peer peer : getPendingPeers())
+            peer.addChainDownloadStartedEventListener(executor, listener);
+    }
+
+    /** See {@link Peer#addConnectedEventListener(PeerConnectedEventListener)} */
+    public void addConnectedEventListener(PeerConnectedEventListener listener) {
+        addConnectedEventListener(Threading.USER_THREAD, listener);
+    }
+
+    /**
+     * <p>Adds a listener that will be notified on the given executor when
+     * new peers are connected to.</p>
+     */
+    public void addConnectedEventListener(Executor executor, PeerConnectedEventListener listener) {
+        peerConnectedEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
+        for (Peer peer : getConnectedPeers())
+            peer.addConnectedEventListener(executor, listener);
+        for (Peer peer : getPendingPeers())
+            peer.addConnectedEventListener(executor, listener);
+    }
+
+    /** See {@link Peer#addDisconnectedEventListener(PeerDisconnectedEventListener)} */
+    public void addDisconnectedEventListener(PeerDisconnectedEventListener listener) {
+        addDisconnectedEventListener(Threading.USER_THREAD, listener);
+    }
+
+    /**
+     * <p>Adds a listener that will be notified on the given executor when
+     * peers are disconnected from.</p>
+     */
+    public void addDisconnectedEventListener(Executor executor, PeerDisconnectedEventListener listener) {
+        peerDisconnectedEventListe
