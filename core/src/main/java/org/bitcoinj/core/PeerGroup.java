@@ -761,3 +761,45 @@ public class PeerGroup implements TransactionBroadcaster {
     public void addOnTransactionBroadcastListener(Executor executor, OnTransactionBroadcastListener listener) {
         peersTransactionBroadastEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
         for (Peer peer : getConnectedPeers())
+            peer.addOnTransactionBroadcastListener(executor, listener);
+        for (Peer peer : getPendingPeers())
+            peer.addOnTransactionBroadcastListener(executor, listener);
+    }
+
+    /** See {@link Peer#addPreMessageReceivedEventListener(PreMessageReceivedEventListener)} */
+    public void addPreMessageReceivedEventListener(PreMessageReceivedEventListener listener) {
+        addPreMessageReceivedEventListener(Threading.USER_THREAD, listener);
+    }
+
+    /** See {@link Peer#addPreMessageReceivedEventListener(Executor, PreMessageReceivedEventListener)} */
+    public void addPreMessageReceivedEventListener(Executor executor, PreMessageReceivedEventListener listener) {
+        peersPreMessageReceivedEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
+        for (Peer peer : getConnectedPeers())
+            peer.addPreMessageReceivedEventListener(executor, listener);
+        for (Peer peer : getPendingPeers())
+            peer.addPreMessageReceivedEventListener(executor, listener);
+    }
+
+    /** Use the more specific listener methods instead */
+    @Deprecated @SuppressWarnings("deprecation")
+    public void removeEventListener(AbstractPeerEventListener listener) {
+        removeBlocksDownloadedEventListener(listener);
+        removeChainDownloadStartedEventListener(listener);
+        removeConnectedEventListener(listener);
+        removeDisconnectedEventListener(listener);
+        removeDiscoveredEventListener(listener);
+        removeGetDataEventListener(listener);
+        removeOnTransactionBroadcastListener(listener);
+        removePreMessageReceivedEventListener(listener);
+    }
+
+    public boolean removeBlocksDownloadedEventListener(BlocksDownloadedEventListener listener) {
+        boolean result = ListenerRegistration.removeFromList(listener, peersBlocksDownloadedEventListeners);
+        for (Peer peer : getConnectedPeers())
+            peer.removeBlocksDownloadedEventListener(listener);
+        for (Peer peer : getPendingPeers())
+            peer.removeBlocksDownloadedEventListener(listener);
+        return result;
+    }
+
+    public boolean removeChainDownloadStartedEventListener(ChainDownloadStartedEve
