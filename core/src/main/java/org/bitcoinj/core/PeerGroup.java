@@ -718,4 +718,46 @@ public class PeerGroup implements TransactionBroadcaster {
      * peers are disconnected from.</p>
      */
     public void addDisconnectedEventListener(Executor executor, PeerDisconnectedEventListener listener) {
-        peerDisconnectedEventListe
+        peerDisconnectedEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
+        for (Peer peer : getConnectedPeers())
+            peer.addDisconnectedEventListener(executor, listener);
+        for (Peer peer : getPendingPeers())
+            peer.addDisconnectedEventListener(executor, listener);
+    }
+
+    /** See {@link Peer#addDiscoveredEventListener(PeerDiscoveredEventListener)} */
+    public void addDiscoveredEventListener(PeerDiscoveredEventListener listener) {
+        addDiscoveredEventListener(Threading.USER_THREAD, listener);
+    }
+
+    /**
+     * <p>Adds a listener that will be notified on the given executor when new
+     * peers are discovered.</p>
+     */
+    public void addDiscoveredEventListener(Executor executor, PeerDiscoveredEventListener listener) {
+        peerDiscoveredEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
+    }
+
+    /** See {@link Peer#addGetDataEventListener(GetDataEventListener)} */
+    public void addGetDataEventListener(GetDataEventListener listener) {
+        addGetDataEventListener(Threading.USER_THREAD, listener);
+    }
+
+    /** See {@link Peer#addGetDataEventListener(Executor, GetDataEventListener)} */
+    public void addGetDataEventListener(final Executor executor, final GetDataEventListener listener) {
+        peerGetDataEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
+        for (Peer peer : getConnectedPeers())
+            peer.addGetDataEventListener(executor, listener);
+        for (Peer peer : getPendingPeers())
+            peer.addGetDataEventListener(executor, listener);
+    }
+
+    /** See {@link Peer#addOnTransactionBroadcastListener(OnTransactionBroadcastListener)} */
+    public void addOnTransactionBroadcastListener(OnTransactionBroadcastListener listener) {
+        addOnTransactionBroadcastListener(Threading.USER_THREAD, listener);
+    }
+
+    /** See {@link Peer#addOnTransactionBroadcastListener(OnTransactionBroadcastListener)} */
+    public void addOnTransactionBroadcastListener(Executor executor, OnTransactionBroadcastListener listener) {
+        peersTransactionBroadastEventListeners.add(new ListenerRegistration<>(checkNotNull(listener), executor));
+        for (Peer peer : getConnectedPeers())
