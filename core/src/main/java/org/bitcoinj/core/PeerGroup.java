@@ -802,4 +802,50 @@ public class PeerGroup implements TransactionBroadcaster {
         return result;
     }
 
-    public boolean removeChainDownloadStartedEventListener(ChainDownloadStartedEve
+    public boolean removeChainDownloadStartedEventListener(ChainDownloadStartedEventListener listener) {
+        boolean result = ListenerRegistration.removeFromList(listener, peersChainDownloadStartedEventListeners);
+        for (Peer peer : getConnectedPeers())
+            peer.removeChainDownloadStartedEventListener(listener);
+        for (Peer peer : getPendingPeers())
+            peer.removeChainDownloadStartedEventListener(listener);
+        return result;
+    }
+
+    /** The given event listener will no longer be called with events. */
+    public boolean removeConnectedEventListener(PeerConnectedEventListener listener) {
+        boolean result = ListenerRegistration.removeFromList(listener, peerConnectedEventListeners);
+        for (Peer peer : getConnectedPeers())
+            peer.removeConnectedEventListener(listener);
+        for (Peer peer : getPendingPeers())
+            peer.removeConnectedEventListener(listener);
+        return result;
+    }
+
+    /** The given event listener will no longer be called with events. */
+    public boolean removeDisconnectedEventListener(PeerDisconnectedEventListener listener) {
+        boolean result = ListenerRegistration.removeFromList(listener, peerDisconnectedEventListeners);
+        for (Peer peer : getConnectedPeers())
+            peer.removeDisconnectedEventListener(listener);
+        for (Peer peer : getPendingPeers())
+            peer.removeDisconnectedEventListener(listener);
+        return result;
+    }
+
+    /** The given event listener will no longer be called with events. */
+    public boolean removeDiscoveredEventListener(PeerDiscoveredEventListener listener) {
+        boolean result = ListenerRegistration.removeFromList(listener, peerDiscoveredEventListeners);
+        return result;
+    }
+
+    /** The given event listener will no longer be called with events. */
+    public boolean removeGetDataEventListener(GetDataEventListener listener) {
+        boolean result = ListenerRegistration.removeFromList(listener, peerGetDataEventListeners);
+        for (Peer peer : getConnectedPeers())
+            peer.removeGetDataEventListener(listener);
+        for (Peer peer : getPendingPeers())
+            peer.removeGetDataEventListener(listener);
+        return result;
+    }
+
+    /** The given event listener will no longer be called with events. */
+    public boolean r
