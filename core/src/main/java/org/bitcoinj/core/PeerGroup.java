@@ -848,4 +848,69 @@ public class PeerGroup implements TransactionBroadcaster {
     }
 
     /** The given event listener will no longer be called with events. */
-    public boolean r
+    public boolean removeOnTransactionBroadcastListener(OnTransactionBroadcastListener listener) {
+        boolean result = ListenerRegistration.removeFromList(listener, peersTransactionBroadastEventListeners);
+        for (Peer peer : getConnectedPeers())
+            peer.removeOnTransactionBroadcastListener(listener);
+        for (Peer peer : getPendingPeers())
+            peer.removeOnTransactionBroadcastListener(listener);
+        return result;
+    }
+
+    public boolean removePreMessageReceivedEventListener(PreMessageReceivedEventListener listener) {
+        boolean result = ListenerRegistration.removeFromList(listener, peersPreMessageReceivedEventListeners);
+        for (Peer peer : getConnectedPeers())
+            peer.removePreMessageReceivedEventListener(listener);
+        for (Peer peer : getPendingPeers())
+            peer.removePreMessageReceivedEventListener(listener);
+        return result;
+    }
+
+    /**
+     * Returns a newly allocated list containing the currently connected peers. If all you care about is the count,
+     * use numConnectedPeers().
+     */
+    public List<Peer> getConnectedPeers() {
+        lock.lock();
+        try {
+            return new ArrayList<>(peers);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns a list containing Peers that did not complete connection yet.
+     */
+    public List<Peer> getPendingPeers() {
+        lock.lock();
+        try {
+            return new ArrayList<>(pendingPeers);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Add an address to the list of potential peers to connect to. It won't necessarily be used unless there's a need
+     * to build new connections to reach the max connection count.
+     *
+     * @param peerAddress IP/port to use.
+     */
+    public void addAddress(PeerAddress peerAddress) {
+        int newMax;
+        lock.lock();
+        try {
+            addInactive(peerAddress);
+            newMax = getMaxConnections() + 1;
+        } finally {
+            lock.unlock();
+        }
+        setMaxConnections(newMax);
+    }
+
+    private void addInactive(PeerAddress peerAddress) {
+        lock.lock();
+        try {
+            // Deduplicate
+            if (backoffMap.containsKey(peerAd
