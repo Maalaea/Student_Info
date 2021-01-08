@@ -967,4 +967,59 @@ public class PeerGroup implements TransactionBroadcaster {
         final Stopwatch watch = Stopwatch.createStarted();
         final List<PeerAddress> addressList = Lists.newLinkedList();
         for (PeerDiscovery peerDiscovery : peerDiscoverers /* COW */) {
-            InetSocketA
+            InetSocketAddress[] addresses;
+            addresses = peerDiscovery.getPeers(requiredServices, peerDiscoveryTimeoutMillis, TimeUnit.MILLISECONDS);
+            for (InetSocketAddress address : addresses) addressList.add(new PeerAddress(params, address));
+            if (addressList.size() >= maxPeersToDiscoverCount) break;
+        }
+        if (!addressList.isEmpty()) {
+            for (PeerAddress address : addressList) {
+                addInactive(address);
+            }
+            final ImmutableSet<PeerAddress> peersDiscoveredSet = ImmutableSet.copyOf(addressList);
+            for (final ListenerRegistration<PeerDiscoveredEventListener> registration : peerDiscoveredEventListeners /* COW */) {
+                registration.executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        registration.listener.onPeersDiscovered(peersDiscoveredSet);
+                    }
+                });
+            }
+        }
+        watch.stop();
+        log.info("Peer discovery took {} and returned {} items", watch, addressList.size());
+        return addressList.size();
+    }
+
+    @VisibleForTesting
+    void waitForJobQueue() {
+        Futures.getUnchecked(executor.submit(Runnables.doNothing()));
+    }
+
+    private int countConnectedAndPendingPeers() {
+        lock.lock();
+        try {
+            return peers.size() + pendingPeers.size();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private enum LocalhostCheckState {
+        NOT_TRIED,
+        FOUND,
+        FOUND_AND_CONNECTED,
+        NOT_THERE
+    }
+    private LocalhostCheckState localhostCheckState = LocalhostCheckState.NOT_TRIED;
+
+    private boolean maybeCheckForLocalhostPeer() {
+        checkState(lock.isHeldByCurrentThread());
+        if (localhostCheckState == LocalhostCheckState.NOT_TRIED) {
+            // Do a fast blocking connect to see if anything is listening.
+            Socket socket = null;
+            try {
+                socket = new Socket();
+                socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"), params.getPort()), vConnectTimeoutMillis);
+                localhostCheckState = LocalhostCheckState.FOUND;
+                re
