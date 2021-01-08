@@ -913,4 +913,58 @@ public class PeerGroup implements TransactionBroadcaster {
         lock.lock();
         try {
             // Deduplicate
-            if (backoffMap.containsKey(peerAd
+            if (backoffMap.containsKey(peerAddress))
+                return;
+            backoffMap.put(peerAddress, new ExponentialBackoff(peerBackoffParams));
+            inactives.offer(peerAddress);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Convenience for connecting only to peers that can serve specific services. It will configure suitable peer
+     * discoveries.
+     * @param requiredServices Required services as a bitmask, e.g. {@link VersionMessage#NODE_NETWORK}.
+     */
+    public void setRequiredServices(long requiredServices) {
+        lock.lock();
+        try {
+            this.requiredServices = requiredServices;
+            peerDiscoverers.clear();
+            addPeerDiscovery(MultiplexingDiscovery.forServices(params, requiredServices));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Convenience method for addAddress(new PeerAddress(address, params.port)); */
+    public void addAddress(InetAddress address) {
+        addAddress(new PeerAddress(params, address, params.getPort()));
+    }
+
+    /**
+     * Add addresses from a discovery source to the list of potential peers to connect to. If max connections has not
+     * been configured, or set to zero, then it's set to the default at this point.
+     */
+    public void addPeerDiscovery(PeerDiscovery peerDiscovery) {
+        lock.lock();
+        try {
+            if (getMaxConnections() == 0)
+                setMaxConnections(DEFAULT_CONNECTIONS);
+            peerDiscoverers.add(peerDiscovery);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Returns number of discovered peers. */
+    protected int discoverPeers() throws PeerDiscoveryException {
+        // Don't hold the lock whilst doing peer discovery: it can take a long time and cause high API latency.
+        checkState(!lock.isHeldByCurrentThread());
+        int maxPeersToDiscoverCount = this.vMaxPeersToDiscoverCount;
+        long peerDiscoveryTimeoutMillis = this.vPeerDiscoveryTimeoutMillis;
+        final Stopwatch watch = Stopwatch.createStarted();
+        final List<PeerAddress> addressList = Lists.newLinkedList();
+        for (PeerDiscovery peerDiscovery : peerDiscoverers /* COW */) {
+            InetSocketA
