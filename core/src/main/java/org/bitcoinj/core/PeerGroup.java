@@ -1022,4 +1022,65 @@ public class PeerGroup implements TransactionBroadcaster {
                 socket = new Socket();
                 socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"), params.getPort()), vConnectTimeoutMillis);
                 localhostCheckState = LocalhostCheckState.FOUND;
-                re
+                return true;
+            } catch (IOException e) {
+                log.info("Localhost peer not detected.");
+                localhostCheckState = LocalhostCheckState.NOT_THERE;
+            } finally {
+                if (socket != null) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        // Ignore.
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Starts the PeerGroup and begins network activity.
+     * @return A future that completes when first connection activity has been triggered (note: not first connection made).
+     */
+    public ListenableFuture startAsync() {
+        // This is run in a background thread by the Service implementation.
+        if (chain == null) {
+            // Just try to help catch what might be a programming error.
+            log.warn("Starting up with no attached block chain. Did you forget to pass one to the constructor?");
+        }
+        checkState(!vUsedUp, "Cannot start a peer group twice");
+        vRunning = true;
+        vUsedUp = true;
+        executorStartupLatch.countDown();
+        // We do blocking waits during startup, so run on the executor thread.
+        return executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    log.info("Starting ...");
+                    channels.startAsync();
+                    channels.awaitRunning();
+                    triggerConnections();
+                    setupPinging();
+                } catch (Throwable e) {
+                    log.error("Exception when starting up", e);  // The executor swallows exceptions :(
+                }
+            }
+        });
+    }
+
+    /** Does a blocking startup. */
+    public void start() {
+        Futures.getUnchecked(startAsync());
+    }
+
+    /** Can just use start() for a blocking start here instead of startAsync/awaitRunning: PeerGroup is no longer a Guava service. */
+    @Deprecated
+    public void awaitRunning() {
+        waitForJobQueue();
+    }
+
+    public ListenableFuture stopAsync() {
+        checkState(vRunning);
+        v
