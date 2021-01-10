@@ -1083,4 +1083,61 @@ public class PeerGroup implements TransactionBroadcaster {
 
     public ListenableFuture stopAsync() {
         checkState(vRunning);
-        v
+        vRunning = false;
+        ListenableFuture future = executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    log.info("Stopping ...");
+                    // Blocking close of all sockets.
+                    channels.stopAsync();
+                    channels.awaitTerminated();
+                    for (PeerDiscovery peerDiscovery : peerDiscoverers) {
+                        peerDiscovery.shutdown();
+                    }
+                    vRunning = false;
+                    log.info("Stopped.");
+                } catch (Throwable e) {
+                    log.error("Exception when shutting down", e);  // The executor swallows exceptions :(
+                }
+            }
+        });
+        executor.shutdown();
+        return future;
+    }
+
+    /** Does a blocking stop */
+    public void stop() {
+        try {
+            stopAsync();
+            log.info("Awaiting PeerGroup shutdown ...");
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Can just use stop() here instead of stopAsync/awaitTerminated: PeerGroup is no longer a Guava service. */
+    @Deprecated
+    public void awaitTerminated() {
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * <p>Link the given wallet to this PeerGroup. This is used for three purposes:</p>
+     *
+     * <ol>
+     *   <li>So the wallet receives broadcast transactions.</li>
+     *   <li>Announcing pending transactions that didn't get into the chain yet to our peers.</li>
+     *   <li>Set the fast catchup time using {@link PeerGroup#setFastCatchupTimeSecs(long)}, to optimize chain
+     *       download.</li>
+     * </ol>
+     *
+     * <p>Note that this should be done before chain download commences because if you add a wallet with keys earlier
+     * than the current chain head, the relevant parts of the chain won't be redownloaded for you.</p>
+     *
+     * <p>The Wallet will have an event listener r
