@@ -1140,4 +1140,46 @@ public class PeerGroup implements TransactionBroadcaster {
      * <p>Note that this should be done before chain download commences because if you add a wallet with keys earlier
      * than the current chain head, the relevant parts of the chain won't be redownloaded for you.</p>
      *
-     * <p>The Wallet will have an event listener r
+     * <p>The Wallet will have an event listener registered on it, so to avoid leaks remember to use
+     * {@link PeerGroup#removeWallet(Wallet)} on it if you wish to keep the Wallet but lose the PeerGroup.</p>
+     */
+    public void addWallet(Wallet wallet) {
+        lock.lock();
+        try {
+            checkNotNull(wallet);
+            checkState(!wallets.contains(wallet));
+            wallets.add(wallet);
+            wallet.setTransactionBroadcaster(this);
+            wallet.addCoinsReceivedEventListener(Threading.SAME_THREAD, walletCoinsReceivedEventListener);
+            wallet.addKeyChainEventListener(Threading.SAME_THREAD, walletKeyEventListener);
+            wallet.addScriptChangeEventListener(Threading.SAME_THREAD, walletScriptEventListener);
+            addPeerFilterProvider(wallet);
+            for (Peer peer : peers) {
+                peer.addWallet(wallet);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * <p>Link the given PeerFilterProvider to this PeerGroup. DO NOT use this for Wallets, use
+     * {@link PeerGroup#addWallet(Wallet)} instead.</p>
+     *
+     * <p>Note that this should be done before chain download commences because if you add a listener with keys earlier
+     * than the current chain head, the relevant parts of the chain won't be redownloaded for you.</p>
+     *
+     * <p>This method invokes {@link PeerGroup#recalculateFastCatchupAndFilter(FilterRecalculateMode)}.
+     * The return value of this method is the <code>ListenableFuture</code> returned by that invocation.</p>
+     *
+     * @return a future that completes once each <code>Peer</code> in this group has had its
+     *         <code>BloomFilter</code> (re)set.
+     */
+    public ListenableFuture<BloomFilter> addPeerFilterProvider(PeerFilterProvider provider) {
+        lock.lock();
+        try {
+            checkNotNull(provider);
+            checkState(!peerFilterProviders.contains(provider));
+            // Insert provider at the start. This avoids various concurrency problems that could occur because we need
+            // all providers to be in a consistent, unchanging state whilst the filter is built. Providers can give
+            // this guarantee by taking a lock in their begin method, but if we add 
