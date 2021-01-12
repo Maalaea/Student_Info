@@ -1182,4 +1182,45 @@ public class PeerGroup implements TransactionBroadcaster {
             checkState(!peerFilterProviders.contains(provider));
             // Insert provider at the start. This avoids various concurrency problems that could occur because we need
             // all providers to be in a consistent, unchanging state whilst the filter is built. Providers can give
-            // this guarantee by taking a lock in their begin method, but if we add 
+            // this guarantee by taking a lock in their begin method, but if we add to the end of the list here, it
+            // means we establish a lock ordering a > b > c if that's the order the providers were added in. Given that
+            // the main wallet will usually be first, this establishes an ordering wallet > other-provider, which means
+            // other-provider can then not call into the wallet itself. Other providers installed by the API user should
+            // come first so the expected ordering is preserved. This can also manifest itself in providers that use
+            // synchronous RPCs into an actor instead of locking, but the same issue applies.
+            peerFilterProviders.add(0, provider);
+
+            // Don't bother downloading block bodies before the oldest keys in all our wallets. Make sure we recalculate
+            // if a key is added. Of course, by then we may have downloaded the chain already. Ideally adding keys would
+            // automatically rewind the block chain and redownload the blocks to find transactions relevant to those keys,
+            // all transparently and in the background. But we are a long way from that yet.
+            ListenableFuture<BloomFilter> future = recalculateFastCatchupAndFilter(FilterRecalculateMode.SEND_IF_CHANGED);
+            updateVersionMessageRelayTxesBeforeFilter(getVersionMessage());
+            return future;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Opposite of {@link #addPeerFilterProvider(PeerFilterProvider)}. Again, don't use this for wallets. Does not
+     * trigger recalculation of the filter.
+     */
+    public void removePeerFilterProvider(PeerFilterProvider provider) {
+        lock.lock();
+        try {
+            checkNotNull(provider);
+            checkArgument(peerFilterProviders.remove(provider));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Unlinks the given wallet so it no longer receives broadcast transactions or has its transactions announced.
+     */
+    public void removeWallet(Wallet wallet) {
+        wallets.remove(checkNotNull(wallet));
+        peerFilterProviders.remove(wallet);
+        wallet.removeCoinsReceivedEventListener(walletCoinsReceivedEventListener);
+        wallet.removeKeyChainEv
