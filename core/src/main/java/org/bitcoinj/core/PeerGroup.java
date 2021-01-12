@@ -1223,4 +1223,51 @@ public class PeerGroup implements TransactionBroadcaster {
         wallets.remove(checkNotNull(wallet));
         peerFilterProviders.remove(wallet);
         wallet.removeCoinsReceivedEventListener(walletCoinsReceivedEventListener);
-        wallet.removeKeyChainEv
+        wallet.removeKeyChainEventListener(walletKeyEventListener);
+        wallet.removeScriptChangeEventListener(walletScriptEventListener);
+        wallet.setTransactionBroadcaster(null);
+        for (Peer peer : peers) {
+            peer.removeWallet(wallet);
+        }        
+    }
+
+    public enum FilterRecalculateMode {
+        SEND_IF_CHANGED,
+        FORCE_SEND_FOR_REFRESH,
+        DONT_SEND,
+    }
+
+    private final Map<FilterRecalculateMode, SettableFuture<BloomFilter>> inFlightRecalculations = Maps.newHashMap();
+
+    /**
+     * Recalculates the bloom filter given to peers as well as the timestamp after which full blocks are downloaded
+     * (instead of only headers). Note that calls made one after another may return the same future, if the request
+     * wasn't processed yet (i.e. calls are deduplicated).
+     *
+     * @param mode In what situations to send the filter to connected peers.
+     * @return a future that completes once the filter has been calculated (note: this does not mean acknowledged by remote peers).
+     */
+    public ListenableFuture<BloomFilter> recalculateFastCatchupAndFilter(final FilterRecalculateMode mode) {
+        final SettableFuture<BloomFilter> future = SettableFuture.create();
+        synchronized (inFlightRecalculations) {
+            if (inFlightRecalculations.get(mode) != null)
+                return inFlightRecalculations.get(mode);
+            inFlightRecalculations.put(mode, future);
+        }
+        Runnable command = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    go();
+                } catch (Throwable e) {
+                    log.error("Exception when trying to recalculate Bloom filter", e);  // The executor swallows exceptions :(
+                }
+            }
+
+            public void go() {
+                checkState(!lock.isHeldByCurrentThread());
+                // Fully verifying mode doesn't use this optimization (it can't as it needs to see all transactions).
+                if ((chain != null && chain.shouldVerifyTransactions()) || !vBloomFilteringEnabled)
+                    return;
+                // We only ever call bloomFilterMerger.calculate on jobQueue, so we cannot be calculating two filters at once.
+      
