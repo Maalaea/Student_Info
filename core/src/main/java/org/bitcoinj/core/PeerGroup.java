@@ -1316,4 +1316,54 @@ public class PeerGroup implements TransactionBroadcaster {
     /**
      * <p>Sets the false positive rate of bloom filters given to peers. The default is {@link #DEFAULT_BLOOM_FILTER_FP_RATE}.</p>
      *
-     * <p>Be careful regenerating the bl
+     * <p>Be careful regenerating the bloom filter too often, as it decreases anonymity because remote nodes can
+     * compare transactions against both the new and old filters to significantly decrease the false positive rate.</p>
+     * 
+     * <p>See the docs for {@link BloomFilter#BloomFilter(int, double, long, BloomFilter.BloomUpdate)} for a brief
+     * explanation of anonymity when using bloom filters.</p>
+     */
+    public void setBloomFilterFalsePositiveRate(double bloomFilterFPRate) {
+        lock.lock();
+        try {
+            bloomFilterMerger.setBloomFilterFPRate(bloomFilterFPRate);
+            recalculateFastCatchupAndFilter(FilterRecalculateMode.SEND_IF_CHANGED);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the number of currently connected peers. To be informed when this count changes, register a 
+     * {@link org.bitcoinj.core.listeners.PeerConnectionEventListener} and use the onPeerConnected/onPeerDisconnected methods.
+     */
+    public int numConnectedPeers() {
+        return peers.size();
+    }
+
+    /**
+     * Connect to a peer by creating a channel to the destination address.  This should not be
+     * used normally - let the PeerGroup manage connections through {@link #start()}
+     * 
+     * @param address destination IP and port.
+     * @return The newly created Peer object or null if the peer could not be connected.
+     *         Use {@link org.bitcoinj.core.Peer#getConnectionOpenFuture()} if you
+     *         want a future which completes when the connection is open.
+     */
+    @Nullable
+    public Peer connectTo(InetSocketAddress address) {
+        lock.lock();
+        try {
+            PeerAddress peerAddress = new PeerAddress(params, address);
+            backoffMap.put(peerAddress, new ExponentialBackoff(peerBackoffParams));
+            return connectTo(peerAddress, true, vConnectTimeoutMillis);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Helper for forcing a connection to localhost. Useful when using regtest mode. Returns the peer object.
+     */
+    @Nullable
+    public Peer connectToLocalHost() {
+        lock.lock();
