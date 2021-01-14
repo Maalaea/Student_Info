@@ -1270,4 +1270,50 @@ public class PeerGroup implements TransactionBroadcaster {
                 if ((chain != null && chain.shouldVerifyTransactions()) || !vBloomFilteringEnabled)
                     return;
                 // We only ever call bloomFilterMerger.calculate on jobQueue, so we cannot be calculating two filters at once.
-      
+                FilterMerger.Result result = bloomFilterMerger.calculate(ImmutableList.copyOf(peerFilterProviders /* COW */));
+                boolean send;
+                switch (mode) {
+                    case SEND_IF_CHANGED:
+                        send = result.changed;
+                        break;
+                    case DONT_SEND:
+                        send = false;
+                        break;
+                    case FORCE_SEND_FOR_REFRESH:
+                        send = true;
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
+                }
+                if (send) {
+                    for (Peer peer : peers /* COW */) {
+                        // Only query the mempool if this recalculation request is not in order to lower the observed FP
+                        // rate. There's no point querying the mempool when doing this because the FP rate can only go
+                        // down, and we will have seen all the relevant txns before: it's pointless to ask for them again.
+                        peer.setBloomFilter(result.filter, mode != FilterRecalculateMode.FORCE_SEND_FOR_REFRESH);
+                    }
+                    // Reset the false positive estimate so that we don't send a flood of filter updates
+                    // if the estimate temporarily overshoots our threshold.
+                    if (chain != null)
+                        chain.resetFalsePositiveEstimate();
+                }
+                // Do this last so that bloomFilter is already set when it gets called.
+                setFastCatchupTimeSecs(result.earliestKeyTimeSecs);
+                synchronized (inFlightRecalculations) {
+                    inFlightRecalculations.put(mode, null);
+                }
+                future.set(result.filter);
+            }
+        };
+        try {
+            executor.execute(command);
+        } catch (RejectedExecutionException e) {
+            // Can happen during shutdown.
+        }
+        return future;
+    }
+    
+    /**
+     * <p>Sets the false positive rate of bloom filters given to peers. The default is {@link #DEFAULT_BLOOM_FILTER_FP_RATE}.</p>
+     *
+     * <p>Be careful regenerating the bl
