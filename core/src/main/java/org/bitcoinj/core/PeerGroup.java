@@ -1367,3 +1367,47 @@ public class PeerGroup implements TransactionBroadcaster {
     @Nullable
     public Peer connectToLocalHost() {
         lock.lock();
+        try {
+            final PeerAddress localhost = PeerAddress.localhost(params);
+            backoffMap.put(localhost, new ExponentialBackoff(peerBackoffParams));
+            return connectTo(localhost, true, vConnectTimeoutMillis);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Creates a version message to send, constructs a Peer object and attempts to connect it. Returns the peer on
+     * success or null on failure.
+     * @param address Remote network address
+     * @param incrementMaxConnections Whether to consider this connection an attempt to fill our quota, or something
+     *                                explicitly requested.
+     * @return Peer or null.
+     */
+    @Nullable @GuardedBy("lock")
+    protected Peer connectTo(PeerAddress address, boolean incrementMaxConnections, int connectTimeoutMillis) {
+        checkState(lock.isHeldByCurrentThread());
+        VersionMessage ver = getVersionMessage().duplicate();
+        ver.bestHeight = chain == null ? 0 : chain.getBestChainHeight();
+        ver.time = Utils.currentTimeSeconds();
+
+        Peer peer = createPeer(address, ver);
+        peer.addConnectedEventListener(Threading.SAME_THREAD, startupListener);
+        peer.addDisconnectedEventListener(Threading.SAME_THREAD, startupListener);
+        peer.setMinProtocolVersion(vMinRequiredProtocolVersion);
+        pendingPeers.add(peer);
+
+        try {
+            log.info("Attempting connection to {}     ({} connected, {} pending, {} max)", address,
+                    peers.size(), pendingPeers.size(), maxConnections);
+            ListenableFuture<SocketAddress> future = channels.openConnection(address.toSocketAddress(), peer);
+            if (future.isDone())
+                Uninterruptibles.getUninterruptibly(future);
+        } catch (ExecutionException e) {
+            Throwable cause = Throwables.getRootCause(e);
+            log.warn("Failed to connect to " + address + ": " + cause.getMessage());
+            handlePeerDeath(peer, cause);
+            return null;
+        }
+        peer.setSocketTimeout(connectTimeoutMillis);
+        // When the channel has connected and version negotiated successfully, handleNewPeer will end up being called on
