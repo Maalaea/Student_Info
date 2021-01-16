@@ -1411,3 +1411,59 @@ public class PeerGroup implements TransactionBroadcaster {
         }
         peer.setSocketTimeout(connectTimeoutMillis);
         // When the channel has connected and version negotiated successfully, handleNewPeer will end up being called on
+        // a worker thread.
+        if (incrementMaxConnections) {
+            // We don't use setMaxConnections here as that would trigger a recursive attempt to establish a new
+            // outbound connection.
+            maxConnections++;
+        }
+        return peer;
+    }
+
+    /** You can override this to customise the creation of {@link Peer} objects. */
+    @GuardedBy("lock")
+    protected Peer createPeer(PeerAddress address, VersionMessage ver) {
+        return new Peer(params, ver, address, chain, downloadTxDependencyDepth);
+    }
+
+    /**
+     * Sets the timeout between when a connection attempt to a peer begins and when the version message exchange
+     * completes. This does not apply to currently pending peers.
+     */
+    public void setConnectTimeoutMillis(int connectTimeoutMillis) {
+        this.vConnectTimeoutMillis = connectTimeoutMillis;
+    }
+
+    /**
+     * <p>Start downloading the blockchain from the first available peer.</p>
+     *
+     * <p>If no peers are currently connected, the download will be started once a peer starts.  If the peer dies,
+     * the download will resume with another peer.</p>
+     *
+     * @param listener a listener for chain download events, may not be null
+     */
+    public void startBlockChainDownload(PeerDataEventListener listener) {
+        lock.lock();
+        try {
+            if (downloadPeer != null) {
+                if (this.downloadListener != null) {
+                    removeDataEventListenerFromPeer(downloadPeer, this.downloadListener);
+                }
+                if (listener != null) {
+                    addDataEventListenerToPeer(Threading.USER_THREAD, downloadPeer, listener);
+                }
+            }
+            this.downloadListener = listener;
+            // TODO: be more nuanced about which peer to download from.  We can also try
+            // downloading from multiple peers and handle the case when a new peer comes along
+            // with a longer chain after we thought we were done.
+            if (!peers.isEmpty()) {
+                startBlockChainDownloadFromPeer(peers.iterator().next()); // Will add the new download listener
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Register a data e
