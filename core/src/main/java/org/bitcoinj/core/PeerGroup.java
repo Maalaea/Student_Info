@@ -1466,4 +1466,54 @@ public class PeerGroup implements TransactionBroadcaster {
     }
 
     /**
-     * Register a data e
+     * Register a data event listener against a single peer (i.e. for blockchain
+     * download). Handling registration/deregistration on peer death/add is
+     * outside the scope of these methods.
+     */
+    private static void addDataEventListenerToPeer(Executor executor, Peer peer, PeerDataEventListener downloadListener) {
+        peer.addBlocksDownloadedEventListener(executor, downloadListener);
+        peer.addChainDownloadStartedEventListener(executor, downloadListener);
+        peer.addGetDataEventListener(executor, downloadListener);
+        peer.addPreMessageReceivedEventListener(executor, downloadListener);
+    }
+
+    /**
+     * Remove a registered data event listener against a single peer (i.e. for
+     * blockchain download). Handling registration/deregistration on peer death/add is
+     * outside the scope of these methods.
+     */
+    private static void removeDataEventListenerFromPeer(Peer peer, PeerDataEventListener listener) {
+        peer.removeBlocksDownloadedEventListener(listener);
+        peer.removeChainDownloadStartedEventListener(listener);
+        peer.removeGetDataEventListener(listener);
+        peer.removePreMessageReceivedEventListener(listener);
+    }
+
+    /**
+     * Download the blockchain from peers. Convenience that uses a {@link DownloadProgressTracker} for you.<p>
+     * 
+     * This method waits until the download is complete.  "Complete" is defined as downloading
+     * from at least one peer all the blocks that are in that peer's inventory.
+     */
+    public void downloadBlockChain() {
+        DownloadProgressTracker listener = new DownloadProgressTracker();
+        startBlockChainDownload(listener);
+        try {
+            listener.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected void handleNewPeer(final Peer peer) {
+        int newSize = -1;
+        lock.lock();
+        try {
+            groupBackoff.trackSuccess();
+            backoffMap.get(peer.getAddress()).trackSuccess();
+
+            // Sets up the newly connected peer so it can do everything it needs to.
+            pendingPeers.remove(peer);
+            peers.add(peer);
+            newSize = peers.size();
+            log.info("{}: New peer      ({} connec
