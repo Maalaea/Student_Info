@@ -1591,4 +1591,62 @@ public class PeerGroup implements TransactionBroadcaster {
                         peer.ping();
                     }
                 } catch (Throwable e) {
-                    log.error("Exception in ping loop", e);  /
+                    log.error("Exception in ping loop", e);  // The executor swallows exceptions :(
+                }
+            }
+        }, getPingIntervalMsec(), getPingIntervalMsec(), TimeUnit.MILLISECONDS);
+    }
+
+    private void setDownloadPeer(@Nullable Peer peer) {
+        lock.lock();
+        try {
+            if (downloadPeer == peer)
+                return;
+            if (downloadPeer != null) {
+                log.info("Unsetting download peer: {}", downloadPeer);
+                if (downloadListener != null) {
+                    removeDataEventListenerFromPeer(downloadPeer, downloadListener);
+                }
+                downloadPeer.setDownloadData(false);
+            }
+            downloadPeer = peer;
+            if (downloadPeer != null) {
+                log.info("Setting download peer: {}", downloadPeer);
+                if (downloadListener != null) {
+                    addDataEventListenerToPeer(Threading.SAME_THREAD, peer, downloadListener);
+                }
+                downloadPeer.setDownloadData(true);
+                if (chain != null)
+                    downloadPeer.setDownloadParameters(fastCatchupTimeSecs, bloomFilterMerger.getLastFilter() != null);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Use "Context.get().getConfidenceTable()" instead */
+    @Deprecated @Nullable
+    public TxConfidenceTable getMemoryPool() {
+        return Context.get().getConfidenceTable();
+    }
+
+    /**
+     * Tells the PeerGroup to download only block headers before a certain time and bodies after that. Call this
+     * before starting block chain download.
+     * Do not use a time > NOW - 1 block, as it will break some block download logic.
+     */
+    public void setFastCatchupTimeSecs(long secondsSinceEpoch) {
+        lock.lock();
+        try {
+            checkState(chain == null || !chain.shouldVerifyTransactions(), "Fast catchup is incompatible with fully verifying");
+            fastCatchupTimeSecs = secondsSinceEpoch;
+            if (downloadPeer != null) {
+                downloadPeer.setDownloadParameters(secondsSinceEpoch, bloomFilterMerger.getLastFilter() != null);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the current fast catchup ti
