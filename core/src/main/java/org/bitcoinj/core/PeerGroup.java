@@ -1544,4 +1544,51 @@ public class PeerGroup implements TransactionBroadcaster {
                 peer.addChainDownloadStartedEventListener(registration.executor, registration.listener);
             for (ListenerRegistration<PeerConnectedEventListener> registration : peerConnectedEventListeners)
                 peer.addConnectedEventListener(registration.executor, registration.listener);
-            // We intentionally do not add dis
+            // We intentionally do not add disconnect listeners to peers
+            for (ListenerRegistration<GetDataEventListener> registration : peerGetDataEventListeners)
+                peer.addGetDataEventListener(registration.executor, registration.listener);
+            for (ListenerRegistration<OnTransactionBroadcastListener> registration : peersTransactionBroadastEventListeners)
+                peer.addOnTransactionBroadcastListener(registration.executor, registration.listener);
+            for (ListenerRegistration<PreMessageReceivedEventListener> registration : peersPreMessageReceivedEventListeners)
+                peer.addPreMessageReceivedEventListener(registration.executor, registration.listener);
+        } finally {
+            lock.unlock();
+        }
+
+        final int fNewSize = newSize;
+        for (final ListenerRegistration<PeerConnectedEventListener> registration : peerConnectedEventListeners) {
+            registration.executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    registration.listener.onPeerConnected(peer, fNewSize);
+                }
+            });
+        }
+    }
+
+    @Nullable private volatile ListenableScheduledFuture<?> vPingTask;
+
+    @SuppressWarnings("NonAtomicOperationOnVolatileField")
+    private void setupPinging() {
+        if (getPingIntervalMsec() <= 0)
+            return;  // Disabled.
+
+        vPingTask = executor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (getPingIntervalMsec() <= 0) {
+                        ListenableScheduledFuture<?> task = vPingTask;
+                        if (task != null) {
+                            task.cancel(false);
+                            vPingTask = null;
+                        }
+                        return;  // Disabled.
+                    }
+                    for (Peer peer : getConnectedPeers()) {
+                        if (peer.getPeerVersionMessage().clientVersion < params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.PONG))
+                            continue;
+                        peer.ping();
+                    }
+                } catch (Throwable e) {
+                    log.error("Exception in ping loop", e);  /
