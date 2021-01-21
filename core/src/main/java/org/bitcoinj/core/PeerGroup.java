@@ -1702,4 +1702,48 @@ public class PeerGroup implements TransactionBroadcaster {
             } else {
                 backoffMap.get(address).trackFailure();
                 // Put back on inactive list
-                inactiv
+                inactives.offer(address);
+            }
+
+            if (numPeers < getMaxConnections()) {
+                triggerConnections();
+            }
+        } finally {
+            lock.unlock();
+        }
+
+        peer.removeBlocksDownloadedEventListener(peerListener);
+        peer.removeGetDataEventListener(peerListener);
+        for (Wallet wallet : wallets) {
+            peer.removeWallet(wallet);
+        }
+
+        final int fNumConnectedPeers = numConnectedPeers;
+
+        for (ListenerRegistration<BlocksDownloadedEventListener> registration: peersBlocksDownloadedEventListeners)
+            peer.removeBlocksDownloadedEventListener(registration.listener);
+        for (ListenerRegistration<ChainDownloadStartedEventListener> registration: peersChainDownloadStartedEventListeners)
+            peer.removeChainDownloadStartedEventListener(registration.listener);
+        for (ListenerRegistration<GetDataEventListener> registration: peerGetDataEventListeners)
+            peer.removeGetDataEventListener(registration.listener);
+        for (ListenerRegistration<PreMessageReceivedEventListener> registration: peersPreMessageReceivedEventListeners)
+            peer.removePreMessageReceivedEventListener(registration.listener);
+        for (ListenerRegistration<OnTransactionBroadcastListener> registration : peersTransactionBroadastEventListeners)
+            peer.removeOnTransactionBroadcastListener(registration.listener);
+        for (final ListenerRegistration<PeerDisconnectedEventListener> registration : peerDisconnectedEventListeners) {
+            registration.executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    registration.listener.onPeerDisconnected(peer, fNumConnectedPeers);
+                }
+            });
+            peer.removeDisconnectedEventListener(registration.listener);
+        }
+    }
+
+    @GuardedBy("lock") private int stallPeriodSeconds = 10;
+    @GuardedBy("lock") private int stallMinSpeedBytesSec = Block.HEADER_SIZE * 20;
+
+    /**
+     * Configures the stall speed: the speed at which a peer is considered to be serving us the block chain
+     * unacceptably slowly. Once a peer has served us data slower than the given data rate for the given
