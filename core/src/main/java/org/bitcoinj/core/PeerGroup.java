@@ -1649,4 +1649,57 @@ public class PeerGroup implements TransactionBroadcaster {
     }
 
     /**
-     * Returns the current fast catchup ti
+     * Returns the current fast catchup time. The contents of blocks before this time won't be downloaded as they
+     * cannot contain any interesting transactions. If you use {@link PeerGroup#addWallet(Wallet)} this just returns
+     * the min of the wallets earliest key times.
+     * @return a time in seconds since the epoch
+     */
+    public long getFastCatchupTimeSecs() {
+        lock.lock();
+        try {
+            return fastCatchupTimeSecs;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    protected void handlePeerDeath(final Peer peer, @Nullable Throwable exception) {
+        // Peer deaths can occur during startup if a connect attempt after peer discovery aborts immediately.
+        if (!isRunning()) return;
+
+        int numPeers;
+        int numConnectedPeers = 0;
+        lock.lock();
+        try {
+            pendingPeers.remove(peer);
+            peers.remove(peer);
+
+            PeerAddress address = peer.getAddress();
+
+            log.info("{}: Peer died      ({} connected, {} pending, {} max)", address, peers.size(), pendingPeers.size(), maxConnections);
+            if (peer == downloadPeer) {
+                log.info("Download peer died. Picking a new one.");
+                setDownloadPeer(null);
+                // Pick a new one and possibly tell it to download the chain.
+                final Peer newDownloadPeer = selectDownloadPeer(peers);
+                if (newDownloadPeer != null) {
+                    setDownloadPeer(newDownloadPeer);
+                    if (downloadListener != null) {
+                        startBlockChainDownloadFromPeer(newDownloadPeer);
+                    }
+                }
+            }
+            numPeers = peers.size() + pendingPeers.size();
+            numConnectedPeers = peers.size();
+
+            groupBackoff.trackFailure();
+
+            if (exception instanceof NoRouteToHostException) {
+                if (address.getAddr() instanceof Inet6Address && !ipv6Unreachable) {
+                    ipv6Unreachable = true;
+                    log.warn("IPv6 peer connect failed due to routing failure, ignoring IPv6 addresses from now on");
+                }
+            } else {
+                backoffMap.get(address).trackFailure();
+                // Put back on inactive list
+                inactiv
