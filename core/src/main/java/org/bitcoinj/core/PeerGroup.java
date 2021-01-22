@@ -1747,3 +1747,46 @@ public class PeerGroup implements TransactionBroadcaster {
     /**
      * Configures the stall speed: the speed at which a peer is considered to be serving us the block chain
      * unacceptably slowly. Once a peer has served us data slower than the given data rate for the given
+     * number of seconds, it is considered stalled and will be disconnected, forcing the chain download to continue
+     * from a different peer. The defaults are chosen conservatively, but if you are running on a platform that is
+     * CPU constrained or on a very slow network e.g. EDGE, the default settings may need adjustment to
+     * avoid false stalls.
+     *
+     * @param periodSecs How many seconds the download speed must be below blocksPerSec, defaults to 10.
+     * @param bytesPerSecond Download speed (only blocks/txns count) must be consistently below this for a stall, defaults to the bandwidth required for 20 block headers per second.
+     */
+    public void setStallThreshold(int periodSecs, int bytesPerSecond) {
+        lock.lock();
+        try {
+            stallPeriodSeconds = periodSecs;
+            stallMinSpeedBytesSec = bytesPerSecond;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private class ChainDownloadSpeedCalculator implements BlocksDownloadedEventListener, Runnable {
+        private int blocksInLastSecond, txnsInLastSecond, origTxnsInLastSecond;
+        private long bytesInLastSecond;
+
+        // If we take more stalls than this, we assume we're on some kind of terminally slow network and the
+        // stall threshold just isn't set properly. We give up on stall disconnects after that.
+        private int maxStalls = 3;
+
+        // How many seconds the peer has until we start measuring its speed.
+        private int warmupSeconds = -1;
+
+        // Used to calculate a moving average.
+        private long[] samples;
+        private int cursor;
+
+        private boolean syncDone;
+
+        @Override
+        public synchronized void onBlocksDownloaded(Peer peer, Block block, @Nullable FilteredBlock filteredBlock, int blocksLeft) {
+            blocksInLastSecond++;
+            bytesInLastSecond += Block.HEADER_SIZE;
+            List<Transaction> blockTransactions = block.getTransactions();
+            // This whole area of the type hierarchy is a mess.
+            int txCount = (blockTransactions != null ? countAndMeasureSize(blockTransactions) : 0) +
+                          (filteredBlock != null ? countAndMeasureSize(filteredB
