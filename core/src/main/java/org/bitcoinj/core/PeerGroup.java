@@ -1789,4 +1789,57 @@ public class PeerGroup implements TransactionBroadcaster {
             List<Transaction> blockTransactions = block.getTransactions();
             // This whole area of the type hierarchy is a mess.
             int txCount = (blockTransactions != null ? countAndMeasureSize(blockTransactions) : 0) +
-                          (filteredBlock != null ? countAndMeasureSize(filteredB
+                          (filteredBlock != null ? countAndMeasureSize(filteredBlock.getAssociatedTransactions().values()) : 0);
+            txnsInLastSecond = txnsInLastSecond + txCount;
+            if (filteredBlock != null)
+                origTxnsInLastSecond += filteredBlock.getTransactionCount();
+        }
+
+        private int countAndMeasureSize(Collection<Transaction> transactions) {
+            for (Transaction transaction : transactions)
+                bytesInLastSecond += transaction.getMessageSize();
+            return transactions.size();
+        }
+
+        @Override
+        public void run() {
+            try {
+                calculate();
+            } catch (Throwable e) {
+                log.error("Error in speed calculator", e);
+            }
+        }
+
+        private void calculate() {
+            int minSpeedBytesPerSec;
+            int period;
+
+            lock.lock();
+            try {
+                minSpeedBytesPerSec = stallMinSpeedBytesSec;
+                period = stallPeriodSeconds;
+            } finally {
+                lock.unlock();
+            }
+
+            synchronized (this) {
+                if (samples == null || samples.length != period) {
+                    samples = new long[period];
+                    // *2 because otherwise a single low sample could cause an immediate disconnect which is too harsh.
+                    Arrays.fill(samples, minSpeedBytesPerSec * 2);
+                    warmupSeconds = 15;
+                }
+
+                boolean behindPeers = chain != null && chain.getBestChainHeight() < getMostCommonChainHeight();
+                if (!behindPeers)
+                    syncDone = true;
+                if (!syncDone) {
+                    if (warmupSeconds < 0) {
+                        // Calculate the moving average.
+                        samples[cursor++] = bytesInLastSecond;
+                        if (cursor == samples.length) cursor = 0;
+                        long average = 0;
+                        for (long sample : samples) average += sample;
+                        average /= samples.length;
+
+                        log.info(String.format(Locale.US, "%d blocks/sec, %d tx/sec, %d pre-filtered tx/sec, avg/last %.2f/%.2f kilobytes per sec (stall thres
