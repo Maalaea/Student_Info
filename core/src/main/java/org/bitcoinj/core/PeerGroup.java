@@ -1842,4 +1842,31 @@ public class PeerGroup implements TransactionBroadcaster {
                         for (long sample : samples) average += sample;
                         average /= samples.length;
 
-                        log.info(String.format(Locale.US, "%d blocks/sec, %d tx/sec, %d pre-filtered tx/sec, avg/last %.2f/%.2f kilobytes per sec (stall thres
+                        log.info(String.format(Locale.US, "%d blocks/sec, %d tx/sec, %d pre-filtered tx/sec, avg/last %.2f/%.2f kilobytes per sec (stall threshold <%.2f KB/sec for %d seconds)",
+                                blocksInLastSecond, txnsInLastSecond, origTxnsInLastSecond, average / 1024.0, bytesInLastSecond / 1024.0,
+                                minSpeedBytesPerSec / 1024.0, samples.length));
+
+                        if (average < minSpeedBytesPerSec && maxStalls > 0) {
+                            maxStalls--;
+                            if (maxStalls == 0) {
+                                // We could consider starting to drop the Bloom filtering FP rate at this point, because
+                                // we tried a bunch of peers and no matter what we don't seem to be able to go any faster.
+                                // This implies we're bandwidth bottlenecked and might want to start using bandwidth
+                                // more effectively. Of course if there's a MITM that is deliberately throttling us,
+                                // this is a good way to make us take away all the FPs from our Bloom filters ... but
+                                // as they don't give us a whole lot of privacy either way that's not inherently a big
+                                // deal.
+                                log.warn("This network seems to be slower than the requested stall threshold - won't do stall disconnects any more.");
+                            } else {
+                                Peer peer = getDownloadPeer();
+                                log.warn(String.format(Locale.US, "Chain download stalled: received %.2f KB/sec for %d seconds, require average of %.2f KB/sec, disconnecting %s", average / 1024.0, samples.length, minSpeedBytesPerSec / 1024.0, peer));
+                                peer.close();
+                                // Reset the sample buffer and give the next peer time to get going.
+                                samples = null;
+                                warmupSeconds = period;
+                            }
+                        }
+                    } else {
+                        warmupSeconds--;
+                        if (bytesInLastSecond > 0)
+                            log.info(String.format(Locale.US, "%d blocks/sec, %d tx/
