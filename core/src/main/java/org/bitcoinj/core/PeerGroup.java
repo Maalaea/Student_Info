@@ -1869,4 +1869,51 @@ public class PeerGroup implements TransactionBroadcaster {
                     } else {
                         warmupSeconds--;
                         if (bytesInLastSecond > 0)
-                            log.info(String.format(Locale.US, "%d blocks/sec, %d tx/
+                            log.info(String.format(Locale.US, "%d blocks/sec, %d tx/sec, %d pre-filtered tx/sec, last %.2f kilobytes per sec",
+                                    blocksInLastSecond, txnsInLastSecond, origTxnsInLastSecond, bytesInLastSecond / 1024.0));
+                    }
+                }
+                blocksInLastSecond = 0;
+                txnsInLastSecond = 0;
+                origTxnsInLastSecond = 0;
+                bytesInLastSecond = 0;
+            }
+        }
+    }
+    @Nullable private ChainDownloadSpeedCalculator chainDownloadSpeedCalculator;
+
+    private void startBlockChainDownloadFromPeer(Peer peer) {
+        lock.lock();
+        try {
+            setDownloadPeer(peer);
+
+            if (chainDownloadSpeedCalculator == null) {
+                // Every second, run the calculator which will log how fast we are downloading the chain.
+                chainDownloadSpeedCalculator = new ChainDownloadSpeedCalculator();
+                executor.scheduleAtFixedRate(chainDownloadSpeedCalculator, 1, 1, TimeUnit.SECONDS);
+            }
+            peer.addBlocksDownloadedEventListener(Threading.SAME_THREAD, chainDownloadSpeedCalculator);
+
+            // startBlockChainDownload will setDownloadData(true) on itself automatically.
+            peer.startBlockChainDownload();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns a future that is triggered when the number of connected peers is equal to the given number of
+     * peers. By using this with {@link org.bitcoinj.core.PeerGroup#getMaxConnections()} you can wait until the
+     * network is fully online. To block immediately, just call get() on the result. Just calls
+     * {@link #waitForPeersOfVersion(int, long)} with zero as the protocol version.
+     *
+     * @param numPeers How many peers to wait for.
+     * @return a future that will be triggered when the number of connected peers >= numPeers
+     */
+    public ListenableFuture<List<Peer>> waitForPeers(final int numPeers) {
+        return waitForPeersOfVersion(numPeers, 0);
+    }
+
+    /**
+     * Returns a future that is triggered when there are at least the requested number of connected peers that support
+     * the given protocol versi
