@@ -1916,4 +1916,51 @@ public class PeerGroup implements TransactionBroadcaster {
 
     /**
      * Returns a future that is triggered when there are at least the requested number of connected peers that support
-     * the given protocol versi
+     * the given protocol version or higher. To block immediately, just call get() on the result.
+     *
+     * @param numPeers How many peers to wait for.
+     * @param protocolVersion The protocol version the awaited peers must implement (or better).
+     * @return a future that will be triggered when the number of connected peers implementing protocolVersion or higher >= numPeers
+     */
+    public ListenableFuture<List<Peer>> waitForPeersOfVersion(final int numPeers, final long protocolVersion) {
+        List<Peer> foundPeers = findPeersOfAtLeastVersion(protocolVersion);
+        if (foundPeers.size() >= numPeers) {
+            return Futures.immediateFuture(foundPeers);
+        }
+        final SettableFuture<List<Peer>> future = SettableFuture.create();
+        addConnectedEventListener(new PeerConnectedEventListener() {
+            @Override
+            public void onPeerConnected(Peer peer, int peerCount) {
+                final List<Peer> peers = findPeersOfAtLeastVersion(protocolVersion);
+                if (peers.size() >= numPeers) {
+                    future.set(peers);
+                    removeConnectedEventListener(this);
+                }
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Returns an array list of peers that implement the given protocol version or better.
+     */
+    public List<Peer> findPeersOfAtLeastVersion(long protocolVersion) {
+        lock.lock();
+        try {
+            ArrayList<Peer> results = new ArrayList<Peer>(peers.size());
+            for (Peer peer : peers)
+                if (peer.getPeerVersionMessage().clientVersion >= protocolVersion)
+                    results.add(peer);
+            return results;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns a future that is triggered when there are at least the requested number of connected peers that support
+     * the given protocol version or higher. To block immediately, just call get() on the result.
+     *
+     * @param numPeers How many peers to wait for.
+     * @param mask An integer representing a bit mask that will be ANDed with the peers advertised service masks.
+     * @return a future that will be triggered when the number of connected peers implementing pro
