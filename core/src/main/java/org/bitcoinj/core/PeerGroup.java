@@ -1963,4 +1963,58 @@ public class PeerGroup implements TransactionBroadcaster {
      *
      * @param numPeers How many peers to wait for.
      * @param mask An integer representing a bit mask that will be ANDed with the peers advertised service masks.
-     * @return a future that will be triggered when the number of connected peers implementing pro
+     * @return a future that will be triggered when the number of connected peers implementing protocolVersion or higher >= numPeers
+     */
+    public ListenableFuture<List<Peer>> waitForPeersWithServiceMask(final int numPeers, final int mask) {
+        lock.lock();
+        try {
+            List<Peer> foundPeers = findPeersWithServiceMask(mask);
+            if (foundPeers.size() >= numPeers)
+                return Futures.immediateFuture(foundPeers);
+            final SettableFuture<List<Peer>> future = SettableFuture.create();
+            addConnectedEventListener(new PeerConnectedEventListener() {
+                @Override
+                public void onPeerConnected(Peer peer, int peerCount) {
+                    final List<Peer> peers = findPeersWithServiceMask(mask);
+                    if (peers.size() >= numPeers) {
+                        future.set(peers);
+                        removeConnectedEventListener(this);
+                    }
+                }
+            });
+            return future;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns an array list of peers that match the requested service bit mask.
+     */
+    public List<Peer> findPeersWithServiceMask(int mask) {
+        lock.lock();
+        try {
+            ArrayList<Peer> results = new ArrayList<Peer>(peers.size());
+            for (Peer peer : peers)
+                if ((peer.getPeerVersionMessage().localServices & mask) == mask)
+                    results.add(peer);
+            return results;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the number of connections that are required before transactions will be broadcast. If there aren't
+     * enough, {@link PeerGroup#broadcastTransaction(Transaction)} will wait until the minimum number is reached so
+     * propagation across the network can be observed. If no value has been set using
+     * {@link PeerGroup#setMinBroadcastConnections(int)} a default of 80% of whatever
+     * {@link org.bitcoinj.core.PeerGroup#getMaxConnections()} returns is used.
+     */
+    public int getMinBroadcastConnections() {
+        lock.lock();
+        try {
+            if (minBroadcastConnections == 0) {
+                int max = getMaxConnections();
+                if (max <= 1)
+            
