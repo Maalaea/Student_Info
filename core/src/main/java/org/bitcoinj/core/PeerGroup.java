@@ -2017,4 +2017,51 @@ public class PeerGroup implements TransactionBroadcaster {
             if (minBroadcastConnections == 0) {
                 int max = getMaxConnections();
                 if (max <= 1)
-            
+                    return max;
+                else
+                    return (int) Math.round(getMaxConnections() * 0.8);
+            }
+            return minBroadcastConnections;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * See {@link org.bitcoinj.core.PeerGroup#getMinBroadcastConnections()}.
+     */
+    public void setMinBroadcastConnections(int value) {
+        lock.lock();
+        try {
+            minBroadcastConnections = value;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Calls {@link PeerGroup#broadcastTransaction(Transaction,int)} with getMinBroadcastConnections() as the number
+     * of connections to wait for before commencing broadcast.
+     */
+    @Override
+    public TransactionBroadcast broadcastTransaction(final Transaction tx) {
+        return broadcastTransaction(tx, Math.max(1, getMinBroadcastConnections()));
+    }
+
+    /**
+     * <p>Given a transaction, sends it un-announced to one peer and then waits for it to be received back from other
+     * peers. Once all connected peers have announced the transaction, the future available via the
+     * {@link org.bitcoinj.core.TransactionBroadcast#future()} method will be completed. If anything goes
+     * wrong the exception will be thrown when get() is called, or you can receive it via a callback on the
+     * {@link ListenableFuture}. This method returns immediately, so if you want it to block just call get() on the
+     * result.</p>
+     *
+     * <p>Note that if the PeerGroup is limited to only one connection (discovery is not activated) then the future
+     * will complete as soon as the transaction was successfully written to that peer.</p>
+     *
+     * <p>The transaction won't be sent until there are at least minConnections active connections available.
+     * A good choice for proportion would be between 0.5 and 0.8 but if you want faster transmission during initial
+     * bringup of the peer group you can lower it.</p>
+     *
+     * <p>The returned {@link org.bitcoinj.core.TransactionBroadcast} object can be used to get progress feedback,
+     * which is calculated by watching the transacti
