@@ -2150,4 +2150,56 @@ public class PeerGroup implements TransactionBroadcaster {
      * If a peer is connected to that claims to speak a protocol version lower than the given version, it will
      * be disconnected and another one will be tried instead.
      */
-    public void setMinRequiredProtoc
+    public void setMinRequiredProtocolVersion(int minRequiredProtocolVersion) {
+        this.vMinRequiredProtocolVersion = minRequiredProtocolVersion;
+    }
+
+    /** The minimum protocol version required: defaults to the version required for Bloom filtering. */
+    public int getMinRequiredProtocolVersion() {
+        return vMinRequiredProtocolVersion;
+    }
+
+    /**
+     * Returns our peers most commonly reported chain height. If multiple heights are tied, the highest is returned.
+     * If no peers are connected, returns zero.
+     */
+    public int getMostCommonChainHeight() {
+        lock.lock();
+        try {
+            return getMostCommonChainHeight(this.peers);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns most commonly reported chain height from the given list of {@link Peer}s.
+     * If multiple heights are tied, the highest is returned. If no peers are connected, returns zero.
+     */
+    public static int getMostCommonChainHeight(final List<Peer> peers) {
+        if (peers.isEmpty())
+            return 0;
+        List<Integer> heights = new ArrayList<>(peers.size());
+        for (Peer peer : peers) heights.add((int) peer.getBestHeight());
+        return Utils.maxOfMostFreq(heights);
+    }
+
+    /**
+     * Given a list of Peers, return a Peer to be used as the download peer. If you don't want PeerGroup to manage
+     * download peer statuses for you, just override this and always return null.
+     */
+    @Nullable
+    protected Peer selectDownloadPeer(List<Peer> peers) {
+        // Characteristics to select for in order of importance:
+        //  - Chain height is reasonable (majority of nodes)
+        //  - High enough protocol version for the features we want (but we'll settle for less)
+        //  - Randomly, to try and spread the load.
+        if (peers.isEmpty())
+            return null;
+        // Make sure we don't select a peer that is behind/synchronizing itself.
+        int mostCommonChainHeight = getMostCommonChainHeight(peers);
+        List<Peer> candidates = new ArrayList<>();
+        for (Peer peer : peers) {
+            if (peer.getBestHeight() == mostCommonChainHeight) candidates.add(peer);
+        }
+        // Of the candidates, find the peers that meet the minimum protocol version we 
