@@ -2099,4 +2099,55 @@ public class PeerGroup implements TransactionBroadcaster {
 
             @Override
             public void onFailure(Throwable throwable) {
-                // This can happen if we get a reject 
+                // This can happen if we get a reject message from a peer.
+                runningBroadcasts.remove(broadcast);
+            }
+        });
+        // Keep a reference to the TransactionBroadcast object. This is important because otherwise, the entire tree
+        // of objects we just created would become garbage if the user doesn't hold on to the returned future, and
+        // eventually be collected. This in turn could result in the transaction not being committed to the wallet
+        // at all.
+        runningBroadcasts.add(broadcast);
+        broadcast.broadcast();
+        return broadcast;
+    }
+
+    /**
+     * Returns the period between pings for an individual peer. Setting this lower means more accurate and timely ping
+     * times are available via {@link org.bitcoinj.core.Peer#getLastPingTime()} but it increases load on the
+     * remote node. It defaults to {@link PeerGroup#DEFAULT_PING_INTERVAL_MSEC}.
+     */
+    public long getPingIntervalMsec() {
+        lock.lock();
+        try {
+            return pingIntervalMsec;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Sets the period between pings for an individual peer. Setting this lower means more accurate and timely ping
+     * times are available via {@link org.bitcoinj.core.Peer#getLastPingTime()} but it increases load on the
+     * remote node. It defaults to {@link PeerGroup#DEFAULT_PING_INTERVAL_MSEC}.
+     * Setting the value to be <= 0 disables pinging entirely, although you can still request one yourself
+     * using {@link org.bitcoinj.core.Peer#ping()}.
+     */
+    public void setPingIntervalMsec(long pingIntervalMsec) {
+        lock.lock();
+        try {
+            this.pingIntervalMsec = pingIntervalMsec;
+            ListenableScheduledFuture<?> task = vPingTask;
+            if (task != null)
+                task.cancel(false);
+            setupPinging();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * If a peer is connected to that claims to speak a protocol version lower than the given version, it will
+     * be disconnected and another one will be tried instead.
+     */
+    public void setMinRequiredProtoc
