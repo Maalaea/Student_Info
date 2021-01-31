@@ -2250,4 +2250,49 @@ public class PeerGroup implements TransactionBroadcaster {
      * each {@link PeerDiscovery} so this max number can be surpassed.
      * @param maxPeersToDiscoverCount the maximum number of peers to discover
      */
-    public void setMaxP
+    public void setMaxPeersToDiscoverCount(int maxPeersToDiscoverCount) {
+        this.vMaxPeersToDiscoverCount = maxPeersToDiscoverCount;
+    }
+
+    /** See {@link #setUseLocalhostPeerWhenPossible(boolean)} */
+    public boolean getUseLocalhostPeerWhenPossible() {
+        lock.lock();
+        try {
+            return useLocalhostPeerWhenPossible;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * When true (the default), PeerGroup will attempt to connect to a Bitcoin node running on localhost before
+     * attempting to use the P2P network. If successful, only localhost will be used. This makes for a simple
+     * and easy way for a user to upgrade a bitcoinj based app running in SPV mode to fully validating security.
+     */
+    public void setUseLocalhostPeerWhenPossible(boolean useLocalhostPeerWhenPossible) {
+        lock.lock();
+        try {
+            this.useLocalhostPeerWhenPossible = useLocalhostPeerWhenPossible;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public boolean isRunning() {
+        return vRunning;
+    }
+
+    /**
+     * Can be used to disable Bloom filtering entirely, even in SPV mode. You are very unlikely to need this, it is
+     * an optimisation for rare cases when full validation is not required but it's still more efficient to download
+     * full blocks than filtered blocks.
+     */
+    public void setBloomFilteringEnabled(boolean bloomFilteringEnabled) {
+        this.vBloomFilteringEnabled = bloomFilteringEnabled;
+    }
+
+    /** Returns whether the Bloom filtering protocol optimisation is in use: defaults to true. */
+    public boolean isBloomFilteringEnabled() {
+        return vBloomFilteringEnabled;
+    }
+}
