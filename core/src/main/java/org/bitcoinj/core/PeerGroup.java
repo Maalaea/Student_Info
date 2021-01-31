@@ -2202,4 +2202,52 @@ public class PeerGroup implements TransactionBroadcaster {
         for (Peer peer : peers) {
             if (peer.getBestHeight() == mostCommonChainHeight) candidates.add(peer);
         }
-        // Of the candidates, find the peers that meet the minimum protocol version we 
+        // Of the candidates, find the peers that meet the minimum protocol version we want to target. We could select
+        // the highest version we've seen on the assumption that newer versions are always better but we don't want to
+        // zap peers if they upgrade early. If we can't find any peers that have our preferred protocol version or
+        // better then we'll settle for the highest we found instead.
+        int highestVersion = 0, preferredVersion = 0;
+        // If/when PREFERRED_VERSION is not equal to vMinRequiredProtocolVersion, reenable the last test in PeerGroupTest.downloadPeerSelection
+        final int PREFERRED_VERSION = params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.BLOOM_FILTER);
+        for (Peer peer : candidates) {
+            highestVersion = Math.max(peer.getPeerVersionMessage().clientVersion, highestVersion);
+            preferredVersion = Math.min(highestVersion, PREFERRED_VERSION);
+        }
+        ArrayList<Peer> candidates2 = new ArrayList<>(candidates.size());
+        for (Peer peer : candidates) {
+            if (peer.getPeerVersionMessage().clientVersion >= preferredVersion) {
+                candidates2.add(peer);
+            }
+        }
+        int index = (int) (Math.random() * candidates2.size());
+        return candidates2.get(index);
+    }
+
+    /**
+     * Returns the currently selected download peer. Bear in mind that it may have changed as soon as this method
+     * returns. Can return null if no peer was selected.
+     */
+    public Peer getDownloadPeer() {
+        lock.lock();
+        try {
+            return downloadPeer;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the maximum number of {@link Peer}s to discover. This maximum is checked after
+     * each {@link PeerDiscovery} so this max number can be surpassed.
+     * @return the maximum number of peers to discover
+     */
+    public int getMaxPeersToDiscoverCount() {
+        return vMaxPeersToDiscoverCount;
+    }
+
+    /**
+     * Sets the maximum number of {@link Peer}s to discover. This maximum is checked after
+     * each {@link PeerDiscovery} so this max number can be surpassed.
+     * @param maxPeersToDiscoverCount the maximum number of peers to discover
+     */
+    public void setMaxP
