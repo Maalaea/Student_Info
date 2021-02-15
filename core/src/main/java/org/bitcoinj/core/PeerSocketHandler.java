@@ -123,4 +123,40 @@ public abstract class PeerSocketHandler extends AbstractTimeoutHandler implement
     @Override
     public int receiveBytes(ByteBuffer buff) {
         checkArgument(buff.position() == 0 &&
-                buff.capacity() >= BitcoinSerializer.BitcoinPa
+                buff.capacity() >= BitcoinSerializer.BitcoinPacketHeader.HEADER_LENGTH + 4);
+        try {
+            // Repeatedly try to deserialize messages until we hit a BufferUnderflowException
+            boolean firstMessage = true;
+            while (true) {
+                // If we are in the middle of reading a message, try to fill that one first, before we expect another
+                if (largeReadBuffer != null) {
+                    // This can only happen in the first iteration
+                    checkState(firstMessage);
+                    // Read new bytes into the largeReadBuffer
+                    int bytesToGet = Math.min(buff.remaining(), largeReadBuffer.length - largeReadBufferPos);
+                    buff.get(largeReadBuffer, largeReadBufferPos, bytesToGet);
+                    largeReadBufferPos += bytesToGet;
+                    // Check the largeReadBuffer's status
+                    if (largeReadBufferPos == largeReadBuffer.length) {
+                        // ...processing a message if one is available
+                        processMessage(serializer.deserializePayload(header, ByteBuffer.wrap(largeReadBuffer)));
+                        largeReadBuffer = null;
+                        header = null;
+                        firstMessage = false;
+                    } else // ...or just returning if we don't have enough bytes yet
+                        return buff.position();
+                }
+                // Now try to deserialize any messages left in buff
+                Message message;
+                int preSerializePosition = buff.position();
+                try {
+                    message = serializer.deserialize(buff);
+                } catch (BufferUnderflowException e) {
+                    // If we went through the whole buffer without a full message, we need to use the largeReadBuffer
+                    if (firstMessage && buff.limit() == buff.capacity()) {
+                        // ...so reposition the buffer to 0 and read the next message header
+                        buff.position(0);
+                        try {
+                            serializer.seekPastMagicBytes(buff);
+                            header = serializer.deserializeHeader(buff);
+                            // Initialize the largeReadBuffer with the next message'
