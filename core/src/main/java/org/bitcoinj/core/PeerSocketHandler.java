@@ -159,4 +159,44 @@ public abstract class PeerSocketHandler extends AbstractTimeoutHandler implement
                         try {
                             serializer.seekPastMagicBytes(buff);
                             header = serializer.deserializeHeader(buff);
-                            // Initialize the largeReadBuffer with the next message'
+                            // Initialize the largeReadBuffer with the next message's size and fill it with any bytes
+                            // left in buff
+                            largeReadBuffer = new byte[header.size];
+                            largeReadBufferPos = buff.remaining();
+                            buff.get(largeReadBuffer, 0, largeReadBufferPos);
+                        } catch (BufferUnderflowException e1) {
+                            // If we went through a whole buffer's worth of bytes without getting a header, give up
+                            // In cases where the buff is just really small, we could create a second largeReadBuffer
+                            // that we use to deserialize the magic+header, but that is rather complicated when the buff
+                            // should probably be at least that big anyway (for efficiency)
+                            throw new ProtocolException("No magic bytes+header after reading " + buff.capacity() + " bytes");
+                        }
+                    } else {
+                        // Reposition the buffer to its original position, which saves us from skipping messages by
+                        // seeking past part of the magic bytes before all of them are in the buffer
+                        buff.position(preSerializePosition);
+                    }
+                    return buff.position();
+                }
+                // Process our freshly deserialized message
+                processMessage(message);
+                firstMessage = false;
+            }
+        } catch (Exception e) {
+            exceptionCaught(e);
+            return -1; // Returning -1 also throws an IllegalStateException upstream and kills the connection
+        }
+    }
+
+    /**
+     * Sets the {@link MessageWriteTarget} used to write messages to the peer. This should almost never be called, it is
+     * called automatically by {@link org.bitcoinj.net.NioClient} or
+     * {@link org.bitcoinj.net.NioClientManager} once the socket finishes initialization.
+     */
+    @Override
+    public void setWriteTarget(MessageWriteTarget writeTarget) {
+        checkArgument(writeTarget != null);
+        lock.lock();
+        boolean closeNow = false;
+        try {
+            checkArgument
