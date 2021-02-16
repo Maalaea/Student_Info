@@ -199,4 +199,42 @@ public abstract class PeerSocketHandler extends AbstractTimeoutHandler implement
         lock.lock();
         boolean closeNow = false;
         try {
-            checkArgument
+            checkArgument(this.writeTarget == null);
+            closeNow = closePending;
+            this.writeTarget = writeTarget;
+        } finally {
+            lock.unlock();
+        }
+        if (closeNow)
+            writeTarget.closeConnection();
+    }
+
+    @Override
+    public int getMaxMessageSize() {
+        return Message.MAX_SIZE;
+    }
+
+    /**
+     * @return the IP address and port of peer.
+     */
+    public PeerAddress getAddress() {
+        return peerAddress;
+    }
+
+    /** Catch any exceptions, logging them and then closing the channel. */
+    private void exceptionCaught(Exception e) {
+        PeerAddress addr = getAddress();
+        String s = addr == null ? "?" : addr.toString();
+        if (e instanceof ConnectException || e instanceof IOException) {
+            // Short message for network errors
+            log.info(s + " - " + e.getMessage());
+        } else {
+            log.warn(s + " - ", e);
+            Thread.UncaughtExceptionHandler handler = Threading.uncaughtExceptionHandler;
+            if (handler != null)
+                handler.uncaughtException(Thread.currentThread(), e);
+        }
+
+        close();
+    }
+}
