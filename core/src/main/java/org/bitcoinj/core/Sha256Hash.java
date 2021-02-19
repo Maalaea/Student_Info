@@ -83,4 +83,58 @@ public class Sha256Hash implements Serializable, Comparable<Sha256Hash> {
         return wrap(Utils.HEX.decode(hexString));
     }
 
-  
+    /**
+     * Creates a new instance that wraps the given hash value, but with byte order reversed.
+     *
+     * @param rawHashBytes the raw hash bytes to wrap
+     * @return a new instance
+     * @throws IllegalArgumentException if the given array length is not exactly 32
+     */
+    @SuppressWarnings("deprecation") // the constructor will be made private in the future
+    public static Sha256Hash wrapReversed(byte[] rawHashBytes) {
+        return wrap(Utils.reverseBytes(rawHashBytes));
+    }
+
+    /** Use {@link #of(byte[])} instead: this old name is ambiguous. */
+    @Deprecated
+    public static Sha256Hash create(byte[] contents) {
+        return of(contents);
+    }
+
+    /**
+     * Creates a new instance containing the calculated (one-time) hash of the given bytes.
+     *
+     * @param contents the bytes on which the hash value is calculated
+     * @return a new instance containing the calculated (one-time) hash
+     */
+    public static Sha256Hash of(byte[] contents) {
+        return wrap(hash(contents));
+    }
+
+    /** Use {@link #twiceOf(byte[])} instead: this old name is ambiguous. */
+    @Deprecated
+    public static Sha256Hash createDouble(byte[] contents) {
+        return twiceOf(contents);
+    }
+
+    /**
+     * Creates a new instance containing the hash of the calculated hash of the given bytes.
+     *
+     * @param contents the bytes on which the hash value is calculated
+     * @return a new instance containing the calculated (two-time) hash
+     */
+    public static Sha256Hash twiceOf(byte[] contents) {
+        return wrap(hashTwice(contents));
+    }
+
+    /**
+     * Creates a new instance containing the calculated (one-time) hash of the given file's contents.
+     *
+     * The file contents are read fully into memory, so this method should only be used with small files.
+     *
+     * @param file the file on which the hash value is calculated
+     * @return a new instance containing the calculated (one-time) hash
+     * @throws IOException if an error occurs while reading the file
+     */
+    public static Sha256Hash of(File file) throws IOException {
+        FileInput
