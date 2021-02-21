@@ -205,4 +205,69 @@ public class Sha256Hash implements Serializable, Comparable<Sha256Hash> {
      * @param length the number of bytes to hash
      * @return the double-hash (in big-endian order)
      */
-    public static byte[] hashTwice(
+    public static byte[] hashTwice(byte[] input, int offset, int length) {
+        MessageDigest digest = newDigest();
+        digest.update(input, offset, length);
+        return digest.digest(digest.digest());
+    }
+
+    /**
+     * Calculates the hash of hash on the given byte ranges. This is equivalent to
+     * concatenating the two ranges and then passing the result to {@link #hashTwice(byte[])}.
+     */
+    public static byte[] hashTwice(byte[] input1, int offset1, int length1,
+                                   byte[] input2, int offset2, int length2) {
+        MessageDigest digest = newDigest();
+        digest.update(input1, offset1, length1);
+        digest.update(input2, offset2, length2);
+        return digest.digest(digest.digest());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return Arrays.equals(bytes, ((Sha256Hash)o).bytes);
+    }
+
+    /**
+     * Returns the last four bytes of the wrapped hash. This should be unique enough to be a suitable hash code even for
+     * blocks, where the goal is to try and get the first bytes to be zeros (i.e. the value as a big integer lower
+     * than the target value).
+     */
+    @Override
+    public int hashCode() {
+        // Use the last 4 bytes, not the first 4 which are often zeros in Bitcoin.
+        return Ints.fromBytes(bytes[LENGTH - 4], bytes[LENGTH - 3], bytes[LENGTH - 2], bytes[LENGTH - 1]);
+    }
+
+    @Override
+    public String toString() {
+        return Utils.HEX.encode(bytes);
+    }
+
+    /**
+     * Returns the bytes interpreted as a positive integer.
+     */
+    public BigInteger toBigInteger() {
+        return new BigInteger(1, bytes);
+    }
+
+    /**
+     * Returns the internal byte array, without defensively copying. Therefore do NOT modify the returned array.
+     */
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    /**
+     * Returns a reversed copy of the internal byte array.
+     */
+    public byte[] getReversedBytes() {
+        return Utils.reverseBytes(bytes);
+    }
+
+    @Override
+    public int compareTo(final Sha256Hash other) {
+        for (int i = LENGTH - 1; i >= 0; i--) {
+            final int thisByte = this.bytes[i] &
