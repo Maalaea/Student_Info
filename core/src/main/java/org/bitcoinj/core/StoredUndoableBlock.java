@@ -50,4 +50,39 @@ public class StoredUndoableBlock {
      * Get the transaction output changes if they have been calculated, otherwise null.
      * Only one of this and getTransactions() will return a non-null value.
      */
-    public T
+    public TransactionOutputChanges getTxOutChanges() {
+        return txOutChanges;
+    }
+    
+    /**
+     * Get the full list of transactions if it is stored, otherwise null.
+     * Only one of this and getTxOutChanges() will return a non-null value.
+     */
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
+    
+    /**
+     * Get the hash of the represented block
+     */
+    public Sha256Hash getHash() {
+        return blockHash;
+    }
+
+    @Override
+    public int hashCode() {
+        return blockHash.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return getHash().equals(((StoredUndoableBlock)o).getHash());
+    }
+
+    @Override
+    public String toString() {
+        return "Undoable Block " + blockHash;
+    }
+}
