@@ -1268,3 +1268,466 @@ public class Transaction extends ChildMessage {
      *
      * @param inputIndex input the signature is being calculated for. Tx signatures are always relative to an input.
      * @param scriptCode the script that should be in the given input during signing.
+     * @param prevValue the value of the coin being spent
+     * @param type Should be SigHash.ALL
+     * @param anyoneCanPay should be false.
+     */
+    public synchronized Sha256Hash hashForSignatureWitness(int inputIndex, Script scriptCode, Coin prevValue,
+                                                           SigHash type, boolean anyoneCanPay) {
+        byte[] connectedScript = scriptCode.getProgram();
+        return hashForSignatureWitness(inputIndex, connectedScript, prevValue, type, anyoneCanPay);
+    }
+
+    public synchronized Sha256Hash hashForSignatureWitness(int inputIndex, byte[] connectedScript, Coin prevValue,
+                                                           SigHash type, boolean anyoneCanPay) {
+        byte sigHashType = (byte) TransactionSignature.calcSigHashValue(type, anyoneCanPay);
+        ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(length == UNKNOWN_LENGTH ? 256 : length + 4);
+        try {
+            byte[] hashPrevouts = new byte[32];
+            byte[] hashSequence = new byte[32];
+            byte[] hashOutputs = new byte[32];
+            anyoneCanPay = (sigHashType & SIGHASH_ANYONECANPAY_VALUE) == SIGHASH_ANYONECANPAY_VALUE;
+
+            if (!anyoneCanPay) {
+                ByteArrayOutputStream bosHashPrevouts = new UnsafeByteArrayOutputStream(256);
+                for (int i = 0; i < this.inputs.size(); ++i) {
+                    bosHashPrevouts.write(this.inputs.get(i).getOutpoint().getHash().getReversedBytes());
+                    uint32ToByteStreamLE(this.inputs.get(i).getOutpoint().getIndex(), bosHashPrevouts);
+                }
+                hashPrevouts = Sha256Hash.hashTwice(bosHashPrevouts.toByteArray());
+            }
+
+            if (!anyoneCanPay && type != SigHash.SINGLE && type != SigHash.NONE) {
+                ByteArrayOutputStream bosSequence = new UnsafeByteArrayOutputStream(256);
+                for (int i = 0; i < this.inputs.size(); ++i) {
+                    uint32ToByteStreamLE(this.inputs.get(i).getSequenceNumber(), bosSequence);
+                }
+                hashSequence = Sha256Hash.hashTwice(bosSequence.toByteArray());
+            }
+
+            if (type != SigHash.SINGLE && type != SigHash.NONE) {
+                ByteArrayOutputStream bosHashOutputs = new UnsafeByteArrayOutputStream(256);
+                for (int i = 0; i < this.outputs.size(); ++i) {
+                    uint64ToByteStreamLE(
+                            BigInteger.valueOf(this.outputs.get(i).getValue().getValue()),
+                            bosHashOutputs
+                    );
+                    bosHashOutputs.write(new VarInt(this.outputs.get(i).getScriptBytes().length).encode());
+                    bosHashOutputs.write(this.outputs.get(i).getScriptBytes());
+                }
+                hashOutputs = Sha256Hash.hashTwice(bosHashOutputs.toByteArray());
+            } else if (type == SigHash.SINGLE && inputIndex < outputs.size()) {
+                ByteArrayOutputStream bosHashOutputs = new UnsafeByteArrayOutputStream(256);
+                uint64ToByteStreamLE(
+                        BigInteger.valueOf(this.outputs.get(inputIndex).getValue().getValue()),
+                        bosHashOutputs
+                );
+                bosHashOutputs.write(new VarInt(this.outputs.get(inputIndex).getScriptBytes().length).encode());
+                bosHashOutputs.write(this.outputs.get(inputIndex).getScriptBytes());
+                hashOutputs = Sha256Hash.hashTwice(bosHashOutputs.toByteArray());
+            }
+            uint32ToByteStreamLE(version, bos);
+            bos.write(hashPrevouts);
+            bos.write(hashSequence);
+            bos.write(inputs.get(inputIndex).getOutpoint().getHash().getReversedBytes());
+            uint32ToByteStreamLE(inputs.get(inputIndex).getOutpoint().getIndex(), bos);
+            bos.write(new VarInt(connectedScript.length).encode());
+            bos.write(connectedScript);
+            uint64ToByteStreamLE(BigInteger.valueOf(prevValue.getValue()), bos);
+            uint32ToByteStreamLE(inputs.get(inputIndex).getSequenceNumber(), bos);
+            bos.write(hashOutputs);
+            uint32ToByteStreamLE(this.lockTime, bos);
+            uint32ToByteStreamLE(0x000000ff & sigHashType, bos);
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        }
+
+        return Sha256Hash.twiceOf(bos.toByteArray());
+    }
+
+    @Override
+    protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {
+        bitcoinSerializeToStream(stream, this.transactionOptions);
+    }
+
+    protected void bitcoinSerializeToStream(OutputStream stream, int transactionOptions) throws IOException {
+        boolean witSupported = (protocolVersion >= NetworkParameters.ProtocolVersion.WITNESS_VERSION.getBitcoinProtocolVersion())
+                && (transactionOptions & TransactionOptions.WITNESS) != 0;
+        boolean serializeWit = hasWitness() && witSupported;
+        uint32ToByteStreamLE(version, stream);
+        if (serializeWit) {
+            stream.write(new byte[]{0, 1});
+        }
+        stream.write(new VarInt(inputs.size()).encode());
+        for (TransactionInput in : inputs)
+            in.bitcoinSerialize(stream);
+        stream.write(new VarInt(outputs.size()).encode());
+        for (TransactionOutput out : outputs)
+            out.bitcoinSerialize(stream);
+
+        if (serializeWit) {
+            for (int i = 0; i < inputs.size(); i++) {
+                TransactionWitness witness = getWitness(i);
+                stream.write(new VarInt(witness.getPushCount()).encode());
+                for (int y = 0; y < witness.getPushCount(); y++) {
+                    byte[] push = witness.getPush(y);
+                    stream.write(new VarInt(push.length).encode());
+                    stream.write(push);
+                }
+            }
+        }
+
+        uint32ToByteStreamLE(lockTime, stream);
+    }
+
+
+    /**
+     * Transactions can have an associated lock time, specified either as a block height or in seconds since the
+     * UNIX epoch. A transaction is not allowed to be confirmed by miners until the lock time is reached, and
+     * since Bitcoin 0.8+ a transaction that did not end its lock period (non final) is considered to be non
+     * standard and won't be relayed or included in the memory pool either.
+     */
+    public long getLockTime() {
+        return lockTime;
+    }
+
+    /**
+     * Transactions can have an associated lock time, specified either as a block height or in seconds since the
+     * UNIX epoch. A transaction is not allowed to be confirmed by miners until the lock time is reached, and
+     * since Bitcoin 0.8+ a transaction that did not end its lock period (non final) is considered to be non
+     * standard and won't be relayed or included in the memory pool either.
+     */
+    public void setLockTime(long lockTime) {
+        unCache();
+        boolean seqNumSet = false;
+        for (TransactionInput input : inputs) {
+            if (input.getSequenceNumber() != TransactionInput.NO_SEQUENCE) {
+                seqNumSet = true;
+                break;
+            }
+        }
+        if (lockTime != 0 && (!seqNumSet || inputs.isEmpty())) {
+            // At least one input must have a non-default sequence number for lock times to have any effect.
+            // For instance one of them can be set to zero to make this feature work.
+            log.warn("You are setting the lock time on a transaction but none of the inputs have non-default sequence numbers. This will not do what you expect!");
+        }
+        this.lockTime = lockTime;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+        unCache();
+    }
+
+    /** Returns an unmodifiable view of all inputs. */
+    public List<TransactionInput> getInputs() {
+        return Collections.unmodifiableList(inputs);
+    }
+
+    /** Returns an unmodifiable view of all outputs. */
+    public List<TransactionOutput> getOutputs() {
+        return Collections.unmodifiableList(outputs);
+    }
+
+    /**
+     * <p>Returns the list of transacion outputs, whether spent or unspent, that match a wallet by address or that are
+     * watched by a wallet, i.e., transaction outputs whose script's address is controlled by the wallet and transaction
+     * outputs whose script is watched by the wallet.</p>
+     *
+     * @param transactionBag The wallet that controls addresses and watches scripts.
+     * @return linked list of outputs relevant to the wallet in this transaction
+     */
+    public List<TransactionOutput> getWalletOutputs(TransactionBag transactionBag){
+        List<TransactionOutput> walletOutputs = new LinkedList<>();
+        for (TransactionOutput o : outputs) {
+            if (!o.isMineOrWatched(transactionBag)) continue;
+            walletOutputs.add(o);
+        }
+
+        return walletOutputs;
+    }
+
+    /** Randomly re-orders the transaction outputs: good for privacy */
+    public void shuffleOutputs() {
+        Collections.shuffle(outputs);
+    }
+
+    /** Same as getInputs().get(index). */
+    public TransactionInput getInput(long index) {
+        return inputs.get((int)index);
+    }
+
+    /** Same as getOutputs().get(index) */
+    public TransactionOutput getOutput(long index) {
+        return outputs.get((int)index);
+    }
+
+    /**
+     * Returns the confidence object for this transaction from the {@link org.bitcoinj.core.TxConfidenceTable}
+     * referenced by the implicit {@link Context}.
+     */
+    public TransactionConfidence getConfidence() {
+        return getConfidence(Context.get());
+    }
+
+    /**
+     * Returns the confidence object for this transaction from the {@link org.bitcoinj.core.TxConfidenceTable}
+     * referenced by the given {@link Context}.
+     */
+    public TransactionConfidence getConfidence(Context context) {
+        return getConfidence(context.getConfidenceTable());
+    }
+
+    /**
+     * Returns the confidence object for this transaction from the {@link org.bitcoinj.core.TxConfidenceTable}
+     */
+    public TransactionConfidence getConfidence(TxConfidenceTable table) {
+        if (confidence == null)
+            confidence = table.getOrCreate(getHash()) ;
+        return confidence;
+    }
+
+    /** Check if the transaction has a known confidence */
+    public boolean hasConfidence() {
+        return getConfidence().getConfidenceType() != TransactionConfidence.ConfidenceType.UNKNOWN;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return getHash().equals(((Transaction)o).getHash());
+    }
+
+    @Override
+    public int hashCode() {
+        return getHash().hashCode();
+    }
+
+    /**
+     * Gets the count of regular SigOps in this transactions
+     */
+    public int getSigOpCount() throws ScriptException {
+        int sigOps = 0;
+        for (TransactionInput input : inputs)
+            sigOps += Script.getSigOpCount(input.getScriptBytes());
+        for (TransactionOutput output : outputs)
+            sigOps += Script.getSigOpCount(output.getScriptBytes());
+        return sigOps;
+    }
+
+    /**
+     * Check block height is in coinbase input script, for use after BIP 34
+     * enforcement is enabled.
+     */
+    public void checkCoinBaseHeight(final int height)
+            throws VerificationException {
+        checkArgument(height >= Block.BLOCK_HEIGHT_GENESIS);
+        checkState(isCoinBase());
+
+        // Check block height is in coinbase input script
+        final TransactionInput in = this.getInputs().get(0);
+        final ScriptBuilder builder = new ScriptBuilder();
+        builder.number(height);
+        final byte[] expected = builder.build().getProgram();
+        final byte[] actual = in.getScriptBytes();
+        if (actual.length < expected.length) {
+            throw new VerificationException.CoinbaseHeightMismatch("Block height mismatch in coinbase.");
+        }
+        for (int scriptIdx = 0; scriptIdx < expected.length; scriptIdx++) {
+            if (actual[scriptIdx] != expected[scriptIdx]) {
+                throw new VerificationException.CoinbaseHeightMismatch("Block height mismatch in coinbase.");
+            }
+        }
+    }
+
+    /**
+     * <p>Checks the transaction contents for sanity, in ways that can be done in a standalone manner.
+     * Does <b>not</b> perform all checks on a transaction such as whether the inputs are already spent.
+     * Specifically this method verifies:</p>
+     *
+     * <ul>
+     *     <li>That there is at least one input and output.</li>
+     *     <li>That the serialized size is not larger than the max block size.</li>
+     *     <li>That no outputs have negative value.</li>
+     *     <li>That the outputs do not sum to larger than the max allowed quantity of coin in the system.</li>
+     *     <li>If the tx is a coinbase tx, the coinbase scriptSig size is within range. Otherwise that there are no
+     *     coinbase inputs in the tx.</li>
+     * </ul>
+     *
+     * @throws VerificationException
+     */
+    public void verify() throws VerificationException {
+        if (inputs.size() == 0 || outputs.size() == 0)
+            throw new VerificationException.EmptyInputsOrOutputs();
+        if (this.getMessageSize() > Block.MAX_BLOCK_SIZE)
+            throw new VerificationException.LargerThanMaxBlockSize();
+
+        Coin valueOut = Coin.ZERO;
+        HashSet<TransactionOutPoint> outpoints = new HashSet<>();
+        for (TransactionInput input : inputs) {
+            if (outpoints.contains(input.getOutpoint()))
+                throw new VerificationException.DuplicatedOutPoint();
+            outpoints.add(input.getOutpoint());
+        }
+        try {
+            for (TransactionOutput output : outputs) {
+                if (output.getValue().signum() < 0)    // getValue() can throw IllegalStateException
+                    throw new VerificationException.NegativeValueOutput();
+                valueOut = valueOut.add(output.getValue());
+                if (params.hasMaxMoney() && valueOut.compareTo(params.getMaxMoney()) > 0)
+                    throw new IllegalArgumentException();
+            }
+        } catch (IllegalStateException e) {
+            throw new VerificationException.ExcessiveValue();
+        } catch (IllegalArgumentException e) {
+            throw new VerificationException.ExcessiveValue();
+        }
+
+        if (isCoinBase()) {
+            if (inputs.get(0).getScriptBytes().length < 2 || inputs.get(0).getScriptBytes().length > 100)
+                throw new VerificationException.CoinbaseScriptSizeOutOfRange();
+        } else {
+            for (TransactionInput input : inputs)
+                if (input.isCoinBase())
+                    throw new VerificationException.UnexpectedCoinbaseInput();
+        }
+    }
+
+    /**
+     * <p>A transaction is time locked if at least one of its inputs is non-final and it has a lock time</p>
+     *
+     * <p>To check if this transaction is final at a given height and time, see {@link Transaction#isFinal(int, long)}
+     * </p>
+     */
+    public boolean isTimeLocked() {
+        if (getLockTime() == 0)
+            return false;
+        for (TransactionInput input : getInputs())
+            if (input.hasSequence())
+                return true;
+        return false;
+    }
+
+    /**
+     * Returns whether this transaction will opt into the
+     * <a href="https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki">full replace-by-fee </a> semantics.
+     */
+    public boolean isOptInFullRBF() {
+        for (TransactionInput input : getInputs())
+            if (input.isOptInFullRBF())
+                return true;
+        return false;
+    }
+
+    /**
+     * <p>Returns true if this transaction is considered finalized and can be placed in a block. Non-finalized
+     * transactions won't be included by miners and can be replaced with newer versions using sequence numbers.
+     * This is useful in certain types of <a href="http://en.bitcoin.it/wiki/Contracts">contracts</a>, such as
+     * micropayment channels.</p>
+     *
+     * <p>Note that currently the replacement feature is disabled in Bitcoin Core and will need to be
+     * re-activated before this functionality is useful.</p>
+     */
+    public boolean isFinal(int height, long blockTimeSeconds) {
+        long time = getLockTime();
+        return time < (time < LOCKTIME_THRESHOLD ? height : blockTimeSeconds) || !isTimeLocked();
+    }
+
+    /**
+     * Returns either the lock time as a date, if it was specified in seconds, or an estimate based on the time in
+     * the current head block if it was specified as a block time.
+     */
+    public Date estimateLockTime(AbstractBlockChain chain) {
+        if (lockTime < LOCKTIME_THRESHOLD)
+            return chain.estimateBlockTime((int)getLockTime());
+        else
+            return new Date(getLockTime()*1000);
+    }
+
+    /**
+     * Returns the purpose for which this transaction was created. See the javadoc for {@link Purpose} for more
+     * information on the point of this field and what it can be.
+     */
+    public Purpose getPurpose() {
+        return purpose;
+    }
+
+    /**
+     * Marks the transaction as being created for the given purpose. See the javadoc for {@link Purpose} for more
+     * information on the point of this field and what it can be.
+     */
+    public void setPurpose(Purpose purpose) {
+        this.purpose = purpose;
+    }
+
+    /**
+     * Getter for {@link #exchangeRate}.
+     */
+    @Nullable
+    public ExchangeRate getExchangeRate() {
+        return exchangeRate;
+    }
+
+    /**
+     * Setter for {@link #exchangeRate}.
+     */
+    public void setExchangeRate(ExchangeRate exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
+
+    /**
+     * Returns the transaction {@link #memo}.
+     */
+    public String getMemo() {
+        return memo;
+    }
+
+    /**
+     * Set the transaction {@link #memo}. It can be used to record the memo of the payment request that initiated the
+     * transaction.
+     */
+    public void setMemo(String memo) {
+        this.memo = memo;
+    }
+
+    /**
+       * Transaction weight is a segwit-related computation 3b+t where b is the size of a transaction serialized in the
+       * traditional manner without witness data, and t is the size of a transaction serialized in the segwit format
+       * with witness data.
+       */
+      public int getWeight() {
+          final int baseLength;
+          {
+              final ByteArrayOutputStream base = new UnsafeByteArrayOutputStream(length < 32 ? 32 : length + 32);
+              try {
+                  bitcoinSerializeToStream(base, TransactionOptions.NONE);
+              } catch (IOException e) {
+                  ; // Cannot happen, we are serializing to a memory stream
+              }
+              baseLength = base.size();
+          }
+
+          final int totalLength;
+          {
+              final ByteArrayOutputStream total = new UnsafeByteArrayOutputStream(length < 32 ? 32 : length + 32);
+              try {
+                  bitcoinSerializeToStream(total, TransactionOptions.WITNESS);
+              } catch (IOException e) {
+                ; // Cannot happen, we are serializing to a memory stream
+              }
+              totalLength = total.size();
+          }
+
+          return baseLength * (WITNESS_SCALE_FACTOR - 1) + totalLength;
+      }
+
+      public int getVirtualTransactionSize() {
+          return (getWeight() + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+      }
+
+}
