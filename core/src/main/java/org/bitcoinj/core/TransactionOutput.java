@@ -48,4 +48,47 @@ public class TransactionOutput extends ChildMessage {
     private Script scriptPubKey;
 
     // These fields are not Bitcoin serialized. They are used for tracking purposes in our wallet
-    // only. If set to true, 
+    // only. If set to true, this output is counted towards our balance. If false and spentBy is null the tx output
+    // was owned by us and was sent to somebody else. If false and spentBy is set it means this output was owned by
+    // us and used in one of our own transactions (eg, because it is a change output).
+    private boolean availableForSpending;
+    @Nullable private TransactionInput spentBy;
+
+    protected int scriptLen;
+
+    /**
+     * Deserializes a transaction output message. This is usually part of a transaction message.
+     */
+    public TransactionOutput(NetworkParameters params, @Nullable Transaction parent, byte[] payload,
+                             int offset) throws ProtocolException {
+        super(params, payload, offset);
+        setParent(parent);
+        availableForSpending = true;
+    }
+
+    /**
+     * Deserializes a transaction output message. This is usually part of a transaction message.
+     *
+     * @param params NetworkParameters object.
+     * @param payload Bitcoin protocol formatted byte array containing message content.
+     * @param offset The location of the first payload byte within the array.
+     * @param serializer the serializer to use for this message.
+     * @throws ProtocolException
+     */
+    public TransactionOutput(NetworkParameters params, @Nullable Transaction parent, byte[] payload, int offset, MessageSerializer serializer) throws ProtocolException {
+        super(params, payload, offset, parent, serializer, UNKNOWN_LENGTH);
+        availableForSpending = true;
+    }
+
+    /**
+     * Creates an output that sends 'value' to the given address (public key hash). The amount should be created with
+     * something like {@link Coin#valueOf(int, int)}. Typically you would use
+     * {@link Transaction#addOutput(Coin, Address)} instead of creating a TransactionOutput directly.
+     */
+    public TransactionOutput(NetworkParameters params, @Nullable Transaction parent, Coin value, Address to) {
+        this(params, parent, value, ScriptBuilder.createOutputScript(to).getProgram());
+    }
+
+    /**
+     * Creates an output that sends 'value' to the given public key using a simple CHECKSIG script (no addresses). The
+     * amount should be created with something like {@link Coin#valueOf(in
