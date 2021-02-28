@@ -91,4 +91,49 @@ public class TransactionOutput extends ChildMessage {
 
     /**
      * Creates an output that sends 'value' to the given public key using a simple CHECKSIG script (no addresses). The
-     * amount should be created with something like {@link Coin#valueOf(in
+     * amount should be created with something like {@link Coin#valueOf(int, int)}. Typically you would use
+     * {@link Transaction#addOutput(Coin, ECKey)} instead of creating an output directly.
+     */
+    public TransactionOutput(NetworkParameters params, @Nullable Transaction parent, Coin value, ECKey to) {
+        this(params, parent, value, ScriptBuilder.createOutputScript(to).getProgram());
+    }
+
+    public TransactionOutput(NetworkParameters params, @Nullable Transaction parent, Coin value, byte[] scriptBytes) {
+        super(params);
+        // Negative values obviously make no sense, except for -1 which is used as a sentinel value when calculating
+        // SIGHASH_SINGLE signatures, so unfortunately we have to allow that here.
+        checkArgument(value.signum() >= 0 || value.equals(Coin.NEGATIVE_SATOSHI), "Negative values not allowed");
+        checkArgument(!params.hasMaxMoney() || value.compareTo(params.getMaxMoney()) <= 0, "Values larger than MAX_MONEY not allowed");
+        this.value = value.value;
+        this.scriptBytes = scriptBytes;
+        setParent(parent);
+        availableForSpending = true;
+        length = 8 + VarInt.sizeOf(scriptBytes.length) + scriptBytes.length;
+    }
+
+    public Script getScriptPubKey() throws ScriptException {
+        if (scriptPubKey == null) {
+            scriptPubKey = new Script(scriptBytes);
+        }
+        return scriptPubKey;
+    }
+
+    /**
+     * <p>If the output script pays to an address as in <a href="https://bitcoin.org/en/developer-guide#term-p2pkh">
+     * P2PKH</a>, return the address of the receiver, i.e., a base58 encoded hash of the public key in the script. </p>
+     *
+     * @param networkParameters needed to specify an address
+     * @return null, if the output script is not the form <i>OP_DUP OP_HASH160 <PubkeyHash> OP_EQUALVERIFY OP_CHECKSIG</i>,
+     * i.e., not P2PKH
+     * @return an address made out of the public key hash
+     */
+    @Nullable
+    public Address getAddressFromP2PKHScript(NetworkParameters networkParameters) throws ScriptException{
+        if (getScriptPubKey().isSentToAddress())
+            return getScriptPubKey().getToAddress(networkParameters);
+
+        return null;
+    }
+
+    /**
+     * <p>If the output script pays to a redeem script, return the address of the rede
