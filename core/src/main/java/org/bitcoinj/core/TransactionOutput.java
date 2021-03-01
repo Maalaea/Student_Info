@@ -136,4 +136,65 @@ public class TransactionOutput extends ChildMessage {
     }
 
     /**
-     * <p>If the output script pays to a redeem script, return the address of the rede
+     * <p>If the output script pays to a redeem script, return the address of the redeem script as described by,
+     * i.e., a base58 encoding of [one-byte version][20-byte hash][4-byte checksum], where the 20-byte hash refers to
+     * the redeem script.</p>
+     *
+     * <p>P2SH is described by <a href="https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki">BIP 16</a> and
+     * <a href="https://bitcoin.org/en/developer-guide#p2sh-scripts">documented in the Bitcoin Developer Guide</a>.</p>
+     *
+     * @param networkParameters needed to specify an address
+     * @return null if the output script does not pay to a script hash
+     * @return an address that belongs to the redeem script
+     */
+    @Nullable
+    public Address getAddressFromP2SH(NetworkParameters networkParameters) throws ScriptException{
+        if (getScriptPubKey().isPayToScriptHash())
+            return getScriptPubKey().getToAddress(networkParameters);
+
+        return null;
+    }
+
+    @Override
+    protected void parse() throws ProtocolException {
+        value = readInt64();
+        scriptLen = (int) readVarInt();
+        length = cursor - offset + scriptLen;
+        scriptBytes = readBytes(scriptLen);
+    }
+
+    @Override
+    protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {
+        checkNotNull(scriptBytes);
+        Utils.int64ToByteStreamLE(value, stream);
+        // TODO: Move script serialization into the Script class, where it belongs.
+        stream.write(new VarInt(scriptBytes.length).encode());
+        stream.write(scriptBytes);
+    }
+
+    /**
+     * Returns the value of this output. This is the amount of currency that the destination address
+     * receives.
+     */
+    public Coin getValue() {
+        try {
+            return Coin.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Sets the value of this output.
+     */
+    public void setValue(Coin value) {
+        checkNotNull(value);
+        unCache();
+        this.value = value.value;
+    }
+
+    /**
+     * Gets the index of this output in the parent transaction, or throws if this output is free standing. Iterates
+     * over the parents list to discover this.
+     */
+    public int getIn
