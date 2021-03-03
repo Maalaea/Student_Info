@@ -281,4 +281,65 @@ public class TransactionOutput extends ChildMessage {
      * the spending transaction wasn't downloaded yet, and it can be marked as spent when in reality the rest of the
      * network believes it to be unspent if the signature or script connecting to it was not actually valid.
      */
-    public boo
+    public boolean isAvailableForSpending() {
+        return availableForSpending;
+    }
+
+    /**
+     * The backing script bytes which can be turned into a Script object.
+     * @return the scriptBytes
+    */
+    public byte[] getScriptBytes() {
+        return scriptBytes;
+    }
+
+    /**
+     * Returns true if this output is to a key in the wallet or to an address/script we are watching.
+     */
+    public boolean isMineOrWatched(TransactionBag transactionBag) {
+        return isMine(transactionBag) || isWatched(transactionBag);
+    }
+
+    /**
+     * Returns true if this output is to a key, or an address we have the keys for, in the wallet.
+     */
+    public boolean isWatched(TransactionBag transactionBag) {
+        try {
+            Script script = getScriptPubKey();
+            return transactionBag.isWatchedScript(script);
+        } catch (ScriptException e) {
+            // Just means we didn't understand the output of this transaction: ignore it.
+            log.debug("Could not parse tx output script: {}", e.toString());
+            return false;
+        }
+    }
+
+    /**
+     * Returns true if this output is to a key, or an address we have the keys for, in the wallet.
+     */
+    public boolean isMine(TransactionBag transactionBag) {
+        try {
+            Script script = getScriptPubKey();
+            if (script.isSentToRawPubKey()) {
+                byte[] pubkey = script.getPubKey();
+                return transactionBag.isPubKeyMine(pubkey);
+            } if (script.isPayToScriptHash()) {
+                return transactionBag.isPayToScriptHashMine(script.getPubKeyHash());
+            } else {
+                byte[] pubkeyHash = script.getPubKeyHash();
+                return transactionBag.isPubKeyHashMine(pubkeyHash);
+            }
+        } catch (ScriptException e) {
+            // Just means we didn't understand the output of this transaction: ignore it.
+            log.debug("Could not parse tx {} output script: {}", parent != null ? parent.getHash() : "(no parent)", e.toString());
+            return false;
+        }
+    }
+
+    /**
+     * Returns a human readable debug string.
+     */
+    @Override
+    public String toString() {
+        try {
+            Script script 
