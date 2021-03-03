@@ -235,4 +235,50 @@ public class TransactionOutput extends ChildMessage {
         // wrongness in order to ensure we're considered standard. A better formula would either estimate the
         // size of data needed to satisfy all different script types, or just hard code 33 below.
         final long size = this.unsafeBitcoinSerialize().length + 148;
-        return feePerKb.multiply(size).divide(100
+        return feePerKb.multiply(size).divide(1000);
+    }
+
+    /**
+     * Returns the minimum value for this output to be considered "not dust", i.e. the transaction will be relayable
+     * and mined by default miners. For normal pay to address outputs, this is 2730 satoshis, the same as
+     * {@link Transaction#MIN_NONDUST_OUTPUT}.
+     */
+    public Coin getMinNonDustValue() {
+        return getMinNonDustValue(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.multiply(3));
+    }
+
+    /**
+     * Sets this objects availableForSpending flag to false and the spentBy pointer to the given input.
+     * If the input is null, it means this output was signed over to somebody else rather than one of our own keys.
+     * @throws IllegalStateException if the transaction was already marked as spent.
+     */
+    public void markAsSpent(TransactionInput input) {
+        checkState(availableForSpending);
+        availableForSpending = false;
+        spentBy = input;
+        if (parent != null)
+            if (log.isDebugEnabled()) log.debug("Marked {}:{} as spent by {}", getParentTransactionHash(), getIndex(), input);
+        else
+            if (log.isDebugEnabled()) log.debug("Marked floating output as spent by {}", input);
+    }
+
+    /**
+     * Resets the spent pointer / availableForSpending flag to null.
+     */
+    public void markAsUnspent() {
+        if (parent != null)
+            if (log.isDebugEnabled()) log.debug("Un-marked {}:{} as spent by {}", getParentTransactionHash(), getIndex(), spentBy);
+        else
+            if (log.isDebugEnabled()) log.debug("Un-marked floating output as spent by {}", spentBy);
+        availableForSpending = true;
+        spentBy = null;
+    }
+
+    /**
+     * Returns whether {@link TransactionOutput#markAsSpent(TransactionInput)} has been called on this class. A
+     * {@link Wallet} will mark a transaction output as spent once it sees a transaction input that is connected to it.
+     * Note that this flag can be false when an output has in fact been spent according to the rest of the network if
+     * the spending transaction wasn't downloaded yet, and it can be marked as spent when in reality the rest of the
+     * network believes it to be unspent if the signature or script connecting to it was not actually valid.
+     */
+    public boo
