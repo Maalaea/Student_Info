@@ -342,4 +342,71 @@ public class TransactionOutput extends ChildMessage {
     @Override
     public String toString() {
         try {
-            Script script 
+            Script script = getScriptPubKey();
+            StringBuilder buf = new StringBuilder("TxOut of ");
+            buf.append(Coin.valueOf(value).toFriendlyString());
+            if (script.isSentToAddress() || script.isPayToScriptHash())
+                buf.append(" to ").append(script.getToAddress(params));
+            else if (script.isSentToRawPubKey())
+                buf.append(" to pubkey ").append(Utils.HEX.encode(script.getPubKey()));
+            else if (script.isSentToMultiSig())
+                buf.append(" to multisig");
+            else
+                buf.append(" (unknown type)");
+            buf.append(" script:").append(script);
+            return buf.toString();
+        } catch (ScriptException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Returns the connected input.
+     */
+    @Nullable
+    public TransactionInput getSpentBy() {
+        return spentBy;
+    }
+
+    /**
+     * Returns the transaction that owns this output.
+     */
+    @Nullable
+    public Transaction getParentTransaction() {
+        return (Transaction)parent;
+    }
+
+    /**
+     * Returns the transaction hash that owns this output.
+     */
+    @Nullable
+    public Sha256Hash getParentTransactionHash() {
+        return parent == null ? null : parent.getHash();
+    }
+
+    /**
+     * Returns the depth in blocks of the parent tx.
+     *
+     * <p>If the transaction appears in the top block, the depth is one. If it's anything else (pending, dead, unknown)
+     * then -1.</p>
+     * @return The tx depth or -1.
+     */
+    public int getParentTransactionDepthInBlocks() {
+        if (getParentTransaction() != null) {
+            TransactionConfidence confidence = getParentTransaction().getConfidence();
+            if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+                return confidence.getDepthInBlocks();
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Returns a new {@link TransactionOutPoint}, which is essentially a structure pointing to this output.
+     * Requires that this output is not detached.
+     */
+    public TransactionOutPoint getOutPointFor() {
+        return new TransactionOutPoint(params, getIndex(), getParentTransaction());
+    }
+
+    /** Returns 
