@@ -409,4 +409,22 @@ public class TransactionOutput extends ChildMessage {
         return new TransactionOutPoint(params, getIndex(), getParentTransaction());
     }
 
-    /** Returns 
+    /** Returns a copy of the output detached from its containing transaction, if need be. */
+    public TransactionOutput duplicateDetached() {
+        return new TransactionOutput(params, null, Coin.valueOf(value), org.bouncycastle.util.Arrays.clone(scriptBytes));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransactionOutput other = (TransactionOutput) o;
+        return value == other.value && (parent == null || (parent == other.parent && getIndex() == other.getIndex()))
+                && Arrays.equals(scriptBytes, other.scriptBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value, parent, Arrays.hashCode(scriptBytes));
+    }
+}
