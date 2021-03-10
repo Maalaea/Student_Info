@@ -68,4 +68,53 @@ public class UTXOsMessage extends Message {
                 Utils.setBitLE(hits, i);
         }
         this.outputs = new ArrayList<>(outputs.size());
-        for (TransactionOutput output 
+        for (TransactionOutput output : outputs) {
+            if (output != null) this.outputs.add(output);
+        }
+        this.chainHead = chainHead;
+        this.height = height;
+        this.heights = Arrays.copyOf(heights, heights.length);
+    }
+
+    @Override
+    protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {
+        Utils.uint32ToByteStreamLE(height, stream);
+        stream.write(chainHead.getBytes());
+        stream.write(new VarInt(hits.length).encode());
+        stream.write(hits);
+        stream.write(new VarInt(outputs.size()).encode());
+        for (int i = 0; i < outputs.size(); i++) {
+            TransactionOutput output = outputs.get(i);
+            Transaction tx = output.getParentTransaction();
+            Utils.uint32ToByteStreamLE(tx != null ? tx.getVersion() : 0L, stream);  // Version
+            Utils.uint32ToByteStreamLE(heights[i], stream);  // Height
+            output.bitcoinSerializeToStream(stream);
+        }
+    }
+
+    @Override
+    protected void parse() throws ProtocolException {
+        // Format is:
+        //   uint32 chainHeight
+        //   uint256 chainHeadHash
+        //   vector<unsigned char> hitsBitmap;
+        //   vector<CCoin> outs;
+        //
+        // A CCoin is  { int nVersion, int nHeight, CTxOut output }
+        // The bitmap indicates which of the requested TXOs were found in the UTXO set.
+        height = readUint32();
+        chainHead = readHash();
+        int numBytes = (int) readVarInt();
+        if (numBytes < 0 || numBytes > InventoryMessage.MAX_INVENTORY_ITEMS / 8)
+            throw new ProtocolException("hitsBitmap out of range: " + numBytes);
+        hits = readBytes(numBytes);
+        int numOuts = (int) readVarInt();
+        if (numOuts < 0 || numOuts > InventoryMessage.MAX_INVENTORY_ITEMS)
+            throw new ProtocolException("numOuts out of range: " + numOuts);
+        outputs = new ArrayList<>(numOuts);
+        heights = new long[numOuts];
+        for (int i = 0; i < numOuts; i++) {
+            long version = readUint32();
+            long height = readUint32();
+            if (version > 1)
+                throw new ProtocolException("Unknown tx version in ge
