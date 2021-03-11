@@ -117,4 +117,53 @@ public class UTXOsMessage extends Message {
             long version = readUint32();
             long height = readUint32();
             if (version > 1)
-                throw new ProtocolException("Unknown tx version in ge
+                throw new ProtocolException("Unknown tx version in getutxo output: " + version);
+            TransactionOutput output = new TransactionOutput(params, null, payload, cursor);
+            outputs.add(output);
+            heights[i] = height;
+            cursor += output.length;
+        }
+        length = cursor;
+    }
+
+    /**
+     * Returns a bit map indicating which of the queried outputs were found in the UTXO set.
+     */
+    public byte[] getHitMap() {
+        return Arrays.copyOf(hits, hits.length);
+    }
+
+    /** Returns the list of outputs that matched the query. */
+    public List<TransactionOutput> getOutputs() {
+        return new ArrayList<>(outputs);
+    }
+
+    /** Returns the block heights of each output returned in getOutputs(), or MEMPOOL_HEIGHT if not confirmed yet. */
+    public long[] getHeights() { return Arrays.copyOf(heights, heights.length); }
+
+    @Override
+    public String toString() {
+        return "UTXOsMessage{" +
+                "height=" + height +
+                ", chainHead=" + chainHead +
+                ", hitMap=" + Arrays.toString(hits) +
+                ", outputs=" + outputs +
+                ", heights=" + Arrays.toString(heights) +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UTXOsMessage other = (UTXOsMessage) o;
+        return height == other.height && chainHead.equals(other.chainHead)
+            && Arrays.equals(heights, other.heights) && Arrays.equals(hits, other.hits)
+            && outputs.equals(other.outputs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(height, chainHead, Arrays.hashCode(heights), Arrays.hashCode(hits), outputs);
+    }
+}
