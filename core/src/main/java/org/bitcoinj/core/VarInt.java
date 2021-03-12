@@ -1,6 +1,5 @@
 /*
  * Copyright 2011 Google Inc.
- * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +17,8 @@
 package org.bitcoinj.core;
 
 /**
- * <p>Instances of this class are not safe for use by multiple threads.</p>
+ * A variable-length encoded unsigned integer using Satoshi's encoding (a.k.a. "CompactSize").
  */
-public class UnknownMessage extends EmptyMessage {
-
-    private String name;
-
-    public UnknownMessage(NetworkParameters params, String name, byte[] payloadBytes) throws ProtocolException {
-        super(params, payloadBytes, 0);
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return "Unknown message [" + name + "]: " + (payload == null ? "" : Utils.HEX.encode(payload));
-    }
-}
+public class VarInt {
+    public final long value;
+    private fi
