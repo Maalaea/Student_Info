@@ -81,4 +81,32 @@ public class VarInt {
         if (value < 0) return 9; // 1 marker + 8 data bytes
         if (value < 253) return 1; // 1 data byte
         if (value <= 0xFFFFL) return 3; // 1 marker + 2 data bytes
-        if (value <= 0xFFFFFFFFL) return 5; // 1
+        if (value <= 0xFFFFFFFFL) return 5; // 1 marker + 4 data bytes
+        return 9; // 1 marker + 8 data bytes
+    }
+
+    /**
+     * Encodes the value into its minimal representation.
+     *
+     * @return the minimal encoded bytes of the value
+     */
+    public byte[] encode() {
+        byte[] bytes;
+        switch (sizeOf(value)) {
+            case 1:
+                return new byte[]{(byte) value};
+            case 3:
+                return new byte[]{(byte) 253, (byte) (value), (byte) (value >> 8)};
+            case 5:
+                bytes = new byte[5];
+                bytes[0] = (byte) 254;
+                Utils.uint32ToByteArrayLE(value, bytes, 1);
+                return bytes;
+            default:
+                bytes = new byte[9];
+                bytes[0] = (byte) 255;
+                Utils.uint64ToByteArrayLE(value, bytes, 1);
+                return bytes;
+        }
+    }
+}
