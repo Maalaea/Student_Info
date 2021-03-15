@@ -107,3 +107,56 @@ public class VersionMessage extends Message {
         // Note that the Bitcoin Core doesn't do anything with these, and finding out your own external IP address
         // is kind of tricky anyway, so we just put nonsense here for now.
         InetAddress localhost = InetAddresses.forString("127.0.0.1");
+        myAddr = new PeerAddress(params, localhost, params.getPort(), 0, BigInteger.ZERO);
+        theirAddr = new PeerAddress(params, localhost, params.getPort(), 0, BigInteger.ZERO);
+        subVer = LIBRARY_SUBVER;
+        bestHeight = newBestHeight;
+        relayTxesBeforeFilter = true;
+
+        length = 85;
+        if (protocolVersion > 31402)
+            length += 8;
+        length += VarInt.sizeOf(subVer.length()) + subVer.length();
+    }
+
+    @Override
+    protected void parse() throws ProtocolException {
+        clientVersion = (int) readUint32();
+        localServices = readUint64().longValue();
+        time = readUint64().longValue();
+        myAddr = new PeerAddress(params, payload, cursor, 0);
+        cursor += myAddr.getMessageSize();
+        theirAddr = new PeerAddress(params, payload, cursor, 0);
+        cursor += theirAddr.getMessageSize();
+        // uint64 localHostNonce  (random data)
+        // We don't care about the localhost nonce. It's used to detect connecting back to yourself in cases where
+        // there are NATs and proxies in the way. However we don't listen for inbound connections so it's irrelevant.
+        readUint64();
+        try {
+            // Initialize default values for flags which may not be sent by old nodes
+            subVer = "";
+            bestHeight = 0;
+            relayTxesBeforeFilter = true;
+            if (!hasMoreBytes())
+                return;
+            //   string subVer  (currently "")
+            subVer = readStr();
+            if (!hasMoreBytes())
+                return;
+            //   int bestHeight (size of known block chain).
+            bestHeight = readUint32();
+            if (!hasMoreBytes())
+                return;
+            relayTxesBeforeFilter = readBytes(1)[0] != 0;
+        } finally {
+            length = cursor - offset;
+        }
+    }
+
+    @Override
+    public void bitcoinSerializeToStream(OutputStream buf) throws IOException {
+        Utils.uint32ToByteStreamLE(clientVersion, buf);
+        Utils.uint32ToByteStreamLE(localServices, buf);
+        Utils.uint32ToByteStreamLE(localServices >> 32, buf);
+        Utils.uint32ToByteStreamLE(time, buf);
+        Utils.uint32T
