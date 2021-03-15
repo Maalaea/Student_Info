@@ -53,4 +53,57 @@ public class VersionMessage extends Message {
     public static final int NODE_BITCOIN_CASH = 1 << 5;
     /** A service bit used by BTC1 to announce Segwit2x nodes. */
     public static final int NODE_SEGWIT2X = 1 << 7;
-    /** Indicates that a
+    /** Indicates that a node can be asked for blocks and transactions including witness data. */
+    public static final int NODE_WITNESS = 1 << 3;
+
+    /**
+     * The version number of the protocol spoken.
+     */
+    public int clientVersion;
+    /**
+     * Flags defining what optional services are supported.
+     */
+    public long localServices;
+    /**
+     * What the other side believes the current time to be, in seconds.
+     */
+    public long time;
+    /**
+     * What the other side believes the address of this program is. Not used.
+     */
+    public PeerAddress myAddr;
+    /**
+     * What the other side believes their own address is. Not used.
+     */
+    public PeerAddress theirAddr;
+    /**
+     * User-Agent as defined in <a href="https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki">BIP 14</a>.
+     * Bitcoin Core sets it to something like "/Satoshi:0.9.1/".
+     */
+    public String subVer;
+    /**
+     * How many blocks are in the chain, according to the other side.
+     */
+    public long bestHeight;
+    /**
+     * Whether or not to relay tx invs before a filter is received.
+     * See <a href="https://github.com/bitcoin/bips/blob/master/bip-0037.mediawiki#extensions-to-existing-messages">BIP 37</a>.
+     */
+    public boolean relayTxesBeforeFilter;
+
+    public VersionMessage(NetworkParameters params, byte[] payload) throws ProtocolException {
+        super(params, payload, 0);
+    }
+
+    // It doesn't really make sense to ever lazily parse a version message or to retain the backing bytes.
+    // If you're receiving this on the wire you need to check the protocol version and it will never need to be sent
+    // back down the wire.
+
+    public VersionMessage(NetworkParameters params, int newBestHeight) {
+        super(params);
+        clientVersion = params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.CURRENT);
+        localServices = 0;
+        time = System.currentTimeMillis() / 1000;
+        // Note that the Bitcoin Core doesn't do anything with these, and finding out your own external IP address
+        // is kind of tricky anyway, so we just put nonsense here for now.
+        InetAddress localhost = InetAddresses.forString("127.0.0.1");
