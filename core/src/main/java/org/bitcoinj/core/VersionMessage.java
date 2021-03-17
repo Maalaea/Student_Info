@@ -159,4 +159,61 @@ public class VersionMessage extends Message {
         Utils.uint32ToByteStreamLE(localServices, buf);
         Utils.uint32ToByteStreamLE(localServices >> 32, buf);
         Utils.uint32ToByteStreamLE(time, buf);
-        Utils.uint32T
+        Utils.uint32ToByteStreamLE(time >> 32, buf);
+        try {
+            // My address.
+            myAddr.bitcoinSerialize(buf);
+            // Their address.
+            theirAddr.bitcoinSerialize(buf);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);  // Can't happen.
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Can't happen.
+        }
+        // Next up is the "local host nonce", this is to detect the case of connecting
+        // back to yourself. We don't care about this as we won't be accepting inbound
+        // connections.
+        Utils.uint32ToByteStreamLE(0, buf);
+        Utils.uint32ToByteStreamLE(0, buf);
+        // Now comes subVer.
+        byte[] subVerBytes = subVer.getBytes("UTF-8");
+        buf.write(new VarInt(subVerBytes.length).encode());
+        buf.write(subVerBytes);
+        // Size of known block chain.
+        Utils.uint32ToByteStreamLE(bestHeight, buf);
+        buf.write(relayTxesBeforeFilter ? 1 : 0);
+    }
+
+    /**
+     * Returns true if the version message indicates the sender has a full copy of the block chain,
+     * or if it's running in client mode (only has the headers).
+     */
+    public boolean hasBlockChain() {
+        return (localServices & NODE_NETWORK) == NODE_NETWORK;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VersionMessage other = (VersionMessage) o;
+        return other.bestHeight == bestHeight &&
+                other.clientVersion == clientVersion &&
+                other.localServices == localServices &&
+                other.time == time &&
+                other.subVer.equals(subVer) &&
+                other.myAddr.equals(myAddr) &&
+                other.theirAddr.equals(theirAddr) &&
+                other.relayTxesBeforeFilter == relayTxesBeforeFilter;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(bestHeight, clientVersion, localServices,
+            time, subVer, myAddr, theirAddr, relayTxesBeforeFilter);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilde
