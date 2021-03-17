@@ -216,4 +216,40 @@ public class VersionMessage extends Message {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilde
+        stringBuilder.append("\n");
+        stringBuilder.append("client version: ").append(clientVersion).append("\n");
+        stringBuilder.append("local services: ").append(localServices).append("\n");
+        stringBuilder.append("time:           ").append(time).append("\n");
+        stringBuilder.append("my addr:        ").append(myAddr).append("\n");
+        stringBuilder.append("their addr:     ").append(theirAddr).append("\n");
+        stringBuilder.append("sub version:    ").append(subVer).append("\n");
+        stringBuilder.append("best height:    ").append(bestHeight).append("\n");
+        stringBuilder.append("delay tx relay: ").append(!relayTxesBeforeFilter).append("\n");
+        return stringBuilder.toString();
+    }
+
+    public VersionMessage duplicate() {
+        VersionMessage v = new VersionMessage(params, (int) bestHeight);
+        v.clientVersion = clientVersion;
+        v.localServices = localServices;
+        v.time = time;
+        v.myAddr = myAddr;
+        v.theirAddr = theirAddr;
+        v.subVer = subVer;
+        v.relayTxesBeforeFilter = relayTxesBeforeFilter;
+        return v;
+    }
+
+    /**
+     * Appends the given user-agent information to the subVer field. The subVer is composed of a series of
+     * name:version pairs separated by slashes in the form of a path. For example a typical subVer field for bitcoinj
+     * users might look like "/bitcoinj:0.13/MultiBit:1.2/" where libraries come further to the left.<p>
+     *
+     * There can be as many components as you feel a need for, and the version string can be anything, but it is
+     * recommended to use A.B.C where A = major, B = minor and C = revision for software releases, and dates for
+     * auto-generated source repository snapshots. A valid subVer begins and ends with a slash, therefore name
+     * and version are not allowed to contain such characters. <p>
+     *
+     * Anything put in the "comments" field will appear in brackets and may be used for platform info, or anything
+     * else. For example, calling <tt>appendToSubVer("MultiBit", "1.0", "Windows")</tt> will result in a subVer being
+     * set of "/bitcoinj:1.0/MultiBit:1.0(Windows)/". Therefore the / ( and ) charact
