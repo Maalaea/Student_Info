@@ -252,4 +252,49 @@ public class VersionMessage extends Message {
      *
      * Anything put in the "comments" field will appear in brackets and may be used for platform info, or anything
      * else. For example, calling <tt>appendToSubVer("MultiBit", "1.0", "Windows")</tt> will result in a subVer being
-     * set of "/bitcoinj:1.0/MultiBit:1.0(Windows)/". Therefore the / ( and ) charact
+     * set of "/bitcoinj:1.0/MultiBit:1.0(Windows)/". Therefore the / ( and ) characters are reserved in all these
+     * components. If you don't want to add a comment (recommended), pass null.<p>
+     *
+     * See <a href="https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki">BIP 14</a> for more information.
+     *
+     * @param comments Optional (can be null) platform or other node specific information.
+     * @throws IllegalArgumentException if name, version or comments contains invalid characters.
+     */
+    public void appendToSubVer(String name, String version, @Nullable String comments) {
+        checkSubVerComponent(name);
+        checkSubVerComponent(version);
+        if (comments != null) {
+            checkSubVerComponent(comments);
+            subVer = subVer.concat(String.format(Locale.US, "%s:%s(%s)/", name, version, comments));
+        } else {
+            subVer = subVer.concat(String.format(Locale.US, "%s:%s/", name, version));
+        }
+    }
+
+    private static void checkSubVerComponent(String component) {
+        if (component.contains("/") || component.contains("(") || component.contains(")"))
+            throw new IllegalArgumentException("name contains invalid characters");
+    }
+
+    /**
+     * Returns true if the clientVersion field is >= Pong.MIN_PROTOCOL_VERSION. If it is then ping() is usable.
+     */
+    public boolean isPingPongSupported() {
+        return clientVersion >= params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.PONG);
+    }
+
+    /**
+     * Returns true if the clientVersion field is >= FilteredBlock.MIN_PROTOCOL_VERSION. If it is then Bloom filtering
+     * is available and the memory pool of the remote peer will be queried when the downloadData property is true.
+     */
+    public boolean isBloomFilteringSupported() {
+        return clientVersion >= params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.BLOOM_FILTER);
+    }
+
+    /** Returns true if the protocol version and service bits both indicate support for the getutxos message. */
+    public boolean isGetUTXOsSupported() {
+        return clientVersion >= GetUTXOsMessage.MIN_PROTOCOL_VERSION &&
+                (localServices & NODE_GETUTXOS) == NODE_GETUTXOS;
+    }
+
+    public boolean isWitnessSup
