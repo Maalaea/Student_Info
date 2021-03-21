@@ -297,4 +297,7 @@ public class VersionMessage extends Message {
                 (localServices & NODE_GETUTXOS) == NODE_GETUTXOS;
     }
 
-    public boolean isWitnessSup
+    public boolean isWitnessSupported() {
+        return (localServices & NODE_WITNESS) == NODE_WITNESS;
+    }
+}
