@@ -43,4 +43,8 @@ public interface TransactionConfidenceEventListener {
      * in some way so they know the thing they bought may not arrive/the thing they sold should not be dispatched.</p>
      *
      * <p>Note that this callback will be invoked for every transaction in the wallet, for every new block that is
-     * received (because the depth has change
+     * received (because the depth has changed). <b>If you want to update a UI view from the contents of the wallet
+     * it is more efficient to use onWalletChanged instead.</b></p>
+     */
+    void onTransactionConfidenceChanged(Wallet wallet, Transaction tx);
+}
