@@ -41,4 +41,27 @@ public interface TransactionReceivedInBlockListener {
      * rather exists only to order the transaction relative to the others.</p>
      */
     void receiveFromBlock(Transaction tx, StoredBlock block,
-     
+                          BlockChain.NewBlockType blockType,
+                          int relativityOffset) throws VerificationException;
+    /**
+     * <p>Called by the {@link BlockChain} when we receive a new {@link FilteredBlock} that contains the given
+     * transaction hash in its merkle tree.</p>
+     *
+     * <p>A transaction may be received multiple times if is included into blocks in parallel chains. The blockType
+     * parameter describes whether the containing block is on the main/best chain or whether it's on a presently
+     * inactive side chain.</p>
+     *
+     * <p>The relativityOffset parameter in this case is an arbitrary (meaningless) number, that is useful only when
+     * compared to the relativity count of another transaction received inside the same block. It is used to establish
+     * an ordering of transactions relative to one another.</p>
+     *
+     * <p>This method should return false if the given tx hash isn't known about, e.g. because the the transaction was
+     * a Bloom false positive. If it was known about and stored, it should return true. The caller may need to know
+     * this to calculate the effective FP rate.</p>
+     *
+     * @return whether the transaction is known about i.e. was considered relevant previously.
+     */
+    boolean notifyTransactionIsInBlock(Sha256Hash txHash, StoredBlock block,
+                                       BlockChain.NewBlockType blockType,
+                                       int relativityOffset) throws VerificationException;
+}
