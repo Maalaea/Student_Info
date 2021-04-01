@@ -94,4 +94,50 @@ public class BIP38PrivateKey extends VersionedChecksummedBytes {
                 throw new AddressFormatException("Non-EC-multiplied keys cannot have lot/sequence.");
         } else if (byte0 == 0x43) {
             // EC-multiplied key
-     
+            if ((bytes[1] & 0xc0) != 0x00) // bits 6+7
+                throw new AddressFormatException("Bits 0x40 and 0x80 must be cleared for EC-multiplied keys.");
+            ecMultiply = true;
+        } else {
+            throw new AddressFormatException("Second byte must by 0x42 or 0x43.");
+        }
+        addressHash = Arrays.copyOfRange(bytes, 2, 6);
+        content = Arrays.copyOfRange(bytes, 6, 38);
+    }
+
+    public ECKey decrypt(String passphrase) throws BadPassphraseException {
+        String normalizedPassphrase = Normalizer.normalize(passphrase, Normalizer.Form.NFC);
+        ECKey key = ecMultiply ? decryptEC(normalizedPassphrase) : decryptNoEC(normalizedPassphrase);
+        Sha256Hash hash = Sha256Hash.twiceOf(key.toAddress(params).toString().getBytes(Charsets.US_ASCII));
+        byte[] actualAddressHash = Arrays.copyOfRange(hash.getBytes(), 0, 4);
+        if (!Arrays.equals(actualAddressHash, addressHash))
+            throw new BadPassphraseException();
+        return key;
+    }
+
+    private ECKey decryptNoEC(String normalizedPassphrase) {
+        try {
+            byte[] derived = SCrypt.scrypt(normalizedPassphrase.getBytes(Charsets.UTF_8), addressHash, 16384, 8, 8, 64);
+            byte[] key = Arrays.copyOfRange(derived, 32, 64);
+            SecretKeySpec keyspec = new SecretKeySpec(key, "AES");
+
+            DRMWorkaround.maybeDisableExportControls();
+            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+
+            cipher.init(Cipher.DECRYPT_MODE, keyspec);
+            byte[] decrypted = cipher.doFinal(content, 0, 32);
+            for (int i = 0; i < 32; i++)
+                decrypted[i] ^= derived[i];
+            return ECKey.fromPrivate(decrypted, compressed);
+        } catch (GeneralSecurityException x) {
+            throw new RuntimeException(x);
+        }
+    }
+
+    private ECKey decryptEC(String normalizedPassphrase) {
+        try {
+            byte[] ownerEntropy = Arrays.copyOfRange(content, 0, 8);
+            byte[] ownerSalt = hasLotAndSequence ? Arrays.copyOfRange(ownerEntropy, 0, 4) : ownerEntropy;
+
+            byte[] passFactorBytes = SCrypt.scrypt(normalizedPassphrase.getBytes(Charsets.UTF_8), ownerSalt, 16384, 8, 8, 32);
+            if (hasLotAndSequence) {
+    
