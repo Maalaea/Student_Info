@@ -140,4 +140,50 @@ public class BIP38PrivateKey extends VersionedChecksummedBytes {
 
             byte[] passFactorBytes = SCrypt.scrypt(normalizedPassphrase.getBytes(Charsets.UTF_8), ownerSalt, 16384, 8, 8, 32);
             if (hasLotAndSequence) {
-    
+                byte[] hashBytes = Bytes.concat(passFactorBytes, ownerEntropy);
+                checkState(hashBytes.length == 40);
+                passFactorBytes = Sha256Hash.hashTwice(hashBytes);
+            }
+            BigInteger passFactor = new BigInteger(1, passFactorBytes);
+            ECKey k = ECKey.fromPrivate(passFactor, true);
+
+            byte[] salt = Bytes.concat(addressHash, ownerEntropy);
+            checkState(salt.length == 12);
+            byte[] derived = SCrypt.scrypt(k.getPubKey(), salt, 1024, 1, 1, 64);
+            byte[] aeskey = Arrays.copyOfRange(derived, 32, 64);
+
+            SecretKeySpec keyspec = new SecretKeySpec(aeskey, "AES");
+            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, keyspec);
+
+            byte[] encrypted2 = Arrays.copyOfRange(content, 16, 32);
+            byte[] decrypted2 = cipher.doFinal(encrypted2);
+            checkState(decrypted2.length == 16);
+            for (int i = 0; i < 16; i++)
+                decrypted2[i] ^= derived[i + 16];
+
+            byte[] encrypted1 = Bytes.concat(Arrays.copyOfRange(content, 8, 16), Arrays.copyOfRange(decrypted2, 0, 8));
+            byte[] decrypted1 = cipher.doFinal(encrypted1);
+            checkState(decrypted1.length == 16);
+            for (int i = 0; i < 16; i++)
+                decrypted1[i] ^= derived[i];
+
+            byte[] seed = Bytes.concat(decrypted1, Arrays.copyOfRange(decrypted2, 8, 16));
+            checkState(seed.length == 24);
+            BigInteger seedFactor = new BigInteger(1, Sha256Hash.hashTwice(seed));
+            checkState(passFactor.signum() >= 0);
+            checkState(seedFactor.signum() >= 0);
+            BigInteger priv = passFactor.multiply(seedFactor).mod(ECKey.CURVE.getN());
+
+            return ECKey.fromPrivate(priv, compressed);
+        } catch (GeneralSecurityException x) {
+            throw new RuntimeException(x);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BIP38PrivateKey other = (BIP38PrivateKey) o;
+        return super.equals(other) && Objects.equal(this.params, other.params)
