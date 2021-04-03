@@ -186,4 +186,23 @@ public class BIP38PrivateKey extends VersionedChecksummedBytes {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BIP38PrivateKey other = (BIP38PrivateKey) o;
-        return super.equals(other) && Objects.equal(this.params, other.params)
+        return super.equals(other) && Objects.equal(this.params, other.params);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(super.hashCode(), params);
+    }
+
+    // Java serialization
+
+    private void writeObject(ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeUTF(params.getId());
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        params = checkNotNull(NetworkParameters.fromID(in.readUTF()));
+    }
+}
