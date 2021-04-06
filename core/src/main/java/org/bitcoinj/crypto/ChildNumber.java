@@ -35,4 +35,64 @@ public class ChildNumber implements Comparable<ChildNumber> {
      */
     public static final int HARDENED_BIT = 0x80000000;
 
-    public static final ChildNumber 
+    public static final ChildNumber ZERO = new ChildNumber(0);
+    public static final ChildNumber ONE = new ChildNumber(1);
+    public static final ChildNumber ZERO_HARDENED = new ChildNumber(0, true);
+
+    /** Integer i as per BIP 32 spec, including the MSB denoting derivation type (0 = public, 1 = private) **/
+    private final int i;
+
+    public ChildNumber(int childNumber, boolean isHardened) {
+        if (hasHardenedBit(childNumber))
+            throw new IllegalArgumentException("Most significant bit is reserved and shouldn't be set: " + childNumber);
+        i = isHardened ? (childNumber | HARDENED_BIT) : childNumber;
+    }
+
+    public ChildNumber(int i) {
+        this.i = i;
+    }
+
+    /** Returns the uint32 encoded form of the path element, including the most significant bit. */
+    public int getI() {
+        return i;
+    }
+
+    /** Returns the uint32 encoded form of the path element, including the most significant bit. */
+    public int i() { return i; }
+
+    public boolean isHardened() {
+        return hasHardenedBit(i);
+    }
+
+    private static boolean hasHardenedBit(int a) {
+        return (a & HARDENED_BIT) != 0;
+    }
+
+    /** Returns the child number without the hardening bit set (i.e. index in that part of the tree). */
+    public int num() {
+        return i & (~HARDENED_BIT);
+    }
+
+    @Override
+    public String toString() {
+        return String.format(Locale.US, "%d%s", num(), isHardened() ? "H" : "");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return i == ((ChildNumber)o).i;
+    }
+
+    @Override
+    public int hashCode() {
+        return i;
+    }
+
+    @Override
+    public int compareTo(ChildNumber other) {
+        // note that in this implementation compareTo() is not consistent with equals()
+        return Ints.compare(this.num(), other.num());
+    }
+}
