@@ -55,4 +55,47 @@ public class DeterministicKey extends ECKey {
     private final DeterministicKey parent;
     private final ImmutableList<ChildNumber> childNumberPath;
     private final int depth;
-    private int parentFingerprint; // 0 if this key is root
+    private int parentFingerprint; // 0 if this key is root node of key hierarchy
+
+    /** 32 bytes */
+    private final byte[] chainCode;
+
+    /** Constructs a key from its components. This is not normally something you should use. */
+    public DeterministicKey(ImmutableList<ChildNumber> childNumberPath,
+                            byte[] chainCode,
+                            LazyECPoint publicAsPoint,
+                            @Nullable BigInteger priv,
+                            @Nullable DeterministicKey parent) {
+        super(priv, compressPoint(checkNotNull(publicAsPoint)));
+        checkArgument(chainCode.length == 32);
+        this.parent = parent;
+        this.childNumberPath = checkNotNull(childNumberPath);
+        this.chainCode = Arrays.copyOf(chainCode, chainCode.length);
+        this.depth = parent == null ? 0 : parent.depth + 1;
+        this.parentFingerprint = (parent != null) ? parent.getFingerprint() : 0;
+    }
+
+    public DeterministicKey(ImmutableList<ChildNumber> childNumberPath,
+                            byte[] chainCode,
+                            ECPoint publicAsPoint,
+                            @Nullable BigInteger priv,
+                            @Nullable DeterministicKey parent) {
+        this(childNumberPath, chainCode, new LazyECPoint(publicAsPoint), priv, parent);
+    }
+
+    /** Constructs a key from its components. This is not normally something you should use. */
+    public DeterministicKey(ImmutableList<ChildNumber> childNumberPath,
+                            byte[] chainCode,
+                            BigInteger priv,
+                            @Nullable DeterministicKey parent) {
+        super(priv, compressPoint(ECKey.publicPointFromPrivate(priv)));
+        checkArgument(chainCode.length == 32);
+        this.parent = parent;
+        this.childNumberPath = checkNotNull(childNumberPath);
+        this.chainCode = Arrays.copyOf(chainCode, chainCode.length);
+        this.depth = parent == null ? 0 : parent.depth + 1;
+        this.parentFingerprint = (parent != null) ? parent.getFingerprint() : 0;
+    }
+
+    /** Constructs a key from its components. This is not normally something you should use. */
+    public DeterministicKey(ImmutableList<ChildNum
