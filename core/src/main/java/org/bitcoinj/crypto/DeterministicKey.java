@@ -98,4 +98,52 @@ public class DeterministicKey extends ECKey {
     }
 
     /** Constructs a key from its components. This is not normally something you should use. */
-    public DeterministicKey(ImmutableList<ChildNum
+    public DeterministicKey(ImmutableList<ChildNumber> childNumberPath,
+                            byte[] chainCode,
+                            KeyCrypter crypter,
+                            LazyECPoint pub,
+                            EncryptedData priv,
+                            @Nullable DeterministicKey parent) {
+        this(childNumberPath, chainCode, pub, null, parent);
+        this.encryptedPrivateKey = checkNotNull(priv);
+        this.keyCrypter = checkNotNull(crypter);
+    }
+
+    /**
+     * Return the fingerprint of this key's parent as an int value, or zero if this key is the
+     * root node of the key hierarchy.  Raise an exception if the arguments are inconsistent.
+     * This method exists to avoid code repetition in the constructors.
+     */
+    private int ascertainParentFingerprint(DeterministicKey parentKey, int parentFingerprint)
+    throws IllegalArgumentException {
+        if (parentFingerprint != 0) {
+            if (parent != null)
+                checkArgument(parent.getFingerprint() == parentFingerprint,
+                              "parent fingerprint mismatch",
+                              Integer.toHexString(parent.getFingerprint()), Integer.toHexString(parentFingerprint));
+            return parentFingerprint;
+        } else return 0;
+    }
+
+    /**
+     * Constructs a key from its components, including its public key data and possibly-redundant
+     * information about its parent key.  Invoked when deserializing, but otherwise not something that
+     * you normally should use.
+     */
+    public DeterministicKey(ImmutableList<ChildNumber> childNumberPath,
+                            byte[] chainCode,
+                            LazyECPoint publicAsPoint,
+                            @Nullable DeterministicKey parent,
+                            int depth,
+                            int parentFingerprint) {
+        super(null, compressPoint(checkNotNull(publicAsPoint)));
+        checkArgument(chainCode.length == 32);
+        this.parent = parent;
+        this.childNumberPath = checkNotNull(childNumberPath);
+        this.chainCode = Arrays.copyOf(chainCode, chainCode.length);
+        this.depth = depth;
+        this.parentFingerprint = ascertainParentFingerprint(parent, parentFingerprint);
+    }
+
+    /**
+     * Constructs a k
