@@ -146,4 +146,55 @@ public class DeterministicKey extends ECKey {
     }
 
     /**
-     * Constructs a k
+     * Constructs a key from its components, including its private key data and possibly-redundant
+     * information about its parent key.  Invoked when deserializing, but otherwise not something that
+     * you normally should use.
+     */
+    public DeterministicKey(ImmutableList<ChildNumber> childNumberPath,
+                            byte[] chainCode,
+                            BigInteger priv,
+                            @Nullable DeterministicKey parent,
+                            int depth,
+                            int parentFingerprint) {
+        super(priv, compressPoint(ECKey.publicPointFromPrivate(priv)));
+        checkArgument(chainCode.length == 32);
+        this.parent = parent;
+        this.childNumberPath = checkNotNull(childNumberPath);
+        this.chainCode = Arrays.copyOf(chainCode, chainCode.length);
+        this.depth = depth;
+        this.parentFingerprint = ascertainParentFingerprint(parent, parentFingerprint);
+    }
+
+
+    /** Clones the key */
+    public DeterministicKey(DeterministicKey keyToClone, DeterministicKey newParent) {
+        super(keyToClone.priv, keyToClone.pub.get());
+        this.parent = newParent;
+        this.childNumberPath = keyToClone.childNumberPath;
+        this.chainCode = keyToClone.chainCode;
+        this.encryptedPrivateKey = keyToClone.encryptedPrivateKey;
+        this.depth = this.childNumberPath.size();
+        this.parentFingerprint = this.parent.getFingerprint();
+    }
+
+    /**
+     * Returns the path through some {@link DeterministicHierarchy} which reaches this keys position in the tree.
+     * A path can be written as 1/2/1 which means the first child of the root, the second child of that node, then
+     * the first child of that node.
+     */
+    public ImmutableList<ChildNumber> getPath() {
+        return childNumberPath;
+    }
+
+    /**
+     * Returns the path of this key as a human readable string starting with M to indicate the master key.
+     */
+    public String getPathAsString() {
+        return HDUtils.formatPath(getPath());
+    }
+
+    /**
+     * Return this key's depth in the hierarchy, where the root node is at depth zero.
+     * This may be different than the number of segments in the path if this key was
+     * deserialized without access to its parent.
+     */
