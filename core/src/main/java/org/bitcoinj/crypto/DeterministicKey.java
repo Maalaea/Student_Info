@@ -198,3 +198,61 @@ public class DeterministicKey extends ECKey {
      * This may be different than the number of segments in the path if this key was
      * deserialized without access to its parent.
      */
+    public int getDepth() {
+        return depth;
+    }
+
+    /** Returns the last element of the path returned by {@link DeterministicKey#getPath()} */
+    public ChildNumber getChildNumber() {
+        return childNumberPath.size() == 0 ? ChildNumber.ZERO : childNumberPath.get(childNumberPath.size() - 1);
+    }
+
+    /**
+     * Returns the chain code associated with this key. See the specification to learn more about chain codes.
+     */
+    public byte[] getChainCode() {
+        return chainCode;
+    }
+
+    /**
+     * Returns RIPE-MD160(SHA256(pub key bytes)).
+     */
+    public byte[] getIdentifier() {
+        return Utils.sha256hash160(getPubKey());
+    }
+
+    /** Returns the first 32 bits of the result of {@link #getIdentifier()}. */
+    public int getFingerprint() {
+        // TODO: why is this different than armory's fingerprint? BIP 32: "The first 32 bits of the identifier are called the fingerprint."
+        return ByteBuffer.wrap(Arrays.copyOfRange(getIdentifier(), 0, 4)).getInt();
+    }
+
+    @Nullable
+    public DeterministicKey getParent() {
+        return parent;
+    }
+
+    /**
+     * Return the fingerprint of the key from which this key was derived, if this is a
+     * child key, or else an array of four zero-value bytes.
+     */
+    public int getParentFingerprint() {
+        return parentFingerprint;
+    }
+
+    /**
+     * Returns private key bytes, padded with zeros to 33 bytes.
+     * @throws java.lang.IllegalStateException if the private key bytes are missing.
+     */
+    public byte[] getPrivKeyBytes33() {
+        byte[] bytes33 = new byte[33];
+        byte[] priv = getPrivKeyBytes();
+        System.arraycopy(priv, 0, bytes33, 33 - priv.length, priv.length);
+        return bytes33;
+    }
+
+    /**
+     * Returns the same key with the private bytes removed. May return the same instance. The purpose of this is to save
+     * memory: the private key can always be very efficiently rederived from a parent that a private key, so storing
+     * all the private keys in RAM is a poor tradeoff especially on constrained devices. This means that the returned
+     * key may still be usable for signing and so on, so d
