@@ -357,4 +357,46 @@ public class DeterministicKey extends ECKey {
             // If the key is encrypted, ECKey.sign will decrypt it first before rerunning sign. Decryption walks the
             // key heirarchy to find the private key (see below), so, we can just run the inherited method.
             return super.sign(input, aesKey);
-    
+        } else {
+            // If it's not encrypted, derive the private via the parents.
+            final BigInteger privateKey = findOrDerivePrivateKey();
+            if (privateKey == null) {
+                // This key is a part of a public-key only heirarchy and cannot be used for signing
+                throw new MissingPrivateKeyException();
+            }
+            return super.doSign(input, privateKey);
+        }
+    }
+
+    @Override
+    public DeterministicKey decrypt(KeyCrypter keyCrypter, KeyParameter aesKey) throws KeyCrypterException {
+        checkNotNull(keyCrypter);
+        // Check that the keyCrypter matches the one used to encrypt the keys, if set.
+        if (this.keyCrypter != null && !this.keyCrypter.equals(keyCrypter))
+            throw new KeyCrypterException("The keyCrypter being used to decrypt the key is different to the one that was used to encrypt it");
+        BigInteger privKey = findOrDeriveEncryptedPrivateKey(keyCrypter, aesKey);
+        DeterministicKey key = new DeterministicKey(childNumberPath, chainCode, privKey, parent);
+        if (!Arrays.equals(key.getPubKey(), getPubKey()))
+            throw new KeyCrypterException("Provided AES key is wrong");
+        if (parent == null)
+            key.setCreationTimeSeconds(getCreationTimeSeconds());
+        return key;
+    }
+
+    @Override
+    public DeterministicKey decrypt(KeyParameter aesKey) throws KeyCrypterException {
+        return (DeterministicKey) super.decrypt(aesKey);
+    }
+
+    // For when a key is encrypted, either decrypt our encrypted private key bytes, or work up the tree asking parents
+    // to decrypt and re-derive.
+    private BigInteger findOrDeriveEncryptedPrivateKey(KeyCrypter keyCrypter, KeyParameter aesKey) {
+        if (encryptedPrivateKey != null)
+            return new BigInteger(1, keyCrypter.decrypt(encryptedPrivateKey, aesKey));
+        // Otherwise we don't have it, but maybe we can figure it out from our parents. Walk up the tree looking for
+        // the first key that has some encrypted private key data.
+        DeterministicKey cursor = parent;
+        while (cursor != null) {
+            if (cursor.encryptedPrivateKey != null) break;
+            cursor = cursor.parent;
+        }
