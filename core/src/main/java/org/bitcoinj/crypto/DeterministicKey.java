@@ -300,4 +300,61 @@ public class DeterministicKey extends ECKey {
             checkArgument(newParent.isEncrypted());
         final byte[] privKeyBytes = getPrivKeyBytes();
         checkState(privKeyBytes != null, "Private key is not available");
-        EncryptedData encrypt
+        EncryptedData encryptedPrivateKey = keyCrypter.encrypt(privKeyBytes, aesKey);
+        DeterministicKey key = new DeterministicKey(childNumberPath, chainCode, keyCrypter, pub, encryptedPrivateKey, newParent);
+        if (newParent == null)
+            key.setCreationTimeSeconds(getCreationTimeSeconds());
+        return key;
+    }
+
+    /**
+     * A deterministic key is considered to be 'public key only' if it hasn't got a private key part and it cannot be
+     * rederived. If the hierarchy is encrypted this returns true.
+     */
+    @Override
+    public boolean isPubKeyOnly() {
+        return super.isPubKeyOnly() && (parent == null || parent.isPubKeyOnly());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean hasPrivKey() {
+        return findParentWithPrivKey() != null;
+    }
+
+    @Nullable
+    @Override
+    public byte[] getSecretBytes() {
+        return priv != null ? getPrivKeyBytes() : null;
+    }
+
+    /**
+     * A deterministic key is considered to be encrypted if it has access to encrypted private key bytes, OR if its
+     * parent does. The reason is because the parent would be encrypted under the same key and this key knows how to
+     * rederive its own private key bytes from the parent, if needed.
+     */
+    @Override
+    public boolean isEncrypted() {
+        return priv == null && (super.isEncrypted() || (parent != null && parent.isEncrypted()));
+    }
+
+    /**
+     * Returns this keys {@link org.bitcoinj.crypto.KeyCrypter} <b>or</b> the keycrypter of its parent key.
+     */
+    @Override @Nullable
+    public KeyCrypter getKeyCrypter() {
+        if (keyCrypter != null)
+            return keyCrypter;
+        else if (parent != null)
+            return parent.getKeyCrypter();
+        else
+            return null;
+    }
+
+    @Override
+    public ECDSASignature sign(Sha256Hash input, @Nullable KeyParameter aesKey) throws KeyCrypterException {
+        if (isEncrypted()) {
+            // If the key is encrypted, ECKey.sign will decrypt it first before rerunning sign. Decryption walks the
+            // key heirarchy to find the private key (see below), so, we can just run the inherited method.
+            return super.sign(input, aesKey);
+    
