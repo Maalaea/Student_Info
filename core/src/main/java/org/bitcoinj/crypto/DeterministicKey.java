@@ -400,3 +400,50 @@ public class DeterministicKey extends ECKey {
             if (cursor.encryptedPrivateKey != null) break;
             cursor = cursor.parent;
         }
+        if (cursor == null)
+            throw new KeyCrypterException("Neither this key nor its parents have an encrypted private key");
+        byte[] parentalPrivateKeyBytes = keyCrypter.decrypt(cursor.encryptedPrivateKey, aesKey);
+        return derivePrivateKeyDownwards(cursor, parentalPrivateKeyBytes);
+    }
+
+    private DeterministicKey findParentWithPrivKey() {
+        DeterministicKey cursor = this;
+        while (cursor != null) {
+            if (cursor.priv != null) break;
+            cursor = cursor.parent;
+        }
+        return cursor;
+    }
+
+    @Nullable
+    private BigInteger findOrDerivePrivateKey() {
+        DeterministicKey cursor = findParentWithPrivKey();
+        if (cursor == null)
+            return null;
+        return derivePrivateKeyDownwards(cursor, cursor.priv.toByteArray());
+    }
+
+    private BigInteger derivePrivateKeyDownwards(DeterministicKey cursor, byte[] parentalPrivateKeyBytes) {
+        DeterministicKey downCursor = new DeterministicKey(cursor.childNumberPath, cursor.chainCode,
+                cursor.pub, new BigInteger(1, parentalPrivateKeyBytes), cursor.parent);
+        // Now we have to rederive the keys along the path back to ourselves. That path can be found by just truncating
+        // our path with the length of the parents path.
+        ImmutableList<ChildNumber> path = childNumberPath.subList(cursor.getPath().size(), childNumberPath.size());
+        for (ChildNumber num : path) {
+            downCursor = HDKeyDerivation.deriveChildKey(downCursor, num);
+        }
+        // downCursor is now the same key as us, but with private key bytes.
+        // If it's not, it means we tried decrypting with an invalid password and earlier checks e.g. for padding didn't
+        // catch it.
+        if (!downCursor.pub.equals(pub))
+            throw new KeyCrypterException("Could not decrypt bytes");
+        return checkNotNull(downCursor.priv);
+    }
+
+    /**
+     * Derives a child at the given index using hardened derivation.  Note: <code>index</code> is
+     * not the "i" value.  If you want the softened derivation, then use instead
+     * <code>HDKeyDerivation.deriveChildKey(this, new ChildNumber(child, false))</code>.
+     */
+    public DeterministicKey derive(int child) {
+        return HDKeyDerivation.deriveChildKey(this, new ChildNumb
