@@ -446,4 +446,67 @@ public class DeterministicKey extends ECKey {
      * <code>HDKeyDerivation.deriveChildKey(this, new ChildNumber(child, false))</code>.
      */
     public DeterministicKey derive(int child) {
-        return HDKeyDerivation.deriveChildKey(this, new ChildNumb
+        return HDKeyDerivation.deriveChildKey(this, new ChildNumber(child, true));
+    }
+
+    /**
+     * Returns the private key of this deterministic key. Even if this object isn't storing the private key,
+     * it can be re-derived by walking up to the parents if necessary and this is what will happen.
+     * @throws java.lang.IllegalStateException if the parents are encrypted or a watching chain.
+     */
+    @Override
+    public BigInteger getPrivKey() {
+        final BigInteger key = findOrDerivePrivateKey();
+        checkState(key != null, "Private key bytes not available");
+        return key;
+    }
+
+    public byte[] serializePublic(NetworkParameters params, int purpose) {
+        return serialize(params, true, purpose);
+    }
+
+    public byte[] serializePrivate(NetworkParameters params, int purpose) {
+        return serialize(params, false, purpose);
+    }
+
+    private byte[] serialize(NetworkParameters params, boolean pub, int purpose) {
+        ByteBuffer ser = ByteBuffer.allocate(78);
+        switch(purpose)  {
+          case 49:
+            ser.putInt(pub ? params.getBip49HeaderPub() : params.getBip49HeaderPriv());
+            break;
+          case 84:
+            ser.putInt(pub ? params.getBip84HeaderPub() : params.getBip84HeaderPriv());
+            break;
+          // assume purpose == 44
+          default:
+            ser.putInt(pub ? params.getBip32HeaderPub() : params.getBip32HeaderPriv());
+            break;
+        }
+
+        ser.put((byte) getDepth());
+        ser.putInt(getParentFingerprint());
+        ser.putInt(getChildNumber().i());
+        ser.put(getChainCode());
+        ser.put(pub ? getPubKey() : getPrivKeyBytes33());
+        checkState(ser.position() == 78);
+        return ser.array();
+    }
+
+    public String serializePubB58(NetworkParameters params) {
+        return toBase58(serialize(params, true, 44));
+    }
+
+    public String serializePrivB58(NetworkParameters params) {
+        return toBase58(serialize(params, false, 44));
+    }
+
+    public String serializePubB58(NetworkParameters params, int purpose) {
+        return toBase58(serialize(params, true, purpose));
+    }
+
+    public String serializePrivB58(NetworkParameters params, int purpose) {
+        return toBase58(serialize(params, false, purpose));
+    }
+
+    static String toBase58(byte[] se
