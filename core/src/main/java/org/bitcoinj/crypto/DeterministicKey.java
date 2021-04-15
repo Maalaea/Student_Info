@@ -509,4 +509,46 @@ public class DeterministicKey extends ECKey {
         return toBase58(serialize(params, false, purpose));
     }
 
-    static String toBase58(byte[] se
+    static String toBase58(byte[] ser) {
+        return Base58.encode(addChecksum(ser));
+    }
+
+    /** Deserialize a base-58-encoded HD Key with no parent */
+    public static DeterministicKey deserializeB58(String base58, NetworkParameters params) {
+        return deserializeB58(null, base58, params);
+    }
+
+    /**
+      * Deserialize a base-58-encoded HD Key.
+      *  @param parent The parent node in the given key's deterministic hierarchy.
+      *  @throws IllegalArgumentException if the base58 encoded key could not be parsed.
+      */
+    public static DeterministicKey deserializeB58(@Nullable DeterministicKey parent, String base58, NetworkParameters params) {
+        return deserialize(params, Base58.decodeChecked(base58), parent);
+    }
+
+    /**
+      * Deserialize an HD Key with no parent
+      */
+    public static DeterministicKey deserialize(NetworkParameters params, byte[] serializedKey) {
+        return deserialize(params, serializedKey, null);
+    }
+
+    /**
+      * Deserialize an HD Key.
+     * @param parent The parent node in the given key's deterministic hierarchy.
+     */
+    public static DeterministicKey deserialize(NetworkParameters params, byte[] serializedKey, @Nullable DeterministicKey parent) {
+        ByteBuffer buffer = ByteBuffer.wrap(serializedKey);
+        int header = buffer.getInt();
+        if (header != params.getBip32HeaderPriv() && header != params.getBip32HeaderPub() && header != params.getBip49HeaderPriv() && header != params.getBip49HeaderPub())
+            throw new IllegalArgumentException("Unknown header bytes: " + toBase58(serializedKey).substring(0, 4));
+        boolean pub = (header == params.getBip32HeaderPub() || header == params.getBip49HeaderPub());
+        int depth = buffer.get() & 0xFF; // convert signed byte to positive int since depth cannot be negative
+        final int parentFingerprint = buffer.getInt();
+        final int i = buffer.getInt();
+        final ChildNumber childNumber = new ChildNumber(i);
+        ImmutableList<ChildNumber> path;
+        if (parent != null) {
+            if (parentFingerprint == 0)
+                throw new IllegalArgumentException("Parent was provided but this key doesn't have one");
