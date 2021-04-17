@@ -552,3 +552,49 @@ public class DeterministicKey extends ECKey {
         if (parent != null) {
             if (parentFingerprint == 0)
                 throw new IllegalArgumentException("Parent was provided but this key doesn't have one");
+            if (parent.getFingerprint() != parentFingerprint)
+                throw new IllegalArgumentException("Parent fingerprints don't match");
+            path = HDUtils.append(parent.getPath(), childNumber);
+            if (path.size() != depth)
+                throw new IllegalArgumentException("Depth does not match");
+        } else {
+            if (depth >= 1)
+                // We have been given a key that is not a root key, yet we lack the object representing the parent.
+                // This can happen when deserializing an account key for a watching wallet.  In this case, we assume that
+                // the client wants to conceal the key's position in the hierarchy.  The path is truncated at the
+                // parent's node.
+                path = ImmutableList.of(childNumber);
+            else path = ImmutableList.of();
+        }
+        byte[] chainCode = new byte[32];
+        buffer.get(chainCode);
+        byte[] data = new byte[33];
+        buffer.get(data);
+        checkArgument(!buffer.hasRemaining(), "Found unexpected data in key");
+        if (pub) {
+            return new DeterministicKey(path, chainCode, new LazyECPoint(ECKey.CURVE.getCurve(), data), parent, depth, parentFingerprint);
+        } else {
+            return new DeterministicKey(path, chainCode, new BigInteger(1, data), parent, depth, parentFingerprint);
+        }
+    }
+
+    /**
+     * The creation time of a deterministic key is equal to that of its parent, unless this key is the root of a tree
+     * in which case the time is stored alongside the key as per normal, see {@link org.bitcoinj.core.ECKey#getCreationTimeSeconds()}.
+     */
+    @Override
+    public long getCreationTimeSeconds() {
+        if (parent != null)
+            return parent.getCreationTimeSeconds();
+        else
+            return super.getCreationTimeSeconds();
+    }
+
+    /**
+     * The creation time of a deterministic key is equal to that of its parent, unless this key is the root of a tree.
+     * Thus, setting the creation time on a leaf is forbidden.
+     */
+    @Override
+    public void setCreationTimeSeconds(long newCreationTimeSeconds) {
+        if (parent != null)
+            throw ne
