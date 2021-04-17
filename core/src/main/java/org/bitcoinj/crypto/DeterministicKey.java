@@ -597,4 +597,51 @@ public class DeterministicKey extends ECKey {
     @Override
     public void setCreationTimeSeconds(long newCreationTimeSeconds) {
         if (parent != null)
-            throw ne
+            throw new IllegalStateException("Creation time can only be set on root keys.");
+        else
+            super.setCreationTimeSeconds(newCreationTimeSeconds);
+    }
+
+    /**
+     * Verifies equality of all fields but NOT the parent pointer (thus the same key derived in two separate heirarchy
+     * objects will equal each other.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DeterministicKey other = (DeterministicKey) o;
+        return super.equals(other)
+                && Arrays.equals(this.chainCode, other.chainCode)
+                && Objects.equal(this.childNumberPath, other.childNumberPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(super.hashCode(), Arrays.hashCode(chainCode), childNumberPath);
+    }
+
+    @Override
+    public String toString() {
+        final MoreObjects.ToStringHelper helper = MoreObjects.toStringHelper(this).omitNullValues();
+        helper.add("pub", Utils.HEX.encode(pub.getEncoded()));
+        helper.add("chainCode", HEX.encode(chainCode));
+        helper.add("path", getPathAsString());
+        if (creationTimeSeconds > 0)
+            helper.add("creationTimeSeconds", creationTimeSeconds);
+        helper.add("isEncrypted", isEncrypted());
+        helper.add("isPubKeyOnly", isPubKeyOnly());
+        return helper.toString();
+    }
+
+    @Override
+    public void formatKeyWithAddress(boolean includePrivateKeys, StringBuilder builder, NetworkParameters params) {
+        final Address address = toAddress(params);
+        builder.append("  addr:").append(address);
+        builder.append("  hash160:").append(Utils.HEX.encode(getPubKeyHash()));
+        builder.append("  (").append(getPathAsString()).append(")\n");
+        if (includePrivateKeys) {
+            builder.append("  ").append(toStringWithPrivate(params)).append("\n");
+        }
+    }
+}
