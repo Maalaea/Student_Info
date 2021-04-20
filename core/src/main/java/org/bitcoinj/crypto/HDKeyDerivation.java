@@ -69,4 +69,43 @@ public final class HDKeyDerivation {
         checkState(i.length == 64, i.length);
         byte[] il = Arrays.copyOfRange(i, 0, 32);
         byte[] ir = Arrays.copyOfRange(i, 32, 64);
-        Arrays.fill(
+        Arrays.fill(i, (byte)0);
+        DeterministicKey masterPrivKey = createMasterPrivKeyFromBytes(il, ir);
+        Arrays.fill(il, (byte)0);
+        Arrays.fill(ir, (byte)0);
+        // Child deterministic keys will chain up to their parents to find the keys.
+        masterPrivKey.setCreationTimeSeconds(Utils.currentTimeSeconds());
+        return masterPrivKey;
+    }
+
+    /**
+     * @throws HDDerivationException if privKeyBytes is invalid (0 or >= n).
+     */
+    public static DeterministicKey createMasterPrivKeyFromBytes(byte[] privKeyBytes, byte[] chainCode) throws HDDerivationException {
+        BigInteger priv = new BigInteger(1, privKeyBytes);
+        assertNonZero(priv, "Generated master key is invalid.");
+        assertLessThanN(priv, "Generated master key is invalid.");
+        return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, priv, null);
+    }
+
+    public static DeterministicKey createMasterPubKeyFromBytes(byte[] pubKeyBytes, byte[] chainCode) {
+        return new DeterministicKey(ImmutableList.<ChildNumber>of(), chainCode, new LazyECPoint(ECKey.CURVE.getCurve(), pubKeyBytes), null, null);
+    }
+
+    /**
+     * Derives a key given the "extended" child number, ie. the 0x80000000 bit of the value that you
+     * pass for <code>childNumber</code> will determine whether to use hardened derivation or not.
+     * Consider whether your code would benefit from the clarity of the equivalent, but explicit, form
+     * of this method that takes a <code>ChildNumber</code> rather than an <code>int</code>, for example:
+     * <code>deriveChildKey(parent, new ChildNumber(childNumber, true))</code>
+     * where the value of the hardened bit of <code>childNumber</code> is zero.
+     */
+    public static DeterministicKey deriveChildKey(DeterministicKey parent, int childNumber) {
+        return deriveChildKey(parent, new ChildNumber(childNumber));
+    }
+
+    /**
+     * Derives a key of the "extended" child number, ie. with the 0x80000000 bit specifying whether to use
+     * hardened derivation or not. If derivation fails, tries a next child.
+     */
+    public static DeterministicKey deriveThisOrNextChildKey(DeterministicKey parent, i
