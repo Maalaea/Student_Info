@@ -108,4 +108,47 @@ public final class HDKeyDerivation {
      * Derives a key of the "extended" child number, ie. with the 0x80000000 bit specifying whether to use
      * hardened derivation or not. If derivation fails, tries a next child.
      */
-    public static DeterministicKey deriveThisOrNextChildKey(DeterministicKey parent, i
+    public static DeterministicKey deriveThisOrNextChildKey(DeterministicKey parent, int childNumber) {
+        int nAttempts = 0;
+        ChildNumber child = new ChildNumber(childNumber);
+        boolean isHardened = child.isHardened();
+        while (nAttempts < MAX_CHILD_DERIVATION_ATTEMPTS) {
+            try {
+                child = new ChildNumber(child.num() + nAttempts, isHardened);
+                return deriveChildKey(parent, child);
+            } catch (HDDerivationException ignore) { }
+            nAttempts++;
+        }
+        throw new HDDerivationException("Maximum number of child derivation attempts reached, this is probably an indication of a bug.");
+
+    }
+
+    /**
+     * @throws HDDerivationException if private derivation is attempted for a public-only parent key, or
+     * if the resulting derived key is invalid (eg. private key == 0).
+     */
+    public static DeterministicKey deriveChildKey(DeterministicKey parent, ChildNumber childNumber) throws HDDerivationException {
+        if (!parent.hasPrivKey()) {
+            RawKeyBytes rawKey = deriveChildKeyBytesFromPublic(parent, childNumber, PublicDeriveMode.NORMAL);
+            return new DeterministicKey(
+                    HDUtils.append(parent.getPath(), childNumber),
+                    rawKey.chainCode,
+                    new LazyECPoint(ECKey.CURVE.getCurve(), rawKey.keyBytes),
+                    null,
+                    parent);
+        } else {
+            RawKeyBytes rawKey = deriveChildKeyBytesFromPrivate(parent, childNumber);
+            return new DeterministicKey(
+                    HDUtils.append(parent.getPath(), childNumber),
+                    rawKey.chainCode,
+                    new BigInteger(1, rawKey.keyBytes),
+                    parent);
+        }
+    }
+
+    public static RawKeyBytes deriveChildKeyBytesFromPrivate(DeterministicKey parent,
+                                                              ChildNumber childNumber) throws HDDerivationException {
+        checkArgument(parent.hasPrivKey(), "Parent key must have private key bytes for this method.");
+        byte[] parentPublicKey = parent.getPubKeyPoint().getEncoded(true);
+        checkState(parentPublicKey.length == 33, "Parent pubkey must be 33 bytes, but is " + parentPublicKey.length);
+        ByteB
