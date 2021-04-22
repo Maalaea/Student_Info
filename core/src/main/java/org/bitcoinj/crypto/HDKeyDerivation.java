@@ -151,4 +151,49 @@ public final class HDKeyDerivation {
         checkArgument(parent.hasPrivKey(), "Parent key must have private key bytes for this method.");
         byte[] parentPublicKey = parent.getPubKeyPoint().getEncoded(true);
         checkState(parentPublicKey.length == 33, "Parent pubkey must be 33 bytes, but is " + parentPublicKey.length);
-        ByteB
+        ByteBuffer data = ByteBuffer.allocate(37);
+        if (childNumber.isHardened()) {
+            data.put(parent.getPrivKeyBytes33());
+        } else {
+            data.put(parentPublicKey);
+        }
+        data.putInt(childNumber.i());
+        byte[] i = HDUtils.hmacSha512(parent.getChainCode(), data.array());
+        checkState(i.length == 64, i.length);
+        byte[] il = Arrays.copyOfRange(i, 0, 32);
+        byte[] chainCode = Arrays.copyOfRange(i, 32, 64);
+        BigInteger ilInt = new BigInteger(1, il);
+        assertLessThanN(ilInt, "Illegal derived key: I_L >= n");
+        final BigInteger priv = parent.getPrivKey();
+        BigInteger ki = priv.add(ilInt).mod(ECKey.CURVE.getN());
+        assertNonZero(ki, "Illegal derived key: derived private key equals 0.");
+        return new RawKeyBytes(ki.toByteArray(), chainCode);
+    }
+
+    public enum PublicDeriveMode {
+        NORMAL,
+        WITH_INVERSION
+    }
+
+    public static RawKeyBytes deriveChildKeyBytesFromPublic(DeterministicKey parent, ChildNumber childNumber, PublicDeriveMode mode) throws HDDerivationException {
+        checkArgument(!childNumber.isHardened(), "Can't use private derivation with public keys only.");
+        byte[] parentPublicKey = parent.getPubKeyPoint().getEncoded(true);
+        checkState(parentPublicKey.length == 33, "Parent pubkey must be 33 bytes, but is " + parentPublicKey.length);
+        ByteBuffer data = ByteBuffer.allocate(37);
+        data.put(parentPublicKey);
+        data.putInt(childNumber.i());
+        byte[] i = HDUtils.hmacSha512(parent.getChainCode(), data.array());
+        checkState(i.length == 64, i.length);
+        byte[] il = Arrays.copyOfRange(i, 0, 32);
+        byte[] chainCode = Arrays.copyOfRange(i, 32, 64);
+        BigInteger ilInt = new BigInteger(1, il);
+        assertLessThanN(ilInt, "Illegal derived key: I_L >= n");
+
+        final BigInteger N = ECKey.CURVE.getN();
+        ECPoint Ki;
+        switch (mode) {
+            case NORMAL:
+                Ki = ECKey.publicPointFromPrivate(ilInt).add(parent.getPubKeyPoint());
+                break;
+            case WITH_INVERSION:
+                // This trick comes from Gregory Maxwell. Check the homomorphic propert
