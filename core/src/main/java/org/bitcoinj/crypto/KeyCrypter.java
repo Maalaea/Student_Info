@@ -60,4 +60,8 @@ public interface KeyCrypter extends Serializable {
     /**
      * Encrypt the supplied bytes, converting them into ciphertext.
      *
-     * @return encryptedPrivateKey An encryptedPrivateKey
+     * @return encryptedPrivateKey An encryptedPrivateKey containing the encrypted bytes and an initialisation vector.
+     * @throws KeyCrypterException if encryption was unsuccessful
+     */
+    EncryptedData encrypt(byte[] plainBytes, KeyParameter aesKey) throws KeyCrypterException;
+}
