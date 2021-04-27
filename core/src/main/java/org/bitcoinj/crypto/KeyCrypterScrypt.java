@@ -75,4 +75,63 @@ public class KeyCrypterScrypt implements KeyCrypter {
 
     static {
         // Init proper random number generator, as some old Android installations have bugs that make it unsecure.
-        if (Utils.isAndroidR
+        if (Utils.isAndroidRuntime())
+            new LinuxSecureRandom();
+
+        secureRandom = new SecureRandom();
+    }
+
+    private static final SecureRandom secureRandom;
+
+    /** Returns SALT_LENGTH (8) bytes of random data */
+    public static byte[] randomSalt() {
+        byte[] salt = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(salt);
+        return salt;
+    }
+
+    // Scrypt parameters.
+    private final ScryptParameters scryptParameters;
+
+    /**
+     * Encryption/Decryption using default parameters and a random salt.
+     */
+    public KeyCrypterScrypt() {
+        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder().setSalt(
+                ByteString.copyFrom(randomSalt()));
+        this.scryptParameters = scryptParametersBuilder.build();
+    }
+
+    /**
+     * Encryption/Decryption using custom number of iterations parameters and a random salt.
+     * As of August 2016, a useful value for mobile devices is 4096 (derivation takes about 1 second).
+     *
+     * @param iterations
+     *            number of scrypt iterations
+     */
+    public KeyCrypterScrypt(int iterations) {
+        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder()
+                .setSalt(ByteString.copyFrom(randomSalt())).setN(iterations);
+        this.scryptParameters = scryptParametersBuilder.build();
+    }
+
+    /**
+     * Encryption/ Decryption using specified Scrypt parameters.
+     *
+     * @param scryptParameters ScryptParameters to use
+     * @throws NullPointerException if the scryptParameters or any of its N, R or P is null.
+     */
+    public KeyCrypterScrypt(ScryptParameters scryptParameters) {
+        this.scryptParameters = checkNotNull(scryptParameters);
+        // Check there is a non-empty salt.
+        // (Some early MultiBit wallets has a missing salt so it is not a hard fail).
+        if (scryptParameters.getSalt() == null
+                || scryptParameters.getSalt().toByteArray() == null
+                || scryptParameters.getSalt().toByteArray().length == 0) {
+            log.warn("You are using a ScryptParameters with no salt. Your encryption may be vulnerable to a dictionary attack.");
+        }
+    }
+
+    /**
+     * Generate AES key.
+ 
