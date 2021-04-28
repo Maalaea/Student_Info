@@ -134,4 +134,53 @@ public class KeyCrypterScrypt implements KeyCrypter {
 
     /**
      * Generate AES key.
- 
+     *
+     * This is a very slow operation compared to encrypt/ decrypt so it is normally worth caching the result.
+     *
+     * @param password    The password to use in key generation
+     * @return            The KeyParameter containing the created AES key
+     * @throws            KeyCrypterException
+     */
+    @Override
+    public KeyParameter deriveKey(CharSequence password) throws KeyCrypterException {
+        byte[] passwordBytes = null;
+        try {
+            passwordBytes = convertToByteArray(password);
+            byte[] salt = new byte[0];
+            if ( scryptParameters.getSalt() != null) {
+                salt = scryptParameters.getSalt().toByteArray();
+            } else {
+                // Warn the user that they are not using a salt.
+                // (Some early MultiBit wallets had a blank salt).
+                log.warn("You are using a ScryptParameters with no salt. Your encryption may be vulnerable to a dictionary attack.");
+            }
+
+            final Stopwatch watch = Stopwatch.createStarted();
+            byte[] keyBytes = SCrypt.scrypt(passwordBytes, salt, (int) scryptParameters.getN(), scryptParameters.getR(), scryptParameters.getP(), KEY_LENGTH);
+            watch.stop();
+            log.info("Deriving key took {} for {} scrypt iterations.", watch, scryptParameters.getN());
+            return new KeyParameter(keyBytes);
+        } catch (Exception e) {
+            throw new KeyCrypterException("Could not generate key from password and salt.", e);
+        } finally {
+            // Zero the password bytes.
+            if (passwordBytes != null) {
+                java.util.Arrays.fill(passwordBytes, (byte) 0);
+            }
+        }
+    }
+
+    /**
+     * Password based encryption using AES - CBC 256 bits.
+     */
+    @Override
+    public EncryptedData encrypt(byte[] plainBytes, KeyParameter aesKey) throws KeyCrypterException {
+        checkNotNull(plainBytes);
+        checkNotNull(aesKey);
+
+        try {
+            // Generate iv - each encryption call has a different iv.
+            byte[] iv = new byte[BLOCK_LENGTH];
+            secureRandom.nextBytes(iv);
+
+            ParametersWithIV keyWithIv = new Paramete
