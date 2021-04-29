@@ -183,4 +183,53 @@ public class KeyCrypterScrypt implements KeyCrypter {
             byte[] iv = new byte[BLOCK_LENGTH];
             secureRandom.nextBytes(iv);
 
-            ParametersWithIV keyWithIv = new Paramete
+            ParametersWithIV keyWithIv = new ParametersWithIV(aesKey, iv);
+
+            // Encrypt using AES.
+            BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESFastEngine()));
+            cipher.init(true, keyWithIv);
+            byte[] encryptedBytes = new byte[cipher.getOutputSize(plainBytes.length)];
+            final int length1 = cipher.processBytes(plainBytes, 0, plainBytes.length, encryptedBytes, 0);
+            final int length2 = cipher.doFinal(encryptedBytes, length1);
+
+            return new EncryptedData(iv, Arrays.copyOf(encryptedBytes, length1 + length2));
+        } catch (Exception e) {
+            throw new KeyCrypterException("Could not encrypt bytes.", e);
+        }
+    }
+
+    /**
+     * Decrypt bytes previously encrypted with this class.
+     *
+     * @param dataToDecrypt    The data to decrypt
+     * @param aesKey           The AES key to use for decryption
+     * @return                 The decrypted bytes
+     * @throws                 KeyCrypterException if bytes could not be decrypted
+     */
+    @Override
+    public byte[] decrypt(EncryptedData dataToDecrypt, KeyParameter aesKey) throws KeyCrypterException {
+        checkNotNull(dataToDecrypt);
+        checkNotNull(aesKey);
+
+        try {
+            ParametersWithIV keyWithIv = new ParametersWithIV(new KeyParameter(aesKey.getKey()), dataToDecrypt.initialisationVector);
+
+            // Decrypt the message.
+            BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESFastEngine()));
+            cipher.init(false, keyWithIv);
+
+            byte[] cipherBytes = dataToDecrypt.encryptedBytes;
+            byte[] decryptedBytes = new byte[cipher.getOutputSize(cipherBytes.length)];
+            final int length1 = cipher.processBytes(cipherBytes, 0, cipherBytes.length, decryptedBytes, 0);
+            final int length2 = cipher.doFinal(decryptedBytes, length1);
+
+            return Arrays.copyOf(decryptedBytes, length1 + length2);
+        } catch (Exception e) {
+            throw new KeyCrypterException("Could not decrypt bytes", e);
+        }
+    }
+
+    /**
+     * Convert a CharSequence (which are UTF16) into a byte array.
+     *
+     * Note: a String.getBytes() is not used to avoid creating a String of 
