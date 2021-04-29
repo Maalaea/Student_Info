@@ -232,4 +232,47 @@ public class KeyCrypterScrypt implements KeyCrypter {
     /**
      * Convert a CharSequence (which are UTF16) into a byte array.
      *
-     * Note: a String.getBytes() is not used to avoid creating a String of 
+     * Note: a String.getBytes() is not used to avoid creating a String of the password in the JVM.
+     */
+    private static byte[] convertToByteArray(CharSequence charSequence) {
+        checkNotNull(charSequence);
+
+        byte[] byteArray = new byte[charSequence.length() << 1];
+        for(int i = 0; i < charSequence.length(); i++) {
+            int bytePosition = i << 1;
+            byteArray[bytePosition] = (byte) ((charSequence.charAt(i)&0xFF00)>>8);
+            byteArray[bytePosition + 1] = (byte) (charSequence.charAt(i)&0x00FF);
+        }
+        return byteArray;
+    }
+
+    public ScryptParameters getScryptParameters() {
+        return scryptParameters;
+    }
+
+    /**
+     * Return the EncryptionType enum value which denotes the type of encryption/ decryption that this KeyCrypter
+     * can understand.
+     */
+    @Override
+    public EncryptionType getUnderstoodEncryptionType() {
+        return EncryptionType.ENCRYPTED_SCRYPT_AES;
+    }
+
+    @Override
+    public String toString() {
+        return "AES-" + KEY_LENGTH * 8 + "-CBC, Scrypt (N: " + scryptParameters.getN() + ")";
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(scryptParameters);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return Objects.equal(scryptParameters, ((KeyCrypterScrypt)o).scryptParameters);
+    }
+}
