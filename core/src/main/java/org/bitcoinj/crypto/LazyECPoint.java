@@ -108,4 +108,93 @@ public class LazyECPoint {
     }
 
     public boolean isValid() {
-        re
+        return get().isValid();
+    }
+
+    public ECPoint scaleY(ECFieldElement scale) {
+        return get().scaleY(scale);
+    }
+
+    public ECFieldElement getXCoord() {
+        return get().getXCoord();
+    }
+
+    public ECPoint scaleX(ECFieldElement scale) {
+        return get().scaleX(scale);
+    }
+
+    public boolean equals(ECPoint other) {
+        return get().equals(other);
+    }
+
+    public ECPoint negate() {
+        return get().negate();
+    }
+
+    public ECPoint threeTimes() {
+        return get().threeTimes();
+    }
+
+    public ECFieldElement getZCoord(int index) {
+        return get().getZCoord(index);
+    }
+
+    public byte[] getEncoded(boolean compressed) {
+        if (compressed == isCompressed() && bits != null)
+            return Arrays.copyOf(bits, bits.length);
+        else
+            return get().getEncoded(compressed);
+    }
+
+    public ECPoint add(ECPoint b) {
+        return get().add(b);
+    }
+
+    public ECPoint twicePlus(ECPoint b) {
+        return get().twicePlus(b);
+    }
+
+    public ECCurve getCurve() {
+        return get().getCurve();
+    }
+
+    public ECPoint normalize() {
+        return get().normalize();
+    }
+
+    public ECFieldElement getY() {
+        return this.normalize().getYCoord();
+    }
+
+    public ECPoint twice() {
+        return get().twice();
+    }
+
+    public ECFieldElement getAffineYCoord() {
+        return get().getAffineYCoord();
+    }
+
+    public ECFieldElement getAffineXCoord() {
+        return get().getAffineXCoord();
+    }
+
+    public ECFieldElement getX() {
+        return this.normalize().getXCoord();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return Arrays.equals(getCanonicalEncoding(), ((LazyECPoint)o).getCanonicalEncoding());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(getCanonicalEncoding());
+    }
+
+    private byte[] getCanonicalEncoding() {
+        return getEncoded(true);
+    }
+}
