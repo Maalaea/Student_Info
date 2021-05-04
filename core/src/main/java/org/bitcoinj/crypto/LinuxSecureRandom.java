@@ -55,4 +55,39 @@ public class LinuxSecureRandom extends SecureRandomSpi {
                 log.info("Randomness is already secure.");
         } catch (FileNotFoundException e) {
             // Should never happen.
-            log.error("/dev/urandom does not appear 
+            log.error("/dev/urandom does not appear to exist or is not openable");
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            log.error("/dev/urandom does not appear to be readable");
+            throw new RuntimeException(e);
+        }
+    }
+
+    private final DataInputStream dis;
+
+    public LinuxSecureRandom() {
+        // DataInputStream is not thread safe, so each random object has its own.
+        dis = new DataInputStream(urandom);
+    }
+
+    @Override
+    protected void engineSetSeed(byte[] bytes) {
+        // Ignore.
+    }
+
+    @Override
+    protected void engineNextBytes(byte[] bytes) {
+        try {
+            dis.readFully(bytes); // This will block until all the bytes can be read.
+        } catch (IOException e) {
+            throw new RuntimeException(e); // Fatal error. Do not attempt to recover from this.
+        }
+    }
+
+    @Override
+    protected byte[] engineGenerateSeed(int i) {
+        byte[] bits = new byte[i];
+        engineNextBytes(bits);
+        return bits;
+    }
+}
