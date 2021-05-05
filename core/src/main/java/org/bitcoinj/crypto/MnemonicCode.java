@@ -87,4 +87,63 @@ public class MnemonicCode {
      */
     public MnemonicCode(InputStream wordstream, String wordListDigest) throws IOException, IllegalArgumentException {
         BufferedReader br = new BufferedReader(new InputStreamReader(wordstream, "UTF-8"));
-        wordList = new A
+        wordList = new ArrayList<>(2048);
+
+        String word;
+        while ((word = br.readLine()) != null)
+            wordList.add(word);
+        br.close();
+
+        initializeFromWords(wordList, wordListDigest);
+    }
+
+    /**
+     * Creates an MnemonicCode object, initializing with words read from the supplied ArrayList.  If a wordListDigest
+     * is supplied the digest of the words will be checked.
+     */
+    public MnemonicCode(ArrayList<String> wordList, String wordListDigest) throws IllegalArgumentException {
+        initializeFromWords(wordList, wordListDigest);
+    }
+
+    private void initializeFromWords(ArrayList<String> wordList, String wordListDigest) throws IllegalArgumentException {
+        if (wordList.size() != 2048)
+            throw new IllegalArgumentException("input wordlist did not contain 2048 words");
+
+        this.wordList = wordList;
+
+        // If a wordListDigest is supplied check to make sure it matches.
+        if (wordListDigest != null) {
+            MessageDigest md = Sha256Hash.newDigest();
+            for (String word : wordList)
+                md.update(word.getBytes());
+
+            byte[] digest = md.digest();
+            String hexdigest = HEX.encode(digest);
+            if (!hexdigest.equals(wordListDigest))
+                throw new IllegalArgumentException("wordlist digest mismatch");
+        }
+    }
+
+    /**
+     * Gets the word list this code uses.
+     */
+    public List<String> getWordList() {
+        return wordList;
+    }
+
+    /**
+     * Convert mnemonic word list to seed.
+     */
+    public static byte[] toSeed(List<String> words, String passphrase) {
+
+        // To create binary seed from mnemonic, we use PBKDF2 function
+        // with mnemonic sentence (in UTF-8) used as a password and
+        // string "mnemonic" + passphrase (again in UTF-8) used as a
+        // salt. Iteration count is set to 4096 and HMAC-SHA512 is
+        // used as a pseudo-random function. Desired length of the
+        // derived key is 512 bits (= 64 bytes).
+        //
+        String pass = Utils.join(words);
+        String salt = "mnemonic" + passphrase;
+
+        final Stopwatch watch 
