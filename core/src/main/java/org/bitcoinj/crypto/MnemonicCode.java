@@ -146,4 +146,56 @@ public class MnemonicCode {
         String pass = Utils.join(words);
         String salt = "mnemonic" + passphrase;
 
-        final Stopwatch watch 
+        final Stopwatch watch = Stopwatch.createStarted();
+        byte[] seed = PBKDF2SHA512.derive(pass, salt, PBKDF2_ROUNDS, 64);
+        watch.stop();
+        log.info("PBKDF2 took {}", watch);
+        return seed;
+    }
+
+    /**
+     * Convert mnemonic word list to original entropy value.
+     */
+    public byte[] toEntropy(List<String> words) throws MnemonicException.MnemonicLengthException, MnemonicException.MnemonicWordException, MnemonicException.MnemonicChecksumException {
+        if (words.size() % 3 > 0)
+            throw new MnemonicException.MnemonicLengthException("Word list size must be multiple of three words.");
+
+        if (words.size() == 0)
+            throw new MnemonicException.MnemonicLengthException("Word list is empty.");
+
+        // Look up all the words in the list and construct the
+        // concatenation of the original entropy and the checksum.
+        //
+        int concatLenBits = words.size() * 11;
+        boolean[] concatBits = new boolean[concatLenBits];
+        int wordindex = 0;
+        for (String word : words) {
+            // Find the words index in the wordlist.
+            int ndx = Collections.binarySearch(this.wordList, word);
+            if (ndx < 0)
+                throw new MnemonicException.MnemonicWordException(word);
+
+            // Set the next 11 bits to the value of the index.
+            for (int ii = 0; ii < 11; ++ii)
+                concatBits[(wordindex * 11) + ii] = (ndx & (1 << (10 - ii))) != 0;
+            ++wordindex;
+        }        
+
+        int checksumLengthBits = concatLenBits / 33;
+        int entropyLengthBits = concatLenBits - checksumLengthBits;
+
+        // Extract original entropy as bytes.
+        byte[] entropy = new byte[entropyLengthBits / 8];
+        for (int ii = 0; ii < entropy.length; ++ii)
+            for (int jj = 0; jj < 8; ++jj)
+                if (concatBits[(ii * 8) + jj])
+                    entropy[ii] |= 1 << (7 - jj);
+
+        // Take the digest of the entropy.
+        byte[] hash = Sha256Hash.hash(entropy);
+        boolean[] hashBits = bytesToBits(hash);
+
+        // Check all the checksum bits.
+        for (int i = 0; i < checksumLengthBits; ++i)
+            if (concatBits[entropyLengthBits + i] != hashBits[i])
+               
