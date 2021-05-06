@@ -198,4 +198,62 @@ public class MnemonicCode {
         // Check all the checksum bits.
         for (int i = 0; i < checksumLengthBits; ++i)
             if (concatBits[entropyLengthBits + i] != hashBits[i])
-               
+                throw new MnemonicException.MnemonicChecksumException();
+
+        return entropy;
+    }
+
+    /**
+     * Convert entropy data to mnemonic word list.
+     */
+    public List<String> toMnemonic(byte[] entropy) throws MnemonicException.MnemonicLengthException {
+        if (entropy.length % 4 > 0)
+            throw new MnemonicException.MnemonicLengthException("Entropy length not multiple of 32 bits.");
+
+        if (entropy.length == 0)
+            throw new MnemonicException.MnemonicLengthException("Entropy is empty.");
+
+        // We take initial entropy of ENT bits and compute its
+        // checksum by taking first ENT / 32 bits of its SHA256 hash.
+
+        byte[] hash = Sha256Hash.hash(entropy);
+        boolean[] hashBits = bytesToBits(hash);
+        
+        boolean[] entropyBits = bytesToBits(entropy);
+        int checksumLengthBits = entropyBits.length / 32;
+
+        // We append these bits to the end of the initial entropy. 
+        boolean[] concatBits = new boolean[entropyBits.length + checksumLengthBits];
+        System.arraycopy(entropyBits, 0, concatBits, 0, entropyBits.length);
+        System.arraycopy(hashBits, 0, concatBits, entropyBits.length, checksumLengthBits);
+
+        // Next we take these concatenated bits and split them into
+        // groups of 11 bits. Each group encodes number from 0-2047
+        // which is a position in a wordlist.  We convert numbers into
+        // words and use joined words as mnemonic sentence.
+
+        ArrayList<String> words = new ArrayList<>();
+        int nwords = concatBits.length / 11;
+        for (int i = 0; i < nwords; ++i) {
+            int index = 0;
+            for (int j = 0; j < 11; ++j) {
+                index <<= 1;
+                if (concatBits[(i * 11) + j])
+                    index |= 0x1;
+            }
+            words.add(this.wordList.get(index));
+        }
+            
+        return words;        
+    }
+
+    /**
+     * Check to see if a mnemonic word list is valid.
+     */
+    public void check(List<String> words) throws MnemonicException {
+        toEntropy(words);
+    }
+
+    private static boolean[] bytesToBits(byte[] data) {
+        boolean[] bits = new boolean[data.length * 8];
+        for 
