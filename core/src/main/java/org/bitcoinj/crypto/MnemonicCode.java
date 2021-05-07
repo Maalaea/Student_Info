@@ -256,4 +256,9 @@ public class MnemonicCode {
 
     private static boolean[] bytesToBits(byte[] data) {
         boolean[] bits = new boolean[data.length * 8];
-        for 
+        for (int i = 0; i < data.length; ++i)
+            for (int j = 0; j < 8; ++j)
+                bits[(i * 8) + j] = (data[i] & (1 << (7 - j))) != 0;
+        return bits;
+    }
+}
