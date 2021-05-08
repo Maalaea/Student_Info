@@ -110,3 +110,93 @@ public class TransactionSignature extends ECKey.ECDSASignature {
 
         //    R value type mismatch          R value negative
         if (signature[4-2] != 0x02 || (signature[4] & 0x80) == 0x80)
+            return false;
+        if (lenR > 1 && signature[4] == 0x00 && (signature[4+1] & 0x80) != 0x80)
+            return false; // R value excessively padded
+
+        //       S value type mismatch                    S value negative
+        if (signature[6 + lenR - 2] != 0x02 || (signature[6 + lenR] & 0x80) == 0x80)
+            return false;
+        if (lenS > 1 && signature[6 + lenR] == 0x00 && (signature[6 + lenR + 1] & 0x80) != 0x80)
+            return false; // S value excessively padded
+
+        return true;
+    }
+
+    public boolean anyoneCanPay() {
+        return (sighashFlags & Transaction.SigHash.ANYONECANPAY.value) != 0;
+    }
+
+    public Transaction.SigHash sigHashMode() {
+        final int mode = sighashFlags & 0x1f;
+        if (mode == Transaction.SigHash.NONE.value)
+            return Transaction.SigHash.NONE;
+        else if (mode == Transaction.SigHash.SINGLE.value)
+            return Transaction.SigHash.SINGLE;
+        else
+            return Transaction.SigHash.ALL;
+    }
+
+    /**
+     * What we get back from the signer are the two components of a signature, r and s. To get a flat byte stream
+     * of the type used by Bitcoin we have to encode them using DER encoding, which is just a way to pack the two
+     * components into a structure, and then we append a byte to the end for the sighash flags.
+     */
+    public byte[] encodeToBitcoin() {
+        try {
+            ByteArrayOutputStream bos = derByteStream();
+            bos.write(sighashFlags);
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        }
+    }
+
+    @Override
+    public ECKey.ECDSASignature toCanonicalised() {
+        return new TransactionSignature(super.toCanonicalised(), sigHashMode(), anyoneCanPay());
+    }
+
+    /**
+     * Returns a decoded signature.
+     *
+     * @param requireCanonicalEncoding if the encoding of the signature must
+     * be canonical.
+     * @throws RuntimeException if the signature is invalid or unparseable in some way.
+     * @deprecated use {@link #decodeFromBitcoin(byte[], boolean, boolean} instead}.
+     */
+    @Deprecated
+    public static TransactionSignature decodeFromBitcoin(byte[] bytes,
+                                                         boolean requireCanonicalEncoding) throws VerificationException {
+        return decodeFromBitcoin(bytes, requireCanonicalEncoding, false);
+    }
+
+    /**
+     * Returns a decoded signature.
+     *
+     * @param requireCanonicalEncoding if the encoding of the signature must
+     * be canonical.
+     * @param requireCanonicalSValue if the S-value must be canonical (below half
+     * the order of the curve).
+     * @throws RuntimeException if the signature is invalid or unparseable in some way.
+     */
+    public static TransactionSignature decodeFromBitcoin(byte[] bytes,
+                                                         boolean requireCanonicalEncoding,
+                                                         boolean requireCanonicalSValue) throws VerificationException {
+        // Bitcoin encoding is DER signature + sighash byte.
+        if (requireCanonicalEncoding && !isEncodingCanonical(bytes))
+            throw new VerificationException("Signature encoding is not canonical.");
+        ECKey.ECDSASignature sig;
+        try {
+            sig = ECKey.ECDSASignature.decodeFromDER(bytes);
+        } catch (IllegalArgumentException e) {
+            throw new VerificationException("Could not decode DER", e);
+        }
+        if (requireCanonicalSValue && !sig.isCanonical())
+            throw new VerificationException("S-value is not canonical.");
+
+        // In Bitcoin, any value of the final byte is valid, but not necessarily canonical. See javadocs for
+        // isEncodingCanonical to learn more about this. So we must store the exact byte found.
+        return new TransactionSignature(sig.r, sig.s, bytes[bytes.length - 1]);
+    }
+}
