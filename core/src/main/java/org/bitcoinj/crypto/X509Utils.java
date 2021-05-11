@@ -45,4 +45,47 @@ public class X509Utils {
     /**
      * Returns either a string that "sums up" the certificate for humans, in a similar manner to what you might see
      * in a web browser, or null if one cannot be extracted. This will typically be the common name (CN) field, but
-     * can also be the org (O) field, org+location+co
+     * can also be the org (O) field, org+location+country if withLocation is set, or the email
+     * address for S/MIME certificates.
+     */
+    @Nullable
+    public static String getDisplayNameFromCertificate(@Nonnull X509Certificate certificate, boolean withLocation) throws CertificateParsingException {
+        X500Name name = new X500Name(certificate.getSubjectX500Principal().getName());
+        String commonName = null, org = null, location = null, country = null;
+        for (RDN rdn : name.getRDNs()) {
+            AttributeTypeAndValue pair = rdn.getFirst();
+            String val = ((ASN1String) pair.getValue()).getString();
+            ASN1ObjectIdentifier type = pair.getType();
+            if (type.equals(RFC4519Style.cn))
+                commonName = val;
+            else if (type.equals(RFC4519Style.o))
+                org = val;
+            else if (type.equals(RFC4519Style.l))
+                location = val;
+            else if (type.equals(RFC4519Style.c))
+                country = val;
+        }
+        final Collection<List<?>> subjectAlternativeNames = certificate.getSubjectAlternativeNames();
+        String altName = null;
+        if (subjectAlternativeNames != null)
+            for (final List<?> subjectAlternativeName : subjectAlternativeNames)
+                if ((Integer) subjectAlternativeName.get(0) == 1) // rfc822name
+                    altName = (String) subjectAlternativeName.get(1);
+
+        if (org != null) {
+            return withLocation ? Joiner.on(", ").skipNulls().join(org, location, country) : org;
+        } else if (commonName != null) {
+            return commonName;
+        } else {
+            return altName;
+        }
+    }
+
+    /** Returns a key store loaded from the given stream. Just a convenience around the Java APIs. */
+    public static KeyStore loadKeyStore(String keystoreType, @Nullable String keystorePassword, InputStream is)
+            throws KeyStoreException {
+        try {
+            KeyStore keystore = KeyStore.getInstance(keystoreType);
+            keystore.load(is, keystorePassword != null ? keystorePassword.toCharArray() : null);
+            return keystore;
+        } ca
