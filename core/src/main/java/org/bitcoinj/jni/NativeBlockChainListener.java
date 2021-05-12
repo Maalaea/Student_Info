@@ -42,4 +42,6 @@ public class NativeBlockChainListener implements NewBestBlockListener, Reorganiz
                                         int relativityOffset) throws VerificationException;
 
     @Override
-    public native boolean notifyTransactionIsInBlock(Sha256Hash txHash, StoredBlock block, BlockChain.NewBlockType blockTy
+    public native boolean notifyTransactionIsInBlock(Sha256Hash txHash, StoredBlock block, BlockChain.NewBlockType blockType,
+                                                     int relativityOffset) throws VerificationException;
+}
