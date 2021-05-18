@@ -65,4 +65,18 @@ public abstract class AbstractTimeoutHandler {
      * Resets the current progress towards timeout to 0.
      */
     protected synchronized void resetTimeout() {
-        if (tim
+        if (timeoutTask != null)
+            timeoutTask.cancel();
+        if (timeoutMillis == 0 || !timeoutEnabled)
+            return;
+        timeoutTask = new TimerTask() {
+            @Override
+            public void run() {
+                timeoutOccurred();
+            }
+        };
+        timeoutTimer.schedule(timeoutTask, timeoutMillis);
+    }
+
+    protected abstract void timeoutOccurred();
+}
