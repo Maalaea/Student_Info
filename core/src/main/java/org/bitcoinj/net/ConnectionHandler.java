@@ -84,4 +84,58 @@ class ConnectionHandler implements MessageWriteTarget {
         connectedHandlers = null;
     }
 
-    public Connec
+    public ConnectionHandler(StreamConnection connection, SelectionKey key, Set<ConnectionHandler> connectedHandlers) {
+        this(checkNotNull(connection), key);
+
+        // closeConnection() may have already happened because we invoked the other c'tor above, which called
+        // connection.setWriteTarget which might have re-entered already. In this case we shouldn't add ourselves
+        // to the connectedHandlers set.
+        lock.lock();
+        try {
+            this.connectedHandlers = connectedHandlers;
+            if (!closeCalled)
+                checkState(this.connectedHandlers.add(this));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @GuardedBy("lock")
+    private void setWriteOps() {
+        // Make sure we are registered to get updated when writing is available again
+        key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
+        // Refresh the selector to make sure it gets the new interestOps
+        key.selector().wakeup();
+    }
+
+    // Tries to write any outstanding write bytes, runs in any thread (possibly unlocked)
+    private void tryWriteBytes() throws IOException {
+        lock.lock();
+        try {
+            // Iterate through the outbound ByteBuff queue, pushing as much as possible into the OS' network buffer.
+            Iterator<ByteBuffer> bytesIterator = bytesToWrite.iterator();
+            while (bytesIterator.hasNext()) {
+                ByteBuffer buff = bytesIterator.next();
+                bytesToWriteRemaining -= channel.write(buff);
+                if (!buff.hasRemaining())
+                    bytesIterator.remove();
+                else {
+                    setWriteOps();
+                    break;
+                }
+            }
+            // If we are done writing, clear the OP_WRITE interestOps
+            if (bytesToWrite.isEmpty())
+                key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
+            // Don't bother waking up the selector here, since we're just removing an op, not adding
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void writeBytes(byte[] message) throws IOException {
+        boolean andUnlock = true;
+        lock.lock();
+        try {
+      
