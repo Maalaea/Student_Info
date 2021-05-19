@@ -40,4 +40,48 @@ import static com.google.common.base.Preconditions.checkState;
 // TODO: The locking in all this class is horrible and not really necessary. We should just run all network stuff on one thread.
 
 /**
- * A simple NIO MessageWriteTarget w
+ * A simple NIO MessageWriteTarget which handles all the business logic of a connection (reading+writing bytes).
+ * Used only by the NioClient and NioServer classes
+ */
+class ConnectionHandler implements MessageWriteTarget {
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(ConnectionHandler.class);
+
+    private static final int BUFFER_SIZE_LOWER_BOUND = 4096;
+    private static final int BUFFER_SIZE_UPPER_BOUND = 65536;
+
+    private static final int OUTBOUND_BUFFER_BYTE_COUNT = Message.MAX_SIZE + 24; // 24 byte message header
+
+    // We lock when touching local flags and when writing data, but NEVER when calling any methods which leave this
+    // class into non-Java classes.
+    private final ReentrantLock lock = Threading.lock("nioConnectionHandler");
+    @GuardedBy("lock") private final ByteBuffer readBuff;
+    @GuardedBy("lock") private final SocketChannel channel;
+    @GuardedBy("lock") private final SelectionKey key;
+    @GuardedBy("lock") StreamConnection connection;
+    @GuardedBy("lock") private boolean closeCalled = false;
+
+    @GuardedBy("lock") private long bytesToWriteRemaining = 0;
+    @GuardedBy("lock") private final LinkedList<ByteBuffer> bytesToWrite = new LinkedList<>();
+
+    private Set<ConnectionHandler> connectedHandlers;
+
+    public ConnectionHandler(StreamConnectionFactory connectionFactory, SelectionKey key) throws IOException {
+        this(connectionFactory.getNewConnection(((SocketChannel) key.channel()).socket().getInetAddress(), ((SocketChannel) key.channel()).socket().getPort()), key);
+        if (connection == null)
+            throw new IOException("Parser factory.getNewConnection returned null");
+    }
+
+    private ConnectionHandler(@Nullable StreamConnection connection, SelectionKey key) {
+        this.key = key;
+        this.channel = checkNotNull(((SocketChannel)key.channel()));
+        if (connection == null) {
+            readBuff = null;
+            return;
+        }
+        this.connection = connection;
+        readBuff = ByteBuffer.allocateDirect(Math.min(Math.max(connection.getMaxMessageSize(), BUFFER_SIZE_LOWER_BOUND), BUFFER_SIZE_UPPER_BOUND));
+        connection.setWriteTarget(this); // May callback into us (eg closeConnection() now)
+        connectedHandlers = null;
+    }
+
+    public Connec
