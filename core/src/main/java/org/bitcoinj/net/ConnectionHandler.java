@@ -138,4 +138,61 @@ class ConnectionHandler implements MessageWriteTarget {
         boolean andUnlock = true;
         lock.lock();
         try {
-      
+            // Network buffers are not unlimited (and are often smaller than some messages we may wish to send), and
+            // thus we have to buffer outbound messages sometimes. To do this, we use a queue of ByteBuffers and just
+            // append to it when we want to send a message. We then let tryWriteBytes() either send the message or
+            // register our SelectionKey to wakeup when we have free outbound buffer space available.
+
+            if (bytesToWriteRemaining + message.length > OUTBOUND_BUFFER_BYTE_COUNT)
+                throw new IOException("Outbound buffer overflowed");
+            // Just dump the message onto the write buffer and call tryWriteBytes
+            // TODO: Kill the needless message duplication when the write completes right away
+            bytesToWrite.offer(ByteBuffer.wrap(Arrays.copyOf(message, message.length)));
+            bytesToWriteRemaining += message.length;
+            setWriteOps();
+        } catch (IOException e) {
+            lock.unlock();
+            andUnlock = false;
+            log.warn("Error writing message to connection, closing connection", e);
+            closeConnection();
+            throw e;
+        } catch (CancelledKeyException e) {
+            lock.unlock();
+            andUnlock = false;
+            log.warn("Error writing message to connection, closing connection", e);
+            closeConnection();
+            throw new IOException(e);
+        } finally {
+            if (andUnlock)
+                lock.unlock();
+        }
+    }
+
+    // May NOT be called with lock held
+    @Override
+    public void closeConnection() {
+        checkState(!lock.isHeldByCurrentThread());
+        try {
+            channel.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        connectionClosed();
+    }
+
+    private void connectionClosed() {
+        boolean callClosed = false;
+        lock.lock();
+        try {
+            callClosed = !closeCalled;
+            closeCalled = true;
+        } finally {
+            lock.unlock();
+        }
+        if (callClosed) {
+            checkState(connectedHandlers == null || connectedHandlers.remove(this));
+            connection.connectionClosed();
+        }
+    }
+
+    // Handle
