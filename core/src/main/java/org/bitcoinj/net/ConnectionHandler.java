@@ -233,4 +233,7 @@ class ConnectionHandler implements MessageWriteTarget {
             // (ClosedByInterruptException), or if handler.connection.receiveBytes throws something
             Throwable t = Throwables.getRootCause(e);
             log.warn("Error handling SelectionKey: {} {}", t.getClass().getName(), t.getMessage() != null ? t.getMessage() : "", e);
-            ha
+            handler.closeConnection();
+        }
+    }
+}
