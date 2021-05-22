@@ -1,5 +1,6 @@
 /*
- * Copyright 2013 Google Inc.
+ * Copyright 2011 John Sample.
+ * Copyright 2015 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +15,18 @@
  * limitations under the License.
  */
 
-package org.bitcoinj.net;
+package org.bitcoinj.net.discovery;
 
-import java.net.InetAddress;
-import javax.annotation.Nullable;
+import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 /**
- * A factory which generates new {@link StreamConnection}s when a new connection is opened.
+ * A PeerDiscovery object is responsible for finding addresses of other nodes in the Bitcoin P2P network. Note that
+ * the addresses returned may or may not be accepting connections.
  */
-public interface StreamConnectionFactory {
+public interface PeerDiscovery {
+    // TODO: Flesh out this interface a lot more.
+
     /**
-     * Returns a new handler or null to have the connection close.
-     * @param inetAddress The client's (IP) address
-     * @param port The remote port on the client side
-     */
-    @Nullable
-    StreamConnection getNewConnection(InetAddress inetAddress, int port);
-}
+     * Returns an array of addresses. This method may block.
+     * @para
