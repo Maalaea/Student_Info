@@ -1,6 +1,7 @@
 /*
- * Copyright by the original author or authors.
- * 
+ * Copyright 2013 Google Inc.
+ * Copyright 2015 Andreas Schildbach
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +15,18 @@
  * limitations under the License.
  */
 
+package org.bitcoinj.params;
+
+import org.bitcoinj.core.*;
+import org.bitcoinj.net.discovery.*;
+
+import java.net.*;
+
+import static com.google.common.base.Preconditions.*;
+
 /**
- * Classes that know how to discover peers in the P2P network using DNS, IRC or DNS via Tor (orchid).
+ * Parameters for the main production network on which people trade goods and services.
  */
-package org.bitcoinj.net.discovery;
+public class MainNetParams extends AbstractBitcoinNetParams {
+    public static final int MAINNET_MAJORITY_WINDOW = 1000;
+ 

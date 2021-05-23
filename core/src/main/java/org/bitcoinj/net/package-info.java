@@ -15,6 +15,8 @@
  */
 
 /**
- * Classes that know how to discover peers in the P2P network using DNS, IRC or DNS via Tor (orchid).
+ * Classes handling low level network management using either NIO (async io) or older style blocking sockets (useful for
+ * using SOCKS proxies, Tor, SSL etc). The code in this package implements a simple network abstraction a little like
+ * what the Netty library provides, but with only what bitcoinj needs.
  */
-package org.bitcoinj.net.discovery;
+package org.bitcoinj.net;
