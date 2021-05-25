@@ -68,4 +68,34 @@ public class MainNetParams extends AbstractBitcoinNetParams {
 
         // This contains (at a minimum) the blocks which are not BIP30 compliant. BIP30 changed how duplicate
         // transactions are handled. Duplicated transactions could occur in the case where a coinbase had the same
-        // extraNonce and the same outputs but appeared at different heights, and greatly complicated re-org handlin
+        // extraNonce and the same outputs but appeared at different heights, and greatly complicated re-org handling.
+        // Having these here simplifies block connection logic considerably.
+        checkpoints.put(91722, Sha256Hash.wrap("00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e"));
+        checkpoints.put(91812, Sha256Hash.wrap("00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"));
+        checkpoints.put(91842, Sha256Hash.wrap("00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec"));
+        checkpoints.put(91880, Sha256Hash.wrap("00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721"));
+        checkpoints.put(200000, Sha256Hash.wrap("000000000000034a7dedef4a161fa058a2d67a173a90155f3a2fe6fc132e0ebf"));
+
+        dnsSeeds = new String[] {
+                "seed.bitcoin.sipa.be",         // Pieter Wuille
+                "dnsseed.bluematt.me",          // Matt Corallo
+                "dnsseed.bitcoin.dashjr.org",   // Luke Dashjr
+                "seed.bitcoin.jonasschnelli.ch" // Jonas Schnelli
+        };
+        httpSeeds = new HttpDiscovery.Details[] {
+                // Andreas Schildbach
+                new HttpDiscovery.Details(
+                        ECKey.fromPublicOnly(Utils.HEX.decode("0238746c59d46d5408bf8b1d0af5740fe1a6e1703fcb56b2953f0b965c740d256f")),
+                        URI.create("http://httpseed.bitcoin.schildbach.de/peers")
+                )
+        };
+
+        addrSeeds = new int[] {
+                0x1ddb1032, 0x6242ce40, 0x52d6a445, 0x2dd7a445, 0x8a53cd47, 0x73263750, 0xda23c257, 0xecd4ed57,
+                0x0a40ec59, 0x75dce160, 0x7df76791, 0x89370bad, 0xa4f214ad, 0x767700ae, 0x638b0418, 0x868a1018,
+                0xcd9f332e, 0x0129653e, 0xcc92dc3e, 0x96671640, 0x56487e40, 0x5b66f440, 0xb1d01f41, 0xf1dc6041,
+                0xc1d12b42, 0x86ba1243, 0x6be4df43, 0x6d4cef43, 0xd18e0644, 0x1ab0b344, 0x6584a345, 0xe7c1a445,
+                0x58cea445, 0xc5daa445, 0x21dda445, 0x3d3b5346, 0x13e55347, 0x1080d24a, 0x8e611e4b, 0x81518e4b,
+                0x6c839e4b, 0xe2ad0a4c, 0xfbbc0a4c, 0x7f5b6e4c, 0x7244224e, 0x1300554e, 0x20690652, 0x5a48b652,
+                0x75c5c752, 0x4335cc54, 0x340fd154, 0x87c07455, 0x087b2b56, 0x8a133a57, 0xac23c257, 0x70374959,
+                0xfb63d45b, 0xb9a1685c, 0x
