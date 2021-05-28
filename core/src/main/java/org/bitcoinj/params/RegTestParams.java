@@ -65,4 +65,20 @@ public class RegTestParams extends TestNet2Params {
                 genesis.setTime(1296688602L);
                 checkState(genesis.getHashAsString().toLowerCase().equals("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
             }
- 
+            return genesis;
+        }
+    }
+
+    private static RegTestParams instance;
+    public static synchronized RegTestParams get() {
+        if (instance == null) {
+            instance = new RegTestParams();
+        }
+        return instance;
+    }
+
+    @Override
+    public String getPaymentProtocolId() {
+        return PAYMENT_PROTOCOL_ID_REGTEST;
+    }
+}
