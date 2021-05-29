@@ -9,4 +9,58 @@ public final class ClientState {
       com.google.protobuf.ExtensionRegistry registry) {
   }
   public interface StoredClientPaymentChannelsOrBuilder extends
-      // @@protoc_insertion_poin
+      // @@protoc_insertion_point(interface_extends:paymentchannels.StoredClientPaymentChannels)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    java.util.List<org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel> 
+        getChannelsList();
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel getChannels(int index);
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    int getChannelsCount();
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    java.util.List<? extends org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder> 
+        getChannelsOrBuilderList();
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder getChannelsOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code paymentchannels.StoredClientPaymentChannels}
+   *
+   * <pre>
+   * A set of StoredPaymentChannel's
+   * </pre>
+   */
+  public static final class StoredClientPaymentChannels extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.StoredClientPaymentChannels)
+      StoredClientPaymentChannelsOrBuilder {
+    // Use StoredClientPaymentChannels.newBuilder() to construct.
+    private StoredClientPaymentChannels(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private StoredClientPaymentChannels(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final StoredClientPaymentChannels defaultInstance;
+    public static StoredClientPaymentChannels getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public StoredClientPaymentChannels getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.goog
