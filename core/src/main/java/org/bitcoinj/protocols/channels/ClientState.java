@@ -164,4 +164,72 @@ public final class ClientState {
       return channels_.size();
     }
     /**
-     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</cod
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel getChannels(int index) {
+      return channels_.get(index);
+    }
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder getChannelsOrBuilder(
+        int index) {
+      return channels_.get(index);
+    }
+
+    private void initFields() {
+      channels_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      for (int i = 0; i < getChannelsCount(); i++) {
+        if (!getChannels(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < channels_.size(); i++) {
+        output.writeMessage(1, channels_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < channels_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, channels_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    publi
