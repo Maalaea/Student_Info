@@ -117,4 +117,51 @@ public final class ClientState {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.bitcoinj.protocols.channels.ClientState.internal_static_paym
+      return org.bitcoinj.protocols.channels.ClientState.internal_static_paymentchannels_StoredClientPaymentChannels_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoinj.protocols.channels.ClientState.internal_static_paymentchannels_StoredClientPaymentChannels_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.class, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<StoredClientPaymentChannels> PARSER =
+        new com.google.protobuf.AbstractParser<StoredClientPaymentChannels>() {
+      public StoredClientPaymentChannels parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new StoredClientPaymentChannels(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoredClientPaymentChannels> getParserForType() {
+      return PARSER;
+    }
+
+    public static final int CHANNELS_FIELD_NUMBER = 1;
+    private java.util.List<org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel> channels_;
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    public java.util.List<org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel> getChannelsList() {
+      return channels_;
+    }
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    public java.util.List<? extends org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder> 
+        getChannelsOrBuilderList() {
+      return channels_;
+    }
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+     */
+    public int getChannelsCount() {
+      return channels_.size();
+    }
+    /**
+     * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</cod
