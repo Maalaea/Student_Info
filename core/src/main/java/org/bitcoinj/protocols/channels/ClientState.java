@@ -271,4 +271,49 @@ public final class ClientState {
     public static org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
-      return PARSER.pars
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code paymentchannels.StoredClientPaymentChannels}
+     *
+     * <pre>
+     * A set of StoredPaymentChannel's
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:paymentchannels.StoredClientPaymentChannels)
+        org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoinj.protocols.channels.ClientState.internal_static_paymentchannels_StoredClientPaymentChannels_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoinj.protocols.channels.ClientState.internal_static_paymentchannels_StoredClientPaymentChannels_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.class, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.Builder.class);
+      }
+
+      // Construct using org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.newBuilder
