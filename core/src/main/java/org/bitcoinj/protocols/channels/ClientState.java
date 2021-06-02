@@ -316,4 +316,60 @@ public final class ClientState {
                 org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.class, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.Builder.class);
       }
 
-      // Construct using org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.newBuilder
+      // Construct using org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getChannelsFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (channelsBuilder_ == null) {
+          channels_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          channelsBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoinj.protocols.channels.ClientState.internal_static_paymentchannels_StoredClientPaymentChannels_descriptor;
+      }
+
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels getDefaultInstanceForType() {
+        return org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.getDefaultInstance();
+      }
+
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels build() {
+        org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels buildPartial() {
+        org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels result = new org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels(this);
+        int from_bitField0_ = bitField0_;
+        if (channelsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            channels_ = java.util.Collecti
