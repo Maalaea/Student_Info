@@ -436,4 +436,50 @@ public final class ClientState {
 
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite ex
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel> channels_ =
+        java.util.Collections.emptyList();
+      private void ensureChannelsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          channels_ = new java.util.ArrayList<org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel>(channels_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder> channelsBuilder_;
+
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public java.util.List<org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel> getChannelsList() {
+        if (channelsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(channels_);
+        } else {
+          return channelsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public int getChannelsCount() {
+        if (channelsBuilder_ == null) {
+          return channels_.size();
+        } else {
+          return channelsBui
