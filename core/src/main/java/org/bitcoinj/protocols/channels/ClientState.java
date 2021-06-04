@@ -372,4 +372,68 @@ public final class ClientState {
         int from_bitField0_ = bitField0_;
         if (channelsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001)) {
-            channels_ = java.util.Collecti
+            channels_ = java.util.Collections.unmodifiableList(channels_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.channels_ = channels_;
+        } else {
+          result.channels_ = channelsBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels) {
+          return mergeFrom((org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels other) {
+        if (other == org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannels.getDefaultInstance()) return this;
+        if (channelsBuilder_ == null) {
+          if (!other.channels_.isEmpty()) {
+            if (channels_.isEmpty()) {
+              channels_ = other.channels_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureChannelsIsMutable();
+              channels_.addAll(other.channels_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.channels_.isEmpty()) {
+            if (channelsBuilder_.isEmpty()) {
+              channelsBuilder_.dispose();
+              channelsBuilder_ = null;
+              channels_ = other.channels_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              channelsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getChannelsFieldBuilder() : null;
+            } else {
+              channelsBuilder_.addAllMessages(other.channels_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (int i = 0; i < getChannelsCount(); i++) {
+          if (!getChannels(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite ex
