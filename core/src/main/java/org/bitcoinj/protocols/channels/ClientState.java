@@ -482,4 +482,65 @@ public final class ClientState {
         if (channelsBuilder_ == null) {
           return channels_.size();
         } else {
-          return channelsBui
+          return channelsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel getChannels(int index) {
+        if (channelsBuilder_ == null) {
+          return channels_.get(index);
+        } else {
+          return channelsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder setChannels(
+          int index, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel value) {
+        if (channelsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureChannelsIsMutable();
+          channels_.set(index, value);
+          onChanged();
+        } else {
+          channelsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder setChannels(
+          int index, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder builderForValue) {
+        if (channelsBuilder_ == null) {
+          ensureChannelsIsMutable();
+          channels_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          channelsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder addChannels(org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel value) {
+        if (channelsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureChannelsIsMutable();
+          channels_.add(value);
+          onChanged();
+        } else {
+          channelsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPa
