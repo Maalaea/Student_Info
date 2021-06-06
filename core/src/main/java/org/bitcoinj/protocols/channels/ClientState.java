@@ -543,4 +543,61 @@ public final class ClientState {
         return this;
       }
       /**
-       * <code>repeated .paymentchannels.StoredClientPa
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder addChannels(
+          int index, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel value) {
+        if (channelsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureChannelsIsMutable();
+          channels_.add(index, value);
+          onChanged();
+        } else {
+          channelsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder addChannels(
+          org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder builderForValue) {
+        if (channelsBuilder_ == null) {
+          ensureChannelsIsMutable();
+          channels_.add(builderForValue.build());
+          onChanged();
+        } else {
+          channelsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder addChannels(
+          int index, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder builderForValue) {
+        if (channelsBuilder_ == null) {
+          ensureChannelsIsMutable();
+          channels_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          channelsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder addAllChannels(
+          java.lang.Iterable<? extends org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel> values) {
+        if (channelsBuilder_ == null) {
+          ensureChannelsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, channels_);
+          onChanged();
+        } else {
+          channelsBuilder_.addAllMessages(values);
+        }
+        return this;
