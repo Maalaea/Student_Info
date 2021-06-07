@@ -601,3 +601,62 @@ public final class ClientState {
           channelsBuilder_.addAllMessages(values);
         }
         return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder clearChannels() {
+        if (channelsBuilder_ == null) {
+          channels_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          channelsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public Builder removeChannels(int index) {
+        if (channelsBuilder_ == null) {
+          ensureChannelsIsMutable();
+          channels_.remove(index);
+          onChanged();
+        } else {
+          channelsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder getChannelsBuilder(
+          int index) {
+        return getChannelsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder getChannelsOrBuilder(
+          int index) {
+        if (channelsBuilder_ == null) {
+          return channels_.get(index);  } else {
+          return channelsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public java.util.List<? extends org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder> 
+           getChannelsOrBuilderList() {
+        if (channelsBuilder_ != null) {
+          return channelsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(channels_);
+        }
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public org.bitcoinj.protocols.ch
