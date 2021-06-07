@@ -659,4 +659,49 @@ public final class ClientState {
       /**
        * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
        */
-      public org.bitcoinj.protocols.ch
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder addChannelsBuilder() {
+        return getChannelsFieldBuilder().addBuilder(
+            org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder addChannelsBuilder(
+          int index) {
+        return getChannelsFieldBuilder().addBuilder(
+            index, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .paymentchannels.StoredClientPaymentChannel channels = 1;</code>
+       */
+      public java.util.List<org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder> 
+           getChannelsBuilderList() {
+        return getChannelsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder> 
+          getChannelsFieldBuilder() {
+        if (channelsBuilder_ == null) {
+          channelsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannelOrBuilder>(
+                  channels_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          channels_ = null;
+        }
+        return channelsBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.StoredClientPaymentChannels)
+    }
+
+    static {
+      defaultInstance = new StoredClientPaymentChannels(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.StoredClientPaymentChannels)
+  }
+
+  public interface 
