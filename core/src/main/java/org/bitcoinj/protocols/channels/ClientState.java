@@ -704,4 +704,92 @@ public final class ClientState {
     // @@protoc_insertion_point(class_scope:paymentchannels.StoredClientPaymentChannels)
   }
 
-  public interface 
+  public interface StoredClientPaymentChannelOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:paymentchannels.StoredClientPaymentChannel)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    boolean hasId();
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    com.google.protobuf.ByteString getId();
+
+    /**
+     * <code>required bytes contractTransaction = 2;</code>
+     */
+    boolean hasContractTransaction();
+    /**
+     * <code>required bytes contractTransaction = 2;</code>
+     */
+    com.google.protobuf.ByteString getContractTransaction();
+
+    /**
+     * <code>required bytes refundTransaction = 3;</code>
+     */
+    boolean hasRefundTransaction();
+    /**
+     * <code>required bytes refundTransaction = 3;</code>
+     */
+    com.google.protobuf.ByteString getRefundTransaction();
+
+    /**
+     * <code>required bytes myPublicKey = 8;</code>
+     */
+    boolean hasMyPublicKey();
+    /**
+     * <code>required bytes myPublicKey = 8;</code>
+     */
+    com.google.protobuf.ByteString getMyPublicKey();
+
+    /**
+     * <code>required bytes myKey = 4;</code>
+     *
+     * <pre>
+     * Deprecated, key is already stored in the wallet, and found using myPublicKey;
+     * </pre>
+     */
+    boolean hasMyKey();
+    /**
+     * <code>required bytes myKey = 4;</code>
+     *
+     * <pre>
+     * Deprecated, key is already stored in the wallet, and found using myPublicKey;
+     * </pre>
+     */
+    com.google.protobuf.ByteString getMyKey();
+
+    /**
+     * <code>required uint64 valueToMe = 5;</code>
+     */
+    boolean hasValueToMe();
+    /**
+     * <code>required uint64 valueToMe = 5;</code>
+     */
+    long getValueToMe();
+
+    /**
+     * <code>required uint64 refundFees = 6;</code>
+     *
+     * <pre>
+     * Fees required to refund the transaction.
+     * </pre>
+     */
+    boolean hasRefundFees();
+    /**
+     * <code>required uint64 refundFees = 6;</code>
+     *
+     * <pre>
+     * Fees required to refund the transaction.
+     * </pre>
+     */
+    long getRefundFees();
+
+    /**
+     * <code>optional bytes closeTransactionHash = 7;</code>
+     *
+     * <pre>
+     * When set, the hash of the transaction that was presented by the server for closure of the channel.
+     * It sp
