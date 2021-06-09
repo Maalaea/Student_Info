@@ -792,4 +792,76 @@ public final class ClientState {
      *
      * <pre>
      * When set, the hash of the transaction that was presented by the server for closure of the channel.
-     * It sp
+     * It spends the contractTransaction and is expected to be broadcast to the network by the server.
+     * It's supposed to be in the wallet already.
+     * </pre>
+     */
+    boolean hasCloseTransactionHash();
+    /**
+     * <code>optional bytes closeTransactionHash = 7;</code>
+     *
+     * <pre>
+     * When set, the hash of the transaction that was presented by the server for closure of the channel.
+     * It spends the contractTransaction and is expected to be broadcast to the network by the server.
+     * It's supposed to be in the wallet already.
+     * </pre>
+     */
+    com.google.protobuf.ByteString getCloseTransactionHash();
+
+    /**
+     * <code>optional uint32 majorVersion = 9 [default = 1];</code>
+     */
+    boolean hasMajorVersion();
+    /**
+     * <code>optional uint32 majorVersion = 9 [default = 1];</code>
+     */
+    int getMajorVersion();
+
+    /**
+     * <code>optional uint64 expiryTime = 10;</code>
+     *
+     * <pre>
+     * The expiry time of the CLTV lock. Only used in protocol v2.
+     * </pre>
+     */
+    boolean hasExpiryTime();
+    /**
+     * <code>optional uint64 expiryTime = 10;</code>
+     *
+     * <pre>
+     * The expiry time of the CLTV lock. Only used in protocol v2.
+     * </pre>
+     */
+    long getExpiryTime();
+
+    /**
+     * <code>optional bytes serverKey = 11;</code>
+     *
+     * <pre>
+     * The server's public key. Only used in protocol v2.
+     * </pre>
+     */
+    boolean hasServerKey();
+    /**
+     * <code>optional bytes serverKey = 11;</code>
+     *
+     * <pre>
+     * The server's public key. Only used in protocol v2.
+     * </pre>
+     */
+    com.google.protobuf.ByteString getServerKey();
+  }
+  /**
+   * Protobuf type {@code paymentchannels.StoredClientPaymentChannel}
+   *
+   * <pre>
+   * A client-side payment channel in serialized form, which can be reloaded later if the client restarts and wants to
+   * reopen an existing channel
+   * </pre>
+   */
+  public static final class StoredClientPaymentChannel extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:paymentchannels.StoredClientPaymentChannel)
+      StoredClientPaymentChannelOrBuilder {
+    // Use StoredClientPaymentChannel.newBuilder() to construct.
+    private StoredClientPaymentChannel(com.g
