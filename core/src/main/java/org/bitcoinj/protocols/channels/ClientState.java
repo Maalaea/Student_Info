@@ -864,4 +864,67 @@ public final class ClientState {
       // @@protoc_insertion_point(message_implements:paymentchannels.StoredClientPaymentChannel)
       StoredClientPaymentChannelOrBuilder {
     // Use StoredClientPaymentChannel.newBuilder() to construct.
-    private StoredClientPaymentChannel(com.g
+    private StoredClientPaymentChannel(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private StoredClientPaymentChannel(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final StoredClientPaymentChannel defaultInstance;
+    public static StoredClientPaymentChannel getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public StoredClientPaymentChannel getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoredClientPaymentChannel(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              contractTransaction_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              refundTransaction_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000010;
+              myKey_ = input.readBytes();
+              break;
+          
