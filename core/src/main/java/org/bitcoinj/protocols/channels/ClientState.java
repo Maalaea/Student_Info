@@ -927,4 +927,65 @@ public final class ClientState {
               bitField0_ |= 0x00000010;
               myKey_ = input.readBytes();
               break;
-          
+            }
+            case 40: {
+              bitField0_ |= 0x00000020;
+              valueToMe_ = input.readUInt64();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000040;
+              refundFees_ = input.readUInt64();
+              break;
+            }
+            case 58: {
+              bitField0_ |= 0x00000080;
+              closeTransactionHash_ = input.readBytes();
+              break;
+            }
+            case 66: {
+              bitField0_ |= 0x00000008;
+              myPublicKey_ = input.readBytes();
+              break;
+            }
+            case 72: {
+              bitField0_ |= 0x00000100;
+              majorVersion_ = input.readUInt32();
+              break;
+            }
+            case 80: {
+              bitField0_ |= 0x00000200;
+              expiryTime_ = input.readUInt64();
+              break;
+            }
+            case 90: {
+              bitField0_ |= 0x00000400;
+              serverKey_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoinj.protocols.channels.ClientState.internal_static_paymentchannels_StoredClientPaymentChannel_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoinj.protocols.channels.ClientState.internal_static_paymentchannels_StoredClientPaymentChannel_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.class, org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<StoredClientPaymentChannel> PARSER =
+        new com.google.protobuf.AbstractPa
