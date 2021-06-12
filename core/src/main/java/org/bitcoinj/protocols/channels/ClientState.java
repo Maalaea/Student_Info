@@ -1057,4 +1057,82 @@ public final class ClientState {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>re
+     * <code>required bytes myPublicKey = 8;</code>
+     */
+    public com.google.protobuf.ByteString getMyPublicKey() {
+      return myPublicKey_;
+    }
+
+    public static final int MYKEY_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString myKey_;
+    /**
+     * <code>required bytes myKey = 4;</code>
+     *
+     * <pre>
+     * Deprecated, key is already stored in the wallet, and found using myPublicKey;
+     * </pre>
+     */
+    public boolean hasMyKey() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>required bytes myKey = 4;</code>
+     *
+     * <pre>
+     * Deprecated, key is already stored in the wallet, and found using myPublicKey;
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getMyKey() {
+      return myKey_;
+    }
+
+    public static final int VALUETOME_FIELD_NUMBER = 5;
+    private long valueToMe_;
+    /**
+     * <code>required uint64 valueToMe = 5;</code>
+     */
+    public boolean hasValueToMe() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>required uint64 valueToMe = 5;</code>
+     */
+    public long getValueToMe() {
+      return valueToMe_;
+    }
+
+    public static final int REFUNDFEES_FIELD_NUMBER = 6;
+    private long refundFees_;
+    /**
+     * <code>required uint64 refundFees = 6;</code>
+     *
+     * <pre>
+     * Fees required to refund the transaction.
+     * </pre>
+     */
+    public boolean hasRefundFees() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>required uint64 refundFees = 6;</code>
+     *
+     * <pre>
+     * Fees required to refund the transaction.
+     * </pre>
+     */
+    public long getRefundFees() {
+      return refundFees_;
+    }
+
+    public static final int CLOSETRANSACTIONHASH_FIELD_NUMBER = 7;
+    private com.google.protobuf.ByteString closeTransactionHash_;
+    /**
+     * <code>optional bytes closeTransactionHash = 7;</code>
+     *
+     * <pre>
+     * When set, the hash of the transaction that was presented by the server for closure of the channel.
+     * It spends the contractTransaction and is expected to be broadcast to the network by the server.
+     * It's supposed to be in the wallet already.
+     * </pre>
+     */
+    public boolean h
