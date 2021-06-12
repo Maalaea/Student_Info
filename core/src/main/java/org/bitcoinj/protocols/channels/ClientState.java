@@ -988,4 +988,73 @@ public final class ClientState {
     }
 
     public static com.google.protobuf.Parser<StoredClientPaymentChannel> PARSER =
-        new com.google.protobuf.AbstractPa
+        new com.google.protobuf.AbstractParser<StoredClientPaymentChannel>() {
+      public StoredClientPaymentChannel parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new StoredClientPaymentChannel(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoredClientPaymentChannel> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int ID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString id_;
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    public com.google.protobuf.ByteString getId() {
+      return id_;
+    }
+
+    public static final int CONTRACTTRANSACTION_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString contractTransaction_;
+    /**
+     * <code>required bytes contractTransaction = 2;</code>
+     */
+    public boolean hasContractTransaction() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes contractTransaction = 2;</code>
+     */
+    public com.google.protobuf.ByteString getContractTransaction() {
+      return contractTransaction_;
+    }
+
+    public static final int REFUNDTRANSACTION_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString refundTransaction_;
+    /**
+     * <code>required bytes refundTransaction = 3;</code>
+     */
+    public boolean hasRefundTransaction() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required bytes refundTransaction = 3;</code>
+     */
+    public com.google.protobuf.ByteString getRefundTransaction() {
+      return refundTransaction_;
+    }
+
+    public static final int MYPUBLICKEY_FIELD_NUMBER = 8;
+    private com.google.protobuf.ByteString myPublicKey_;
+    /**
+     * <code>required bytes myPublicKey = 8;</code>
+     */
+    public boolean hasMyPublicKey() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>re
