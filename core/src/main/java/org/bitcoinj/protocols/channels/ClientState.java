@@ -1135,4 +1135,83 @@ public final class ClientState {
      * It's supposed to be in the wallet already.
      * </pre>
      */
-    public boolean h
+    public boolean hasCloseTransactionHash() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional bytes closeTransactionHash = 7;</code>
+     *
+     * <pre>
+     * When set, the hash of the transaction that was presented by the server for closure of the channel.
+     * It spends the contractTransaction and is expected to be broadcast to the network by the server.
+     * It's supposed to be in the wallet already.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getCloseTransactionHash() {
+      return closeTransactionHash_;
+    }
+
+    public static final int MAJORVERSION_FIELD_NUMBER = 9;
+    private int majorVersion_;
+    /**
+     * <code>optional uint32 majorVersion = 9 [default = 1];</code>
+     */
+    public boolean hasMajorVersion() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional uint32 majorVersion = 9 [default = 1];</code>
+     */
+    public int getMajorVersion() {
+      return majorVersion_;
+    }
+
+    public static final int EXPIRYTIME_FIELD_NUMBER = 10;
+    private long expiryTime_;
+    /**
+     * <code>optional uint64 expiryTime = 10;</code>
+     *
+     * <pre>
+     * The expiry time of the CLTV lock. Only used in protocol v2.
+     * </pre>
+     */
+    public boolean hasExpiryTime() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional uint64 expiryTime = 10;</code>
+     *
+     * <pre>
+     * The expiry time of the CLTV lock. Only used in protocol v2.
+     * </pre>
+     */
+    public long getExpiryTime() {
+      return expiryTime_;
+    }
+
+    public static final int SERVERKEY_FIELD_NUMBER = 11;
+    private com.google.protobuf.ByteString serverKey_;
+    /**
+     * <code>optional bytes serverKey = 11;</code>
+     *
+     * <pre>
+     * The server's public key. Only used in protocol v2.
+     * </pre>
+     */
+    public boolean hasServerKey() {
+      return ((bitField0_ & 0x00000400) == 0x00000400);
+    }
+    /**
+     * <code>optional bytes serverKey = 11;</code>
+     *
+     * <pre>
+     * The server's public key. Only used in protocol v2.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getServerKey() {
+      return serverKey_;
+    }
+
+    private void initFields() {
+      id_ = com.google.protobuf.ByteString.EMPTY;
+      contractTran
