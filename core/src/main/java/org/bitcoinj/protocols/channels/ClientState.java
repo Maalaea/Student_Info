@@ -1214,4 +1214,75 @@ public final class ClientState {
 
     private void initFields() {
       id_ = com.google.protobuf.ByteString.EMPTY;
-      contractTran
+      contractTransaction_ = com.google.protobuf.ByteString.EMPTY;
+      refundTransaction_ = com.google.protobuf.ByteString.EMPTY;
+      myPublicKey_ = com.google.protobuf.ByteString.EMPTY;
+      myKey_ = com.google.protobuf.ByteString.EMPTY;
+      valueToMe_ = 0L;
+      refundFees_ = 0L;
+      closeTransactionHash_ = com.google.protobuf.ByteString.EMPTY;
+      majorVersion_ = 1;
+      expiryTime_ = 0L;
+      serverKey_ = com.google.protobuf.ByteString.EMPTY;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasContractTransaction()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRefundTransaction()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasMyPublicKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasMyKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasValueToMe()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRefundFees()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, id_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, contractTransaction_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, refundTransaction_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(4, myKey_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeUInt64(5, valueToMe_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeUInt64(6, refundFees_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+   
