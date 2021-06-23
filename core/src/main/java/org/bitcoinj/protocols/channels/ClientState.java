@@ -1487,4 +1487,53 @@ public final class ClientState {
         valueToMe_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000020);
         refundFees_ = 0L;
-        b
+        bitField0_ = (bitField0_ & ~0x00000040);
+        closeTransactionHash_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        majorVersion_ = 1;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        expiryTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000200);
+        serverKey_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000400);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoinj.protocols.channels.ClientState.internal_static_paymentchannels_StoredClientPaymentChannel_descriptor;
+      }
+
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel getDefaultInstanceForType() {
+        return org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.getDefaultInstance();
+      }
+
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel build() {
+        org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel buildPartial() {
+        org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel result = new org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.id_ = id_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.contractTransaction_ = contractTransaction_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.refundTransaction_ = refundTransaction_;
+        if (((f
