@@ -1536,4 +1536,61 @@ public final class ClientState {
           to_bitField0_ |= 0x00000004;
         }
         result.refundTransaction_ = refundTransaction_;
-        if (((f
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.myPublicKey_ = myPublicKey_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.myKey_ = myKey_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.valueToMe_ = valueToMe_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.refundFees_ = refundFees_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.closeTransactionHash_ = closeTransactionHash_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.majorVersion_ = majorVersion_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        result.expiryTime_ = expiryTime_;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000400;
+        }
+        result.serverKey_ = serverKey_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel) {
+          return mergeFrom((org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel other) {
+        if (other == org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel.getDefaultInstance()) return this;
+        if (other.hasId()) {
+          setId(other.getId());
+        }
+        if (other.hasContractTransaction()) {
+          setContractTransaction(other.getContractTransaction());
+        }
+        if (other.hasRefundTransaction()) {
+          setRefundTransaction(other.getRefundTransaction());
+        }
+        if (oth
