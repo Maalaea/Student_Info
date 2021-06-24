@@ -1593,4 +1593,80 @@ public final class ClientState {
         if (other.hasRefundTransaction()) {
           setRefundTransaction(other.getRefundTransaction());
         }
-        if (oth
+        if (other.hasMyPublicKey()) {
+          setMyPublicKey(other.getMyPublicKey());
+        }
+        if (other.hasMyKey()) {
+          setMyKey(other.getMyKey());
+        }
+        if (other.hasValueToMe()) {
+          setValueToMe(other.getValueToMe());
+        }
+        if (other.hasRefundFees()) {
+          setRefundFees(other.getRefundFees());
+        }
+        if (other.hasCloseTransactionHash()) {
+          setCloseTransactionHash(other.getCloseTransactionHash());
+        }
+        if (other.hasMajorVersion()) {
+          setMajorVersion(other.getMajorVersion());
+        }
+        if (other.hasExpiryTime()) {
+          setExpiryTime(other.getExpiryTime());
+        }
+        if (other.hasServerKey()) {
+          setServerKey(other.getServerKey());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasId()) {
+          
+          return false;
+        }
+        if (!hasContractTransaction()) {
+          
+          return false;
+        }
+        if (!hasRefundTransaction()) {
+          
+          return false;
+        }
+        if (!hasMyPublicKey()) {
+          
+          return false;
+        }
+        if (!hasMyKey()) {
+          
+          return false;
+        }
+        if (!hasValueToMe()) {
+          
+          return false;
+        }
+        if (!hasRefundFees()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoinj.protocols.channels.ClientState.StoredClientPaymentChannel) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+    
