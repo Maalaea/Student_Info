@@ -1669,4 +1669,77 @@ public final class ClientState {
           }
         }
         return this;
-    
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public com.google.protobuf.ByteString getId() {
+        return id_;
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder setId(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString contractTransaction_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes contractTransaction = 2;</code>
+       */
+      public boolean hasContractTransaction() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes contractTransaction = 2;</code>
+       */
+      public com.google.protobuf.ByteString getContractTransaction() {
+        return contractTransaction_;
+      }
+      /**
+       * <code>required bytes contractTransaction = 2;</code>
+       */
+      public Builder setContractTransaction(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        contractTransaction_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes contractTransaction = 2;</code>
+       */
+      public Builder clearContractTransaction() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        contractTransaction_ = getDefaultInstance().getContractTransaction();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString refundTrans
