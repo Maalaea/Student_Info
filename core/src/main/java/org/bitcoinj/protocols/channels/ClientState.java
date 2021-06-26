@@ -1742,4 +1742,74 @@ public final class ClientState {
         return this;
       }
 
-      private com.google.protobuf.ByteString refundTrans
+      private com.google.protobuf.ByteString refundTransaction_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes refundTransaction = 3;</code>
+       */
+      public boolean hasRefundTransaction() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required bytes refundTransaction = 3;</code>
+       */
+      public com.google.protobuf.ByteString getRefundTransaction() {
+        return refundTransaction_;
+      }
+      /**
+       * <code>required bytes refundTransaction = 3;</code>
+       */
+      public Builder setRefundTransaction(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        refundTransaction_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes refundTransaction = 3;</code>
+       */
+      public Builder clearRefundTransaction() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        refundTransaction_ = getDefaultInstance().getRefundTransaction();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString myPublicKey_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes myPublicKey = 8;</code>
+       */
+      public boolean hasMyPublicKey() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>required bytes myPublicKey = 8;</code>
+       */
+      public com.google.protobuf.ByteString getMyPublicKey() {
+        return myPublicKey_;
+      }
+      /**
+       * <code>required bytes myPublicKey = 8;</code>
+       */
+      public Builder setMyPublicKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        myPublicKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes myPublicKey = 8;</code>
+       */
+      public Builder clearMyPublicKey() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        myPublicKey_ = getDefaultInstance().getMyPublicKey();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString myKey_ =
