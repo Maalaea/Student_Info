@@ -1812,4 +1812,82 @@ public final class ClientState {
         return this;
       }
 
-      private com.google.protobuf.ByteString myKey_ =
+      private com.google.protobuf.ByteString myKey_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes myKey = 4;</code>
+       *
+       * <pre>
+       * Deprecated, key is already stored in the wallet, and found using myPublicKey;
+       * </pre>
+       */
+      public boolean hasMyKey() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>required bytes myKey = 4;</code>
+       *
+       * <pre>
+       * Deprecated, key is already stored in the wallet, and found using myPublicKey;
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getMyKey() {
+        return myKey_;
+      }
+      /**
+       * <code>required bytes myKey = 4;</code>
+       *
+       * <pre>
+       * Deprecated, key is already stored in the wallet, and found using myPublicKey;
+       * </pre>
+       */
+      public Builder setMyKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        myKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes myKey = 4;</code>
+       *
+       * <pre>
+       * Deprecated, key is already stored in the wallet, and found using myPublicKey;
+       * </pre>
+       */
+      public Builder clearMyKey() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        myKey_ = getDefaultInstance().getMyKey();
+        onChanged();
+        return this;
+      }
+
+      private long valueToMe_ ;
+      /**
+       * <code>required uint64 valueToMe = 5;</code>
+       */
+      public boolean hasValueToMe() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>required uint64 valueToMe = 5;</code>
+       */
+      public long getValueToMe() {
+        return valueToMe_;
+      }
+      /**
+       * <code>required uint64 valueToMe = 5;</code>
+       */
+      public Builder setValueToMe(long value) {
+        bitField0_ |= 0x00000020;
+        valueToMe_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 valueToMe = 5;</code>
+       */
+      public Builder clearValueToMe() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        valueToMe_ =
