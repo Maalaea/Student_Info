@@ -1890,4 +1890,75 @@ public final class ClientState {
        */
       public Builder clearValueToMe() {
         bitField0_ = (bitField0_ & ~0x00000020);
-        valueToMe_ =
+        valueToMe_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long refundFees_ ;
+      /**
+       * <code>required uint64 refundFees = 6;</code>
+       *
+       * <pre>
+       * Fees required to refund the transaction.
+       * </pre>
+       */
+      public boolean hasRefundFees() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>required uint64 refundFees = 6;</code>
+       *
+       * <pre>
+       * Fees required to refund the transaction.
+       * </pre>
+       */
+      public long getRefundFees() {
+        return refundFees_;
+      }
+      /**
+       * <code>required uint64 refundFees = 6;</code>
+       *
+       * <pre>
+       * Fees required to refund the transaction.
+       * </pre>
+       */
+      public Builder setRefundFees(long value) {
+        bitField0_ |= 0x00000040;
+        refundFees_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 refundFees = 6;</code>
+       *
+       * <pre>
+       * Fees required to refund the transaction.
+       * </pre>
+       */
+      public Builder clearRefundFees() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        refundFees_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString closeTransactionHash_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes closeTransactionHash = 7;</code>
+       *
+       * <pre>
+       * When set, the hash of the transaction that was presented by the server for closure of the channel.
+       * It spends the contractTransaction and is expected to be broadcast to the network by the server.
+       * It's supposed to be in the wallet already.
+       * </pre>
+       */
+      public boolean hasCloseTransactionHash() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional bytes closeTransactionHash = 7;</code>
+       *
+       * <pre>
+       * When set, the hash of the transaction that was presented by the server for closure of the channel.
+       * It spends the contractTransaction and is expected to be broadcast to the netw
