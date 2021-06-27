@@ -1961,4 +1961,68 @@ public final class ClientState {
        *
        * <pre>
        * When set, the hash of the transaction that was presented by the server for closure of the channel.
-       * It spends the contractTransaction and is expected to be broadcast to the netw
+       * It spends the contractTransaction and is expected to be broadcast to the network by the server.
+       * It's supposed to be in the wallet already.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getCloseTransactionHash() {
+        return closeTransactionHash_;
+      }
+      /**
+       * <code>optional bytes closeTransactionHash = 7;</code>
+       *
+       * <pre>
+       * When set, the hash of the transaction that was presented by the server for closure of the channel.
+       * It spends the contractTransaction and is expected to be broadcast to the network by the server.
+       * It's supposed to be in the wallet already.
+       * </pre>
+       */
+      public Builder setCloseTransactionHash(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        closeTransactionHash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes closeTransactionHash = 7;</code>
+       *
+       * <pre>
+       * When set, the hash of the transaction that was presented by the server for closure of the channel.
+       * It spends the contractTransaction and is expected to be broadcast to the network by the server.
+       * It's supposed to be in the wallet already.
+       * </pre>
+       */
+      public Builder clearCloseTransactionHash() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        closeTransactionHash_ = getDefaultInstance().getCloseTransactionHash();
+        onChanged();
+        return this;
+      }
+
+      private int majorVersion_ = 1;
+      /**
+       * <code>optional uint32 majorVersion = 9 [default = 1];</code>
+       */
+      public boolean hasMajorVersion() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional uint32 majorVersion = 9 [default = 1];</code>
+       */
+      public int getMajorVersion() {
+        return majorVersion_;
+      }
+      /**
+       * <code>optional uint32 majorVersion = 9 [default = 1];</code>
+       */
+      public Builder setMajorVersion(int value) {
+        bitField0_ |= 0x00000100;
+        majorVersion_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional 
