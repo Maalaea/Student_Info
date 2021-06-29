@@ -2025,4 +2025,86 @@ public final class ClientState {
         return this;
       }
       /**
-       * <code>optional 
+       * <code>optional uint32 majorVersion = 9 [default = 1];</code>
+       */
+      public Builder clearMajorVersion() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        majorVersion_ = 1;
+        onChanged();
+        return this;
+      }
+
+      private long expiryTime_ ;
+      /**
+       * <code>optional uint64 expiryTime = 10;</code>
+       *
+       * <pre>
+       * The expiry time of the CLTV lock. Only used in protocol v2.
+       * </pre>
+       */
+      public boolean hasExpiryTime() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional uint64 expiryTime = 10;</code>
+       *
+       * <pre>
+       * The expiry time of the CLTV lock. Only used in protocol v2.
+       * </pre>
+       */
+      public long getExpiryTime() {
+        return expiryTime_;
+      }
+      /**
+       * <code>optional uint64 expiryTime = 10;</code>
+       *
+       * <pre>
+       * The expiry time of the CLTV lock. Only used in protocol v2.
+       * </pre>
+       */
+      public Builder setExpiryTime(long value) {
+        bitField0_ |= 0x00000200;
+        expiryTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 expiryTime = 10;</code>
+       *
+       * <pre>
+       * The expiry time of the CLTV lock. Only used in protocol v2.
+       * </pre>
+       */
+      public Builder clearExpiryTime() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        expiryTime_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString serverKey_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes serverKey = 11;</code>
+       *
+       * <pre>
+       * The server's public key. Only used in protocol v2.
+       * </pre>
+       */
+      public boolean hasServerKey() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional bytes serverKey = 11;</code>
+       *
+       * <pre>
+       * The server's public key. Only used in protocol v2.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getServerKey() {
+        return serverKey_;
+      }
+      /**
+       * <code>optional bytes serverKey = 11;</code>
+       *
+       * <pre>
+       * The server's public key. Only used
