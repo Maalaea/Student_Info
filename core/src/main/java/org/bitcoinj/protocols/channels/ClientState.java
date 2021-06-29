@@ -2107,4 +2107,65 @@ public final class ClientState {
        * <code>optional bytes serverKey = 11;</code>
        *
        * <pre>
-       * The server's public key. Only used
+       * The server's public key. Only used in protocol v2.
+       * </pre>
+       */
+      public Builder setServerKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000400;
+        serverKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes serverKey = 11;</code>
+       *
+       * <pre>
+       * The server's public key. Only used in protocol v2.
+       * </pre>
+       */
+      public Builder clearServerKey() {
+        bitField0_ = (bitField0_ & ~0x00000400);
+        serverKey_ = getDefaultInstance().getServerKey();
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:paymentchannels.StoredClientPaymentChannel)
+    }
+
+    static {
+      defaultInstance = new StoredClientPaymentChannel(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:paymentchannels.StoredClientPaymentChannel)
+  }
+
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_paymentchannels_StoredClientPaymentChannels_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_paymentchannels_StoredClientPaymentChannels_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_paymentchannels_StoredClientPaymentChannel_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_paymentchannels_StoredClientPaymentChannel_fieldAccessorTable;
+
+  public static com.google.protobuf.Descriptors.FileDescriptor
+      getDescriptor() {
+    return descriptor;
+  }
+  private static com.google.protobuf.Descriptors.FileDescriptor
+      descriptor;
+  static {
+    java.lang.String[] descriptorData = {
+      "\n storedclientpaymentchannel.proto\022\017paym" +
+      "entchannels\"\\\n\033StoredClientPaymentChanne" +
+      "ls\022=\n\010channels\030\001 \003(\0132+.paymentchannels.S" +
+      "toredClientPaymentChannel\"\211\002\n\032StoredClie" +
+      "ntPaymentChannel\022\n\n\002id\030\001 \002(\014\022\033\n\023contract" +
+      "Transaction\030\002 \002(\014\022\031\n\021refundTran
