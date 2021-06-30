@@ -2168,4 +2168,39 @@ public final class ClientState {
       "ls\022=\n\010channels\030\001 \003(\0132+.paymentchannels.S" +
       "toredClientPaymentChannel\"\211\002\n\032StoredClie" +
       "ntPaymentChannel\022\n\n\002id\030\001 \002(\014\022\033\n\023contract" +
-      "Transaction\030\002 \002(\014\022\031\n\021refundTran
+      "Transaction\030\002 \002(\014\022\031\n\021refundTransaction\030\003" +
+      " \002(\014\022\023\n\013myPublicKey\030\010 \002(\014\022\r\n\005myKey\030\004 \002(\014" +
+      "\022\021\n\tvalueToMe\030\005 \002(\004\022\022\n\nrefundFees\030\006 \002(\004\022" +
+      "\034\n\024closeTransactionHash\030\007 \001(\014\022\027\n\014majorVe" +
+      "rsion\030\t \001(\r:\0011\022\022\n\nexpiryTime\030\n \001(\004\022\021\n\tse",
+      "rverKey\030\013 \001(\014B.\n\037org.bitcoinj.protocols." +
+      "channelsB\013ClientState"
+    };
+    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
+    com.google.protobuf.Descriptors.FileDescriptor
+      .internalBuildGeneratedFileFrom(descriptorData,
+        new com.google.protobuf.Descriptors.FileDescriptor[] {
+        }, assigner);
+    internal_static_paymentchannels_StoredClientPaymentChannels_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_paymentchannels_StoredClientPaymentChannels_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_paymentchannels_StoredClientPaymentChannels_descriptor,
+        new java.lang.String[] { "Channels", });
+    internal_static_paymentchannels_StoredClientPaymentChannel_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_paymentchannels_StoredClientPaymentChannel_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_paymentchannels_StoredClientPaymentChannel_descriptor,
+        new java.lang.String[] { "Id", "ContractTransaction", "RefundTransaction", "MyPublicKey", "MyKey", "ValueToMe", "RefundFees", "CloseTransactionHash", "MajorVersion", "ExpiryTime", "ServerKey", });
+  }
+
+  // @@protoc_insertion_point(outer_class_scope)
+}
