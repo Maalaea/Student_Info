@@ -106,3 +106,89 @@ public interface IPaymentChannelClient {
          * <p>If the send fails, no exception should be thrown, however
          * {@link org.bitcoinj.protocols.channels.PaymentChannelClient#connectionClosed()} should be called immediately. In the case of messages which
          * are a part of initialization, initialization will simply fail and the refund transaction will be broadcasted
+         * when it unlocks (if necessary).  In the case of a payment message, the payment will be lost however if the
+         * channel is resumed it will begin again from the channel value <i>after</i> the failed payment.</p>
+         *
+         * <p>Called while holding a lock on the {@link org.bitcoinj.protocols.channels.PaymentChannelClient} object - be careful about reentrancy</p>
+         */
+        void sendToServer(Protos.TwoWayChannelMessage msg);
+
+        /**
+         * <p>Requests that the connection to the server be closed. For stateless protocols, note that after this call,
+         * no more messages should be received from the server and this object is no longer usable. A
+         * {@link org.bitcoinj.protocols.channels.PaymentChannelClient#connectionClosed()} event should be generated immediately after this call.</p>
+         *
+         * <p>Called while holding a lock on the {@link org.bitcoinj.protocols.channels.PaymentChannelClient} object - be careful about reentrancy</p>
+         *
+         * @param reason The reason for the closure, see the individual values for more details.
+         *               It is usually safe to ignore this and treat any value below
+         *               {@link org.bitcoinj.protocols.channels.PaymentChannelCloseException.CloseReason#CLIENT_REQUESTED_CLOSE} as "unrecoverable error" and all others as
+         *               "try again once and see if it works then"
+         */
+        void destroyConnection(PaymentChannelCloseException.CloseReason reason);
+
+
+        /**
+         * <p>Queries if the expire time proposed by server is acceptable. If <code>false</code> is return the channel
+         * will be closed with a  {@link org.bitcoinj.protocols.channels.PaymentChannelCloseException.CloseReason#TIME_WINDOW_UNACCEPTABLE}.</p>
+         * @param expireTime The time, in seconds,  when this channel will be closed by the server. Note this is in absolute time, i.e. seconds since 1970-01-01T00:00:00.
+         * @return <code>true</code> if the proposed time is acceptable <code>false</code> otherwise.
+         */
+        boolean acceptExpireTime(long expireTime);
+
+        /**
+         * <p>Indicates the channel has been successfully opened and
+         * {@link org.bitcoinj.protocols.channels.PaymentChannelClient#incrementPayment(Coin)}
+         * may be called at will.</p>
+         *
+         * <p>Called while holding a lock on the {@link org.bitcoinj.protocols.channels.PaymentChannelClient}
+         * object - be careful about reentrancy</p>
+         *
+         * @param wasInitiated If true, the channel is newly opened. If false, it was resumed.
+         */
+        void channelOpen(boolean wasInitiated);
+    }
+
+    /**
+     * Set Client payment channel properties.
+     */
+    interface ClientChannelProperties {
+        /**
+         * Modify the sendRequest used for the contract.
+         * @param sendRequest the current sendRequest.
+         * @return the modified sendRequest.
+         */
+        SendRequest modifyContractSendRequest(SendRequest sendRequest);
+
+        /**
+         *  The maximum acceptable min payment. If the server suggests a higher amount
+         *  the channel creation will be aborted.
+         */
+        Coin acceptableMinPayment();
+
+        /**
+         *  The time in seconds, relative to now, on how long this channel should be kept open. Note that is is
+         *  a proposal to the server. The server may in turn propose something different.
+         *  See {@link org.bitcoinj.protocols.channels.IPaymentChannelClient.ClientConnection#acceptExpireTime(long)}
+         *
+         */
+        long timeWindow();
+
+        /**
+         * An enum indicating which versions to support:
+         * VERSION_1: use only version 1 of the protocol
+         * VERSION_2_ALLOW_1: suggest version 2 but allow downgrade to version 1
+         * VERSION_2: suggest version 2 and enforce use of version 2
+         *
+         */
+        PaymentChannelClient.VersionSelector versionSelector();
+    }
+
+    /**
+     * An implementor of this interface creates payment channel clients that "talk back" with the given connection.
+     * The client might be a PaymentChannelClient, or an RPC interface, or something else entirely.
+     */
+    interface Factory {
+        IPaymentChannelClient create(String serverPaymentIdentity, ClientConnection connection);
+    }
+}
