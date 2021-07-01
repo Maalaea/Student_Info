@@ -48,4 +48,61 @@ import static com.google.common.base.Preconditions.checkState;
  * {@link StoredPaymentChannelClientStates} so that they are automatically closed when necessary and refund
  * transactions are not lost if the application crashes before it unlocks.</p>
  *
- * <p>Though thi
+ * <p>Though this interface is largely designed with stateful protocols (eg simple TCP connections) in mind, it is also
+ * possible to use it with stateless protocols (eg sending protobufs when required over HTTP headers). In this case, the
+ * "connection" translates roughly into the server-client relationship. See the javadocs for specific functions for more
+ * details.</p>
+ */
+public class PaymentChannelClient implements IPaymentChannelClient {
+    private static final org.slf4j.Logger log = LoggerFactory.getLogger(PaymentChannelClient.class);
+
+    protected final ReentrantLock lock = Threading.lock("channelclient");
+    protected final ClientChannelProperties clientChannelProperties;
+
+    // Used to track the negotiated version number
+    @GuardedBy("lock") private int majorVersion;
+
+    @GuardedBy("lock") private final ClientConnection conn;
+
+    // Used to keep track of whether or not the "socket" ie connection is open and we can generate messages
+    @VisibleForTesting @GuardedBy("lock") boolean connectionOpen = false;
+
+    // The state object used to step through initialization and pay the server
+    @GuardedBy("lock") private PaymentChannelClientState state;
+
+    // The step we are at in initialization, this is partially duplicated in the state object
+    private enum InitStep {
+        WAITING_FOR_CONNECTION_OPEN,
+        WAITING_FOR_VERSION_NEGOTIATION,
+        WAITING_FOR_INITIATE,
+        WAITING_FOR_REFUND_RETURN,
+        WAITING_FOR_CHANNEL_OPEN,
+        CHANNEL_OPEN,
+        WAITING_FOR_CHANNEL_CLOSE,
+        CHANNEL_CLOSED,
+    }
+    @GuardedBy("lock") private InitStep step = InitStep.WAITING_FOR_CONNECTION_OPEN;
+
+    public enum VersionSelector {
+        VERSION_1,
+        VERSION_2_ALLOW_1,
+        VERSION_2;
+
+        public int getRequestedMajorVersion() {
+            switch (this) {
+                case VERSION_1:
+                    return 1;
+                case VERSION_2_ALLOW_1:
+                case VERSION_2:
+                default:
+                    return 2;
+            }
+        }
+
+        public int getRequestedMinorVersion() {
+            return 0;
+        }
+
+        public boolean isServerVersionAccepted(int major, int minor) {
+            switch (this) {
+        
