@@ -105,4 +105,58 @@ public class PaymentChannelClient implements IPaymentChannelClient {
 
         public boolean isServerVersionAccepted(int major, int minor) {
             switch (this) {
-        
+                case VERSION_1:
+                    return major == 1;
+                case VERSION_2_ALLOW_1:
+                    return major == 1 || major == 2;
+                case VERSION_2:
+                    return major == 2;
+                default:
+                    return false;
+            }
+        }
+    }
+
+    private final VersionSelector versionSelector;
+
+    // Will either hold the StoredClientChannel of this channel or null after connectionOpen
+    private StoredClientChannel storedChannel;
+    // An arbitrary hash which identifies this channel (specified by the API user)
+    private final Sha256Hash serverId;
+
+    // The wallet associated with this channel
+    private final Wallet wallet;
+
+    // Information used during channel initialization to send to the server or check what the server sends to us
+    private final ECKey myKey;
+    private final Coin maxValue;
+
+    private Coin missing;
+
+    // key to decrypt myKey, if it is encrypted, during setup.
+    private KeyParameter userKeySetup;
+
+    private final long timeWindow;
+
+    @GuardedBy("lock") private long minPayment;
+
+    @GuardedBy("lock") SettableFuture<PaymentIncrementAck> increasePaymentFuture;
+    @GuardedBy("lock") Coin lastPaymentActualAmount;
+
+    /**
+     * <p>The default maximum amount of time for which we will accept the server locking up our funds for the multisig
+     * contract.</p>
+     *
+     * <p>24 hours less a minute  is the default as it is expected that clients limit risk exposure by limiting channel size instead of
+     * limiting lock time when dealing with potentially malicious servers.</p>
+     */
+    public static final long DEFAULT_TIME_WINDOW = 24*60*60-60;
+
+    /**
+     * Constructs a new channel manager which waits for {@link PaymentChannelClient#connectionOpen()} before acting.
+     * A default time window of {@link #DEFAULT_TIME_WINDOW} will be used.
+     *
+     * @param wallet The wallet which will be paid from, and where completed transactions will be committed.
+     *               Must already have a {@link StoredPaymentChannelClientStates} object in its extensions set.
+     * @param myKey A freshly generated keypair used for the multisig contract and refund output.
+     * @param maxValue The maximum value the server 
