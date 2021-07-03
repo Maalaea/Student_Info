@@ -186,4 +186,31 @@ public class PaymentChannelClient implements IPaymentChannelClient {
      * @param serverId An arbitrary hash representing this channel. This must uniquely identify the server. If an
      *                 existing stored channel exists in the wallet's {@link StoredPaymentChannelClientStates}, then an
      *                 attempt will be made to resume that channel.
-     * @p
+     * @param userKeySetup Key derived from a user password, used to decrypt myKey, if it is encrypted, during setup.
+     * @param conn A callback listener which represents the connection to the server (forwards messages we generate to
+     *             the server)
+     */
+    public PaymentChannelClient(Wallet wallet, ECKey myKey, Coin maxValue, Sha256Hash serverId,
+                                @Nullable KeyParameter userKeySetup, ClientConnection conn) {
+        this(wallet, myKey, maxValue, serverId, userKeySetup, defaultChannelProperties, conn);
+    }
+
+    /**
+     * Constructs a new channel manager which waits for {@link PaymentChannelClient#connectionOpen()} before acting.
+     *
+     * @param wallet The wallet which will be paid from, and where completed transactions will be committed.
+     *               Must already have a {@link StoredPaymentChannelClientStates} object in its extensions set.
+     * @param myKey A freshly generated keypair used for the multisig contract and refund output.
+     * @param maxValue The maximum value the server is allowed to request that we lock into this channel until the
+     *                 refund transaction unlocks. Note that if there is a previously open channel, the refund
+     *                 transaction used in this channel may be larger than maxValue. Thus, maxValue is not a method for
+     *                 limiting the amount payable through this channel.
+     * @param serverId An arbitrary hash representing this channel. This must uniquely identify the server. If an
+     *                 existing stored channel exists in the wallet's {@link StoredPaymentChannelClientStates}, then an
+     *                 attempt will be made to resume that channel.
+     * @param userKeySetup Key derived from a user password, used to decrypt myKey, if it is encrypted, during setup.
+     * @param clientChannelProperties Modify the channel's properties. You may extend {@link DefaultClientChannelProperties}
+     * @param conn A callback listener which represents the connection to the server (forwards messages we generate to
+     *             the server)
+     */
+    public PaymentChannelClient(Wallet wallet, ECKey myKey, Coin maxValue, Sha256
