@@ -260,4 +260,46 @@ public class PaymentChannelClient implements IPaymentChannelClient {
             return CloseReason.TIME_WINDOW_UNACCEPTABLE;
         }
 
-        Coin minChannelSize = Coin.va
+        Coin minChannelSize = Coin.valueOf(initiate.getMinAcceptedChannelSize());
+        if (contractValue.compareTo(minChannelSize) < 0) {
+            log.error("Server requested too much value");
+            errorBuilder.setCode(Protos.Error.ErrorCode.CHANNEL_VALUE_TOO_LARGE);
+            missing = minChannelSize.subtract(contractValue);
+            return CloseReason.SERVER_REQUESTED_TOO_MUCH_VALUE;
+        }
+
+        // For now we require a hard-coded value. In future this will have to get more complex and dynamic as the fees
+        // start to float.
+        final long maxMin = clientChannelProperties.acceptableMinPayment().value;
+        if (initiate.getMinPayment() > maxMin) {
+            log.error("Server requested a min payment of {} but we only accept up to {}", initiate.getMinPayment(), maxMin);
+            errorBuilder.setCode(Protos.Error.ErrorCode.MIN_PAYMENT_TOO_LARGE);
+            errorBuilder.setExpectedValue(maxMin);
+            missing = Coin.valueOf(initiate.getMinPayment() - maxMin);
+            return CloseReason.SERVER_REQUESTED_TOO_MUCH_VALUE;
+        }
+
+        final byte[] pubKeyBytes = initiate.getMultisigKey().toByteArray();
+        if (!ECKey.isPubKeyCanonical(pubKeyBytes))
+            throw new VerificationException("Server gave us a non-canonical public key, protocol error.");
+        switch (majorVersion) {
+            case 1:
+                state = new PaymentChannelV1ClientState(wallet, myKey, ECKey.fromPublicOnly(pubKeyBytes), contractValue, expireTime);
+                break;
+            case 2:
+                state = new PaymentChannelV2ClientState(wallet, myKey, ECKey.fromPublicOnly(pubKeyBytes), contractValue, expireTime);
+                break;
+            default:
+                return CloseReason.NO_ACCEPTABLE_VERSION;
+        }
+        try {
+            state.initiate(userKeySetup, clientChannelProperties);
+        } catch (ValueOutOfRangeException e) {
+            log.error("Value out of range when trying to initiate", e);
+            errorBuilder.setCode(Protos.Error.ErrorCode.CHANNEL_VALUE_TOO_LARGE);
+            return CloseReason.SERVER_REQUESTED_TOO_MUCH_VALUE;
+        }
+        minPayment = initiate.getMinPayment();
+        switch (majorVersion) {
+            case 1:
+                ste
