@@ -213,4 +213,51 @@ public class PaymentChannelClient implements IPaymentChannelClient {
      * @param conn A callback listener which represents the connection to the server (forwards messages we generate to
      *             the server)
      */
-    public PaymentChannelClient(Wallet wallet, ECKey myKey, Coin maxValue, Sha256
+    public PaymentChannelClient(Wallet wallet, ECKey myKey, Coin maxValue, Sha256Hash serverId,
+                                @Nullable KeyParameter userKeySetup, @Nullable ClientChannelProperties clientChannelProperties,
+                                ClientConnection conn) {
+        this.wallet = checkNotNull(wallet);
+        this.myKey = checkNotNull(myKey);
+        this.maxValue = checkNotNull(maxValue);
+        this.serverId = checkNotNull(serverId);
+        this.conn = checkNotNull(conn);
+        this.userKeySetup = userKeySetup;
+        if (clientChannelProperties == null) {
+            this.clientChannelProperties = defaultChannelProperties;
+        } else {
+            this.clientChannelProperties = clientChannelProperties;
+        }
+        this.timeWindow = clientChannelProperties.timeWindow();
+        checkState(timeWindow >= 0);
+        this.versionSelector = clientChannelProperties.versionSelector();
+    }
+
+    /** 
+     * <p>Returns the amount of satoshis missing when a server requests too much value.</p>
+     *
+     * <p>When InsufficientMoneyException is thrown due to the server requesting too much value, an instance of 
+     * PaymentChannelClient needs access to how many satoshis are missing.</p>
+     */
+    public Coin getMissing() {
+        return missing;
+    }
+
+    @Nullable
+    @GuardedBy("lock")
+    private CloseReason receiveInitiate(Protos.Initiate initiate, Coin contractValue, Protos.Error.Builder errorBuilder)
+            throws VerificationException, InsufficientMoneyException, ECKey.KeyIsEncryptedException {
+        log.info("Got INITIATE message:\n{}", initiate.toString());
+
+        if (wallet.isEncrypted() && this.userKeySetup == null)
+            throw new ECKey.KeyIsEncryptedException();
+
+        final long expireTime = initiate.getExpireTimeSecs();
+        checkState( expireTime >= 0 && initiate.getMinAcceptedChannelSize() >= 0);
+
+        if (! conn.acceptExpireTime(expireTime)) {
+            log.error("Server suggested expire time was out of our allowed bounds: {} ({} s)", Utils.dateTimeFormat(expireTime * 1000), expireTime);
+            errorBuilder.setCode(Protos.Error.ErrorCode.TIME_WINDOW_UNACCEPTABLE);
+            return CloseReason.TIME_WINDOW_UNACCEPTABLE;
+        }
+
+        Coin minChannelSize = Coin.va
