@@ -334,4 +334,40 @@ public class PaymentChannelClient implements IPaymentChannelClient {
                     throw new IllegalStateException(e);  // This cannot happen.
                 }
 
-     
+                // Not used any more
+                userKeySetup = null;
+
+                final Protos.TwoWayChannelMessage.Builder msg = Protos.TwoWayChannelMessage.newBuilder();
+                msg.setProvideContract(provideContractBuilder);
+                msg.setType(Protos.TwoWayChannelMessage.MessageType.PROVIDE_CONTRACT);
+                conn.sendToServer(msg.build());
+                break;
+            default:
+                return CloseReason.NO_ACCEPTABLE_VERSION;
+        }
+        return null;
+    }
+
+    @GuardedBy("lock")
+    private void receiveRefund(Protos.TwoWayChannelMessage refundMsg, @Nullable KeyParameter userKey) throws VerificationException {
+        checkState(majorVersion == 1);
+        checkState(step == InitStep.WAITING_FOR_REFUND_RETURN && refundMsg.hasReturnRefund());
+        log.info("Got RETURN_REFUND message, providing signed contract");
+        Protos.ReturnRefund returnedRefund = refundMsg.getReturnRefund();
+        // Cast is safe since we've checked the version number
+        ((PaymentChannelV1ClientState)state).provideRefundSignature(returnedRefund.getSignature().toByteArray(), userKey);
+        step = InitStep.WAITING_FOR_CHANNEL_OPEN;
+
+        // Before we can send the server the contract (ie send it to the network), we must ensure that our refund
+        // transaction is safely in the wallet - thus we store it (this also keeps it up-to-date when we pay)
+        state.storeChannelInWallet(serverId);
+
+        Protos.ProvideContract.Builder contractMsg = Protos.ProvideContract.newBuilder()
+                .setTx(ByteString.copyFrom(state.getContract().unsafeBitcoinSerialize()));
+        try {
+            // Make an initial payment of the dust limit, and put it into the message as well. The size of the
+            // server-requested dust limit was already sanity checked by this point.
+            PaymentChannelClientState.IncrementedPayment payment = state().incrementPaymentBy(Coin.valueOf(minPayment), userKey);
+            Protos.UpdatePayment.Builder initialMsg = contractMsg.getInitialPaymentBuilder();
+            initialMsg.setSignature(ByteString.copyFrom(payment.signature.encodeToBitcoin()));
+            initialMsg.setClientChang
