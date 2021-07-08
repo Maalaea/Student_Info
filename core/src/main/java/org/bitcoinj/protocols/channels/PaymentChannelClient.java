@@ -370,4 +370,56 @@ public class PaymentChannelClient implements IPaymentChannelClient {
             PaymentChannelClientState.IncrementedPayment payment = state().incrementPaymentBy(Coin.valueOf(minPayment), userKey);
             Protos.UpdatePayment.Builder initialMsg = contractMsg.getInitialPaymentBuilder();
             initialMsg.setSignature(ByteString.copyFrom(payment.signature.encodeToBitcoin()));
-            initialMsg.setClientChang
+            initialMsg.setClientChangeValue(state.getValueRefunded().value);
+        } catch (ValueOutOfRangeException e) {
+            throw new IllegalStateException(e);  // This cannot happen.
+        }
+
+        final Protos.TwoWayChannelMessage.Builder msg = Protos.TwoWayChannelMessage.newBuilder();
+        msg.setProvideContract(contractMsg);
+        msg.setType(Protos.TwoWayChannelMessage.MessageType.PROVIDE_CONTRACT);
+        conn.sendToServer(msg.build());
+    }
+
+    @GuardedBy("lock")
+    private void receiveChannelOpen() throws VerificationException {
+        checkState(step == InitStep.WAITING_FOR_CHANNEL_OPEN || (step == InitStep.WAITING_FOR_INITIATE && storedChannel != null), step);
+        log.info("Got CHANNEL_OPEN message, ready to pay");
+
+        boolean wasInitiated = true;
+        if (step == InitStep.WAITING_FOR_INITIATE) {
+            // We skipped the initiate step, because a previous channel that's still valid was resumed.
+            wasInitiated  = false;
+            switch (majorVersion) {
+                case 1:
+                    state = new PaymentChannelV1ClientState(storedChannel, wallet);
+                    break;
+                case 2:
+                    state = new PaymentChannelV2ClientState(storedChannel, wallet);
+                    break;
+                default:
+                    throw new IllegalStateException("Invalid version number " + majorVersion);
+            }
+        }
+        step = InitStep.CHANNEL_OPEN;
+        // channelOpen should disable timeouts, but
+        // TODO accomodate high latency between PROVIDE_CONTRACT and here
+        conn.channelOpen(wasInitiated);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void receiveMessage(Protos.TwoWayChannelMessage msg) throws InsufficientMoneyException {
+        lock.lock();
+        try {
+            checkState(connectionOpen);
+            // If we generate an error, we set errorBuilder and closeReason and break, otherwise we return
+            Protos.Error.Builder errorBuilder;
+            CloseReason closeReason;
+            try {
+                switch (msg.getType()) {
+                    case SERVER_VERSION:
+                        checkState(step == InitStep.WAITING_FOR_VERSION_NEGOTIATION && msg.hasServerVersion());
+                  
