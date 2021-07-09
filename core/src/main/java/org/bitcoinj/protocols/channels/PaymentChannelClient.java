@@ -422,4 +422,41 @@ public class PaymentChannelClient implements IPaymentChannelClient {
                 switch (msg.getType()) {
                     case SERVER_VERSION:
                         checkState(step == InitStep.WAITING_FOR_VERSION_NEGOTIATION && msg.hasServerVersion());
-                  
+                        // Server might send back a major version lower than our own if they want to fallback to a
+                        // lower version. We can't handle that, so we just close the channel.
+                        majorVersion = msg.getServerVersion().getMajor();
+                        if (!versionSelector.isServerVersionAccepted(majorVersion, msg.getServerVersion().getMinor())) {
+                            errorBuilder = Protos.Error.newBuilder()
+                                    .setCode(Protos.Error.ErrorCode.NO_ACCEPTABLE_VERSION);
+                            closeReason = CloseReason.NO_ACCEPTABLE_VERSION;
+                            break;
+                        }
+                        log.info("Got version handshake, awaiting INITIATE or resume CHANNEL_OPEN");
+                        step = InitStep.WAITING_FOR_INITIATE;
+                        return;
+                    case INITIATE:
+                        checkState(step == InitStep.WAITING_FOR_INITIATE && msg.hasInitiate());
+                        Protos.Initiate initiate = msg.getInitiate();
+                        errorBuilder = Protos.Error.newBuilder();
+                        closeReason = receiveInitiate(initiate, maxValue, errorBuilder);
+                        if (closeReason == null)
+                            return;
+                        log.error("Initiate failed with error: {}", errorBuilder.build().toString());
+                        break;
+                    case RETURN_REFUND:
+                        receiveRefund(msg, userKeySetup);
+                        // Key not used anymore
+                        userKeySetup = null;
+                        return;
+                    case CHANNEL_OPEN:
+                        receiveChannelOpen();
+                        return;
+                    case PAYMENT_ACK:
+                        receivePaymentAck(msg.getPaymentAck());
+                        return;
+                    case CLOSE:
+                        receiveClose(msg);
+                        return;
+                    case ERROR:
+                        checkState(msg.hasError());
+                        log.error("Server sent ERROR {} with explanation {}", msg.get
