@@ -459,4 +459,45 @@ public class PaymentChannelClient implements IPaymentChannelClient {
                         return;
                     case ERROR:
                         checkState(msg.hasError());
-                        log.error("Server sent ERROR {} with explanation {}", msg.get
+                        log.error("Server sent ERROR {} with explanation {}", msg.getError().getCode().name(),
+                                msg.getError().hasExplanation() ? msg.getError().getExplanation() : "");
+                        setIncreasePaymentFutureIfNeeded(CloseReason.REMOTE_SENT_ERROR, msg.getError().getCode().name());
+                        conn.destroyConnection(CloseReason.REMOTE_SENT_ERROR);
+                        return;
+                    default:
+                        log.error("Got unknown message type or type that doesn't apply to clients.");
+                        errorBuilder = Protos.Error.newBuilder()
+                                .setCode(Protos.Error.ErrorCode.SYNTAX_ERROR);
+                        setIncreasePaymentFutureIfNeeded(CloseReason.REMOTE_SENT_INVALID_MESSAGE, "");
+                        closeReason = CloseReason.REMOTE_SENT_INVALID_MESSAGE;
+                        break;
+                }
+            } catch (VerificationException e) {
+                log.error("Caught verification exception handling message from server", e);
+                errorBuilder = Protos.Error.newBuilder()
+                        .setCode(Protos.Error.ErrorCode.BAD_TRANSACTION)
+                        .setExplanation(e.getMessage());
+                closeReason = CloseReason.REMOTE_SENT_INVALID_MESSAGE;
+            } catch (IllegalStateException e) {
+                log.error("Caught illegal state exception handling message from server", e);
+                errorBuilder = Protos.Error.newBuilder()
+                        .setCode(Protos.Error.ErrorCode.SYNTAX_ERROR);
+                closeReason = CloseReason.REMOTE_SENT_INVALID_MESSAGE;
+            }
+            conn.sendToServer(Protos.TwoWayChannelMessage.newBuilder()
+                    .setError(errorBuilder)
+                    .setType(Protos.TwoWayChannelMessage.MessageType.ERROR)
+                    .build());
+            conn.destroyConnection(closeReason);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /*
+     * If this is an ongoing payment channel increase we need to call setException() on its future.
+     *
+     * @param reason is the reason for aborting
+     * @param message is the detailed message
+     */
+    private void setIncreasePaymentFutureIfNeeded(PaymentChan
