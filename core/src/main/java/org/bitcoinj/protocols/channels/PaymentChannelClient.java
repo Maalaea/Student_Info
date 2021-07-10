@@ -538,4 +538,59 @@ public class PaymentChannelClient implements IPaymentChannelClient {
      *
      * <p>Note that this <b>MUST</b> still be called even after either
      * {@link ClientConnection#destroyConnection(org.bitcoinj.protocols.channels.PaymentChannelCloseException.CloseReason)} or
-     * {@link PaymentChannelClient#settle
+     * {@link PaymentChannelClient#settle()} is called, to actually handle the connection close logic.</p>
+     */
+    @Override
+    public void connectionClosed() {
+        lock.lock();
+        try {
+            connectionOpen = false;
+            if (state != null)
+                state.disconnectFromChannel();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * <p>Closes the connection, notifying the server it should settle the channel by broadcasting the most recent
+     * payment transaction.</p>
+     *
+     * <p>Note that this only generates a CLOSE message for the server and calls
+     * {@link ClientConnection#destroyConnection(CloseReason)} to settle the connection, it does not
+     * actually handle connection close logic, and {@link PaymentChannelClient#connectionClosed()} must still be called
+     * after the connection fully closes.</p>
+     *
+     * @throws IllegalStateException If the connection is not currently open (ie the CLOSE message cannot be sent)
+     */
+    @Override
+    public void settle() throws IllegalStateException {
+        lock.lock();
+        try {
+            checkState(connectionOpen);
+            step = InitStep.WAITING_FOR_CHANNEL_CLOSE;
+            log.info("Sending a CLOSE message to the server and waiting for response indicating successful settlement.");
+            conn.sendToServer(Protos.TwoWayChannelMessage.newBuilder()
+                    .setType(Protos.TwoWayChannelMessage.MessageType.CLOSE)
+                    .build());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * <p>Called to indicate the connection has been opened and messages can now be generated for the server.</p>
+     *
+     * <p>Attempts to find a channel to resume and generates a CLIENT_VERSION message for the server based on the
+     * result.</p>
+     */
+    @Override
+    public void connectionOpen() {
+        lock.lock();
+        try {
+            connectionOpen = true;
+
+            StoredPaymentChannelClientStates channels = (StoredPaymentChannelClientStates) wallet.getExtensions().get(StoredPaymentChannelClientStates.EXTENSION_ID);
+            if (channels != null)
+                storedChannel = channels.getUsableChannelForServerID(serverId);
+
