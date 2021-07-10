@@ -500,4 +500,42 @@ public class PaymentChannelClient implements IPaymentChannelClient {
      * @param reason is the reason for aborting
      * @param message is the detailed message
      */
-    private void setIncreasePaymentFutureIfNeeded(PaymentChan
+    private void setIncreasePaymentFutureIfNeeded(PaymentChannelCloseException.CloseReason reason, String message) {
+        if (increasePaymentFuture != null && !increasePaymentFuture.isDone()) {
+            increasePaymentFuture.setException(new PaymentChannelCloseException(message, reason));
+        }
+    }
+
+    @GuardedBy("lock")
+    private void receiveClose(Protos.TwoWayChannelMessage msg) throws VerificationException {
+        checkState(lock.isHeldByCurrentThread());
+        if (msg.hasSettlement()) {
+            Transaction settleTx = wallet.getParams().getDefaultSerializer().makeTransaction(msg.getSettlement().getTx().toByteArray());
+            log.info("CLOSE message received with settlement tx {}", settleTx.getHash());
+            // TODO: set source
+            if (state != null && state().isSettlementTransaction(settleTx)) {
+                // The wallet has a listener on it that the state object will use to do the right thing at this
+                // point (like watching it for confirmations). The tx has been checked by now for syntactical validity
+                // and that it correctly spends the multisig contract.
+                wallet.receivePending(settleTx, null);
+            }
+        } else {
+            log.info("CLOSE message received without settlement tx");
+        }
+        if (step == InitStep.WAITING_FOR_CHANNEL_CLOSE)
+            conn.destroyConnection(CloseReason.CLIENT_REQUESTED_CLOSE);
+        else
+            conn.destroyConnection(CloseReason.SERVER_REQUESTED_CLOSE);
+        step = InitStep.CHANNEL_CLOSED;
+    }
+
+    /**
+     * <p>Called when the connection terminates. Notifies the {@link StoredClientChannel} object that we can attempt to
+     * resume this channel in the future and stops generating messages for the server.</p>
+     *
+     * <p>For stateless protocols, this translates to a client not using the channel for the immediate future, but
+     * intending to reopen the channel later. There is likely little reason to use this in a stateless protocol.</p>
+     *
+     * <p>Note that this <b>MUST</b> still be called even after either
+     * {@link ClientConnection#destroyConnection(org.bitcoinj.protocols.channels.PaymentChannelCloseException.CloseReason)} or
+     * {@link PaymentChannelClient#settle
