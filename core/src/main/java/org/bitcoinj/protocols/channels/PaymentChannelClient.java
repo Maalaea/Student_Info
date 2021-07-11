@@ -594,3 +594,49 @@ public class PaymentChannelClient implements IPaymentChannelClient {
             if (channels != null)
                 storedChannel = channels.getUsableChannelForServerID(serverId);
 
+            step = InitStep.WAITING_FOR_VERSION_NEGOTIATION;
+
+            Protos.ClientVersion.Builder versionNegotiationBuilder = Protos.ClientVersion.newBuilder()
+                    .setMajor(versionSelector.getRequestedMajorVersion())
+                    .setMinor(versionSelector.getRequestedMinorVersion())
+                    .setTimeWindowSecs(timeWindow);
+
+            if (storedChannel != null) {
+                versionNegotiationBuilder.setPreviousChannelContractHash(ByteString.copyFrom(storedChannel.contract.getHash().getBytes()));
+                log.info("Begun version handshake, attempting to reopen channel with contract hash {}", storedChannel.contract.getHash());
+            } else
+                log.info("Begun version handshake creating new channel");
+
+            conn.sendToServer(Protos.TwoWayChannelMessage.newBuilder()
+                    .setType(Protos.TwoWayChannelMessage.MessageType.CLIENT_VERSION)
+                    .setClientVersion(versionNegotiationBuilder)
+                    .build());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * <p>Gets the {@link PaymentChannelClientState} object which stores the current state of the connection with the
+     * server.</p>
+     *
+     * <p>Note that if you call any methods which update state directly the server will not be notified and channel
+     * initialization logic in the connection may fail unexpectedly.</p>
+     */
+    public PaymentChannelClientState state() {
+        lock.lock();
+        try {
+            return state;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Increments the total value which we pay the server. Note that the amount of money sent may not be the same as the
+     * amount of money actually requested. It can be larger if the amount left over in the channel would be too small to
+     * be accepted by the Bitcoin network. ValueOutOfRangeException will be thrown, however, if there's not enough money
+     * left in the channel to make the payment at all. Only one payment can be in-flight at once. You have to ensure
+     * you wait for the previous increase payment future to complete before incrementing the payment again.
+     *
+     * @param size Ho
