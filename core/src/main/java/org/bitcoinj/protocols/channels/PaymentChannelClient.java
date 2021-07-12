@@ -639,4 +639,30 @@ public class PaymentChannelClient implements IPaymentChannelClient {
      * left in the channel to make the payment at all. Only one payment can be in-flight at once. You have to ensure
      * you wait for the previous increase payment future to complete before incrementing the payment again.
      *
-     * @param size Ho
+     * @param size How many satoshis to increment the payment by (note: not the new total).
+     * @return a future that completes when the server acknowledges receipt and acceptance of the payment.
+     * @throws ValueOutOfRangeException If the size is negative or would pay more than this channel's total value
+     *                                  ({@link PaymentChannelClientConnection#state()}.getTotalValue())
+     * @throws IllegalStateException If the channel has been closed or is not yet open
+     *                               (see {@link PaymentChannelClientConnection#getChannelOpenFuture()} for the second)
+     */
+    public ListenableFuture<PaymentIncrementAck> incrementPayment(Coin size) throws ValueOutOfRangeException, IllegalStateException {
+        return incrementPayment(size, null, null);
+    }
+
+    /**
+     * Increments the total value which we pay the server. Note that the amount of money sent may not be the same as the
+     * amount of money actually requested. It can be larger if the amount left over in the channel would be too small to
+     * be accepted by the Bitcoin network. ValueOutOfRangeException will be thrown, however, if there's not enough money
+     * left in the channel to make the payment at all. Only one payment can be in-flight at once. You have to ensure
+     * you wait for the previous increase payment future to complete before incrementing the payment again.
+     *
+     * @param size How many satoshis to increment the payment by (note: not the new total).
+     * @param info Information about this update, used to extend this protocol.
+     * @param userKey Key derived from a user password, needed for any signing when the wallet is encrypted.
+     *                The wallet KeyCrypter is assumed.
+     * @return a future that completes when the server acknowledges receipt and acceptance of the payment.
+     * @throws ValueOutOfRangeException If the size is negative or would pay more than this channel's total value
+     *                                  ({@link PaymentChannelClientConnection#state()}.getTotalValue())
+     * @throws IllegalStateException If the channel has been closed or is not yet open
+     *                               (see {@link PaymentChannelClientConnection#get
