@@ -665,4 +665,50 @@ public class PaymentChannelClient implements IPaymentChannelClient {
      * @throws ValueOutOfRangeException If the size is negative or would pay more than this channel's total value
      *                                  ({@link PaymentChannelClientConnection#state()}.getTotalValue())
      * @throws IllegalStateException If the channel has been closed or is not yet open
-     *                               (see {@link PaymentChannelClientConnection#get
+     *                               (see {@link PaymentChannelClientConnection#getChannelOpenFuture()} for the second)
+     * @throws ECKey.KeyIsEncryptedException If the keys are encrypted and no AES key has been provided,
+     */
+    @Override
+    public ListenableFuture<PaymentIncrementAck> incrementPayment(Coin size, @Nullable ByteString info, @Nullable KeyParameter userKey)
+            throws ValueOutOfRangeException, IllegalStateException, ECKey.KeyIsEncryptedException {
+        lock.lock();
+        try {
+            if (state() == null || !connectionOpen || step != InitStep.CHANNEL_OPEN)
+                throw new IllegalStateException("Channel is not fully initialized/has already been closed");
+            if (increasePaymentFuture != null)
+                throw new IllegalStateException("Already incrementing paying, wait for previous payment to complete.");
+            if (wallet.isEncrypted() && userKey == null)
+                throw new ECKey.KeyIsEncryptedException();
+
+            PaymentChannelV1ClientState.IncrementedPayment payment = state().incrementPaymentBy(size, userKey);
+            Protos.UpdatePayment.Builder updatePaymentBuilder = Protos.UpdatePayment.newBuilder()
+                    .setSignature(ByteString.copyFrom(payment.signature.encodeToBitcoin()))
+                    .setClientChangeValue(state.getValueRefunded().value);
+            if (info != null) updatePaymentBuilder.setInfo(info);
+
+            increasePaymentFuture = SettableFuture.create();
+            increasePaymentFuture.addListener(new Runnable() {
+                @Override
+                public void run() {
+                    lock.lock();
+                    increasePaymentFuture = null;
+                    lock.unlock();
+                }
+            }, MoreExecutors.sameThreadExecutor());
+
+            conn.sendToServer(Protos.TwoWayChannelMessage.newBuilder()
+                    .setUpdatePayment(updatePaymentBuilder)
+                    .setType(Protos.TwoWayChannelMessage.MessageType.UPDATE_PAYMENT)
+                    .build());
+            lastPaymentActualAmount = payment.amount;
+            return increasePaymentFuture;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void receivePaymentAck(Protos.PaymentAck paymentAck) {
+        SettableFuture<PaymentIncrementAck> future;
+        Coin value;
+
+        loc
