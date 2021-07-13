@@ -711,4 +711,42 @@ public class PaymentChannelClient implements IPaymentChannelClient {
         SettableFuture<PaymentIncrementAck> future;
         Coin value;
 
-        loc
+        lock.lock();
+        try {
+            if (increasePaymentFuture == null) return;
+            checkNotNull(increasePaymentFuture, "Server sent a PAYMENT_ACK with no outstanding payment");
+            log.info("Received a PAYMENT_ACK from the server");
+            future = increasePaymentFuture;
+            value = lastPaymentActualAmount;
+        } finally {
+            lock.unlock();
+        }
+
+        // Ensure the future runs without the client lock held.
+        future.set(new PaymentIncrementAck(value, paymentAck.getInfo()));
+    }
+
+    public static class DefaultClientChannelProperties implements ClientChannelProperties {
+
+        @Override
+        public SendRequest modifyContractSendRequest(SendRequest sendRequest) {
+            return sendRequest;
+        }
+
+        @Override
+        public Coin acceptableMinPayment() { return Transaction.REFERENCE_DEFAULT_MIN_TX_FEE; }
+
+        @Override
+        public long timeWindow() {
+            return DEFAULT_TIME_WINDOW;
+        }
+
+        @Override
+        public VersionSelector versionSelector() {
+            return VersionSelector.VERSION_2_ALLOW_1;
+        }
+
+    }
+
+    public static DefaultClientChannelProperties defaultChannelProperties = new DefaultClientChannelProperties();
+}
