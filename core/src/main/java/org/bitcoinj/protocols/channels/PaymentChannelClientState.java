@@ -54,4 +54,35 @@ import static com.google.common.base.Preconditions.*;
  * this class implements only the simplest case.</p>
  *
  * <p>A channel has an expiry parameter. If the server halts after the multi-signature contract which locks
- * up the given value is broadcast you 
+ * up the given value is broadcast you could get stuck in a state where you've lost all the money put into the
+ * contract. To avoid this, a refund transaction is agreed ahead of time but it may only be used/broadcast after
+ * the expiry time. This is specified in terms of block timestamps and once the timestamp of the chain chain approaches
+ * the given time (within a few hours), the channel must be closed or else the client will broadcast the refund
+ * transaction and take back all the money once the expiry time is reached.</p>
+ *
+ * <p>To begin, the client calls {@link PaymentChannelClientState#initiate(KeyParameter, ClientChannelProperties)}, which moves the channel into state
+ * INITIATED and creates the initial multi-sig contract and refund transaction. If the wallet has insufficient funds an
+ * exception will be thrown at this point. Once this is done, call
+ * {@link PaymentChannelV1ClientState#getIncompleteRefundTransaction()} and pass the resultant transaction through to the
+ * server. Once you have retrieved the signature, use {@link PaymentChannelV1ClientState#provideRefundSignature(byte[], KeyParameter)}.
+ * You must then call {@link PaymentChannelClientState#storeChannelInWallet(Sha256Hash)} to store the refund transaction
+ * in the wallet, protecting you against a malicious server attempting to destroy all your coins. At this point, you can
+ * provide the server with the multi-sig contract (via {@link PaymentChannelClientState#getContract()}) safely.
+ * </p>
+ */
+public abstract class PaymentChannelClientState {
+    private static final Logger log = LoggerFactory.getLogger(PaymentChannelClientState.class);
+    // How much value is currently allocated to us. Starts as being same as totalValue.
+    protected Coin valueToMe;
+
+    /**
+     * The different logical states the channel can be in. The channel starts out as NEW, and then steps through the
+     * states until it becomes finalized. The server should have already been contacted and asked for a public key
+     * by the time the NEW state is reached.
+     */
+    public enum State {
+        UNINITIALISED,
+        NEW,
+        INITIATED,
+        WAITING_FOR_SIGNED_REFUND,
+        SAVE_STATE_I
