@@ -133,4 +133,45 @@ public abstract class PaymentChannelClientState {
      * @param wallet a wallet that contains at least the specified amount of value.
      * @param myKey a freshly generated private key for this channel.
      * @param serverKey a public key retrieved from the server used for the initial multisig contract
-     * @param value how many satoshis to put into this contract. If the channel 
+     * @param value how many satoshis to put into this contract. If the channel reaches this limit, it must be closed.
+     * @param expiryTimeInSeconds At what point (UNIX timestamp +/- a few hours) the channel will expire
+     *
+     * @throws VerificationException If either myKey's pubkey or serverKey's pubkey are non-canonical (ie invalid)
+     */
+    public PaymentChannelClientState(Wallet wallet, ECKey myKey, ECKey serverKey,
+                                     Coin value, long expiryTimeInSeconds) throws VerificationException {
+        this.stateMachine = new StateMachine<>(State.UNINITIALISED, getStateTransitions());
+        this.wallet = checkNotNull(wallet);
+        this.serverKey = checkNotNull(serverKey);
+        this.myKey = checkNotNull(myKey);
+        this.valueToMe = checkNotNull(value);
+    }
+
+    protected synchronized void initWalletListeners() {
+        // Register a listener that watches out for the server closing the channel.
+        if (storedChannel != null && storedChannel.close != null) {
+            watchCloseConfirmations();
+        }
+        wallet.addCoinsReceivedEventListener(Threading.SAME_THREAD, new WalletCoinsReceivedEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                synchronized (PaymentChannelClientState.this) {
+                    if (getContractInternal() == null) return;
+                    if (isSettlementTransaction(tx)) {
+                        log.info("Close: transaction {} closed contract {}", tx.getHash(), getContractInternal().getHash());
+                        // Record the fact that it was closed along with the transaction that closed it.
+                        stateMachine.transition(State.CLOSED);
+                        if (storedChannel == null) return;
+                        storedChannel.close = tx;
+                        updateChannelInWallet();
+                        watchCloseConfirmations();
+                    }
+                }
+            }
+        });
+    }
+
+    protected void watchCloseConfirmations() {
+        // When we see the close transaction get enough confirmations, we can just delete the record
+        // of this channel along with the refund tx from the wallet, because we're not going to need
+        // any of that any 
