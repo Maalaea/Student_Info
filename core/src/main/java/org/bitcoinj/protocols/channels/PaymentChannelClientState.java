@@ -85,4 +85,52 @@ public abstract class PaymentChannelClientState {
         NEW,
         INITIATED,
         WAITING_FOR_SIGNED_REFUND,
-        SAVE_STATE_I
+        SAVE_STATE_IN_WALLET,
+        PROVIDE_MULTISIG_CONTRACT_TO_SERVER,
+        READY,
+        EXPIRED,
+        CLOSED
+    }
+    protected final StateMachine<State> stateMachine;
+
+    final Wallet wallet;
+
+    // Both sides need a key (private in our case, public for the server) in order to manage the multisig contract
+    // and transactions that spend it.
+    final ECKey myKey, serverKey;
+
+    // The id of this channel in the StoredPaymentChannelClientStates, or null if it is not stored
+    protected StoredClientChannel storedChannel;
+
+    PaymentChannelClientState(StoredClientChannel storedClientChannel, Wallet wallet) throws VerificationException {
+        this.stateMachine = new StateMachine<>(State.UNINITIALISED, getStateTransitions());
+        this.wallet = checkNotNull(wallet);
+        this.myKey = checkNotNull(storedClientChannel.myKey);
+        this.serverKey = checkNotNull(storedClientChannel.serverKey);
+        this.storedChannel = storedClientChannel;
+        this.valueToMe = checkNotNull(storedClientChannel.valueToMe);
+    }
+
+    /**
+     * Returns true if the tx is a valid settlement transaction.
+     */
+    public synchronized boolean isSettlementTransaction(Transaction tx) {
+        try {
+            tx.verify();
+            tx.getInput(0).verify(getContractInternal().getOutput(0));
+            return true;
+        } catch (VerificationException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Creates a state object for a payment channel client. It is expected that you be ready to
+     * {@link PaymentChannelClientState#initiate(KeyParameter, ClientChannelProperties)} after construction (to avoid creating objects for channels which are
+     * not going to finish opening) and thus some parameters provided here are only used in
+     * {@link PaymentChannelClientState#initiate(KeyParameter, ClientChannelProperties)} to create the Multisig contract and refund transaction.
+     *
+     * @param wallet a wallet that contains at least the specified amount of value.
+     * @param myKey a freshly generated private key for this channel.
+     * @param serverKey a public key retrieved from the server used for the initial multisig contract
+     * @param value how many satoshis to put into this contract. If the channel 
