@@ -174,4 +174,52 @@ public abstract class PaymentChannelClientState {
     protected void watchCloseConfirmations() {
         // When we see the close transaction get enough confirmations, we can just delete the record
         // of this channel along with the refund tx from the wallet, because we're not going to need
-        // any of that any 
+        // any of that any more.
+        final TransactionConfidence confidence = storedChannel.close.getConfidence();
+        int numConfirms = Context.get().getEventHorizon();
+        ListenableFuture<TransactionConfidence> future = confidence.getDepthFuture(numConfirms, Threading.SAME_THREAD);
+        Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+            @Override
+            public void onSuccess(TransactionConfidence result) {
+                deleteChannelFromWallet();
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Throwables.propagate(t);
+            }
+        });
+    }
+
+    private synchronized void deleteChannelFromWallet() {
+        log.info("Close tx has confirmed, deleting channel from wallet: {}", storedChannel);
+        StoredPaymentChannelClientStates channels = (StoredPaymentChannelClientStates)
+                wallet.getExtensions().get(StoredPaymentChannelClientStates.EXTENSION_ID);
+        channels.removeChannel(storedChannel);
+        storedChannel = null;
+    }
+
+    public synchronized State getState() {
+        return stateMachine.getState();
+    }
+
+    protected abstract Multimap<State, State> getStateTransitions();
+
+    public abstract int getMajorVersion();
+
+    /**
+     * Creates the initial multisig contract and incomplete refund transaction which can be requested at the appropriate
+     * time using {@link PaymentChannelV1ClientState#getIncompleteRefundTransaction} and
+     * {@link PaymentChannelV1ClientState#getContract()}. The way the contract is crafted can be adjusted by
+     * By default unconfirmed coins are allowed to be used, as for micropayments the risk should be relatively low.
+     *
+     * @throws ValueOutOfRangeException if the value being used is too small to be accepted by the network
+     * @throws InsufficientMoneyException if the wallet doesn't contain enough balance to initiate
+     */
+    public void initiate() throws ValueOutOfRangeException, InsufficientMoneyException {
+        initiate(null, PaymentChannelClient.defaultChannelProperties);
+    }
+
+    /**
+     * Creates the initial multisig contract and incomplete refund transaction which can be requested at the appropriate
+     * time using {@link PaymentChannelV1ClientState#getIncompleteRefun
