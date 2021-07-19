@@ -222,4 +222,45 @@ public abstract class PaymentChannelClientState {
 
     /**
      * Creates the initial multisig contract and incomplete refund transaction which can be requested at the appropriate
-     * time using {@link PaymentChannelV1ClientState#getIncompleteRefun
+     * time using {@link PaymentChannelV1ClientState#getIncompleteRefundTransaction} and
+     * {@link PaymentChannelClientState#getContract()}.
+     * By default unconfirmed coins are allowed to be used, as for micropayments the risk should be relatively low.
+     * @param userKey Key derived from a user password, needed for any signing when the wallet is encrypted.
+     *                The wallet KeyCrypter is assumed.
+     * @param clientChannelProperties Modify the channel's configuration.
+     *
+     * @throws ValueOutOfRangeException   if the value being used is too small to be accepted by the network
+     * @throws InsufficientMoneyException if the wallet doesn't contain enough balance to initiate
+     */
+    public abstract void initiate(@Nullable KeyParameter userKey, ClientChannelProperties clientChannelProperties) throws ValueOutOfRangeException, InsufficientMoneyException;
+
+    /**
+     * Gets the contract which was used to initialize this channel
+     */
+    public abstract Transaction getContract();
+
+    private synchronized Transaction makeUnsignedChannelContract(Coin valueToMe) throws ValueOutOfRangeException {
+        Transaction tx = new Transaction(wallet.getParams());
+        tx.addInput(getContractInternal().getOutput(0));
+        // Our output always comes first.
+        // TODO: We should drop myKey in favor of output key + multisig key separation
+        // (as its always obvious who the client is based on T2 output order)
+        tx.addOutput(valueToMe, myKey.toAddress(wallet.getParams()));
+        return tx;
+    }
+
+    /**
+     * Checks if the channel is expired, setting state to {@link State#EXPIRED}, removing this channel from wallet
+     * storage and throwing an {@link IllegalStateException} if it is.
+     */
+    public synchronized void checkNotExpired() {
+        if (Utils.currentTimeSeconds() > getExpiryTime()) {
+            stateMachine.transition(State.EXPIRED);
+            disconnectFromChannel();
+            throw new IllegalStateException("Channel expired");
+        }
+    }
+
+    /** Container for a signature and an amount that was sent. */
+    public static class IncrementedPayment {
+        public TransactionSignatur
