@@ -263,4 +263,41 @@ public abstract class PaymentChannelClientState {
 
     /** Container for a signature and an amount that was sent. */
     public static class IncrementedPayment {
-        public TransactionSignatur
+        public TransactionSignature signature;
+        public Coin amount;
+    }
+
+    /**
+     * <p>Updates the outputs on the payment contract transaction and re-signs it. The state must be READY in order to
+     * call this method. The signature that is returned should be sent to the server so it has the ability to broadcast
+     * the best seen payment when the channel closes or times out.</p>
+     *
+     * <p>The returned signature is over the payment transaction, which we never have a valid copy of and thus there
+     * is no accessor for it on this object.</p>
+     *
+     * <p>To spend the whole channel increment by {@link PaymentChannelV1ClientState#getTotalValue()} -
+     * {@link PaymentChannelV1ClientState#getValueRefunded()}</p>
+     *
+     * @param size How many satoshis to increment the payment by (note: not the new total).
+     * @throws ValueOutOfRangeException If size is negative or the channel does not have sufficient money in it to
+     *                                  complete this payment.
+     */
+    public synchronized IncrementedPayment incrementPaymentBy(Coin size, @Nullable KeyParameter userKey)
+            throws ValueOutOfRangeException {
+        stateMachine.checkState(State.READY);
+        checkNotExpired();
+        checkNotNull(size);  // Validity of size will be checked by makeUnsignedChannelContract.
+        if (size.signum() < 0)
+            throw new ValueOutOfRangeException("Tried to decrement payment");
+        Coin newValueToMe = getValueToMe().subtract(size);
+        if (newValueToMe.compareTo(Transaction.MIN_NONDUST_OUTPUT) < 0 && newValueToMe.signum() > 0) {
+            log.info("New value being sent back as change was smaller than minimum nondust output, sending all");
+            size = getValueToMe();
+            newValueToMe = Coin.ZERO;
+        }
+        if (newValueToMe.signum() < 0)
+            throw new ValueOutOfRangeException("Channel has too little money to pay " + size + " satoshis");
+        Transaction tx = makeUnsignedChannelContract(newValueToMe);
+        log.info("Signing new payment tx {}", tx);
+        Transaction.SigHash mode;
+        // If we spent all the money we put into this channel,
