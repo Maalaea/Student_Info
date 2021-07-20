@@ -300,4 +300,60 @@ public abstract class PaymentChannelClientState {
         Transaction tx = makeUnsignedChannelContract(newValueToMe);
         log.info("Signing new payment tx {}", tx);
         Transaction.SigHash mode;
-        // If we spent all the money we put into this channel,
+        // If we spent all the money we put into this channel, we (by definition) don't care what the outputs are, so
+        // we sign with SIGHASH_NONE to let the server do what it wants.
+        if (newValueToMe.equals(Coin.ZERO))
+            mode = Transaction.SigHash.NONE;
+        else
+            mode = Transaction.SigHash.SINGLE;
+        TransactionSignature sig = tx.calculateSignature(0, myKey.maybeDecrypt(userKey), getSignedScript(), mode, true);
+        valueToMe = newValueToMe;
+        updateChannelInWallet();
+        IncrementedPayment payment = new IncrementedPayment();
+        payment.signature = sig;
+        payment.amount = size;
+        return payment;
+    }
+
+    protected synchronized void updateChannelInWallet() {
+        if (storedChannel == null)
+            return;
+        storedChannel.valueToMe = getValueToMe();
+        StoredPaymentChannelClientStates channels = (StoredPaymentChannelClientStates)
+                wallet.getExtensions().get(StoredPaymentChannelClientStates.EXTENSION_ID);
+        channels.updatedChannel(storedChannel);
+    }
+
+    /**
+     * Sets this channel's state in {@link StoredPaymentChannelClientStates} to unopened so this channel can be reopened
+     * later.
+     *
+     * @see PaymentChannelV1ClientState#storeChannelInWallet(Sha256Hash)
+     */
+    public synchronized void disconnectFromChannel() {
+        if (storedChannel == null)
+            return;
+        synchronized (storedChannel) {
+            storedChannel.active = false;
+        }
+    }
+
+    /**
+     * Skips saving state in the wallet for testing
+     */
+    @VisibleForTesting synchronized void fakeSave() {
+        try {
+            wallet.commitTx(getContractInternal());
+        } catch (VerificationException e) {
+            throw new RuntimeException(e); // We created it
+        }
+        stateMachine.transition(State.PROVIDE_MULTISIG_CONTRACT_TO_SERVER);
+    }
+
+    @VisibleForTesting abstract void doStoreChannelInWallet(Sha256Hash id);
+
+    /**
+     * <p>Stores this channel's state in the wallet as a part of a {@link StoredPaymentChannelClientStates} wallet
+     * extension and keeps it up-to-date each time payment is incremented. This allows the
+     * {@link StoredPaymentChannelClientStates} object to keep track of timeouts and broadcast the refund transaction
+   
