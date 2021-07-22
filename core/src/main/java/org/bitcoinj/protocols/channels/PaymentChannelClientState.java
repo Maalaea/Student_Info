@@ -419,4 +419,12 @@ public abstract class PaymentChannelClientState {
      */
     protected abstract Transaction getContractInternal();
 
-    protected
+    protected abstract Script getContractScript();
+
+    /**
+     * Gets the script that is signed. In the case of a P2SH contract this is the
+     * script inside the P2SH script.
+     * @return
+     */
+    protected abstract Script getSignedScript();
+}
