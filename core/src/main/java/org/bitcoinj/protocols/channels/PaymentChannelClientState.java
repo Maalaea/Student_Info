@@ -356,4 +356,67 @@ public abstract class PaymentChannelClientState {
      * <p>Stores this channel's state in the wallet as a part of a {@link StoredPaymentChannelClientStates} wallet
      * extension and keeps it up-to-date each time payment is incremented. This allows the
      * {@link StoredPaymentChannelClientStates} object to keep track of timeouts and broadcast the refund transaction
-   
+     * when the channel expires.</p>
+     *
+     * <p>A channel may only be stored after it has fully opened (ie state == State.READY). The wallet provided in the
+     * constructor must already have a {@link StoredPaymentChannelClientStates} object in its extensions set.</p>
+     *
+     * @param id A hash providing this channel with an id which uniquely identifies this server. It does not have to be
+     *           unique.
+     */
+    public synchronized void storeChannelInWallet(Sha256Hash id) {
+        stateMachine.checkState(State.SAVE_STATE_IN_WALLET);
+        checkState(id != null);
+        if (storedChannel != null) {
+            checkState(storedChannel.id.equals(id));
+            return;
+        }
+        doStoreChannelInWallet(id);
+
+        try {
+            wallet.commitTx(getContractInternal());
+        } catch (VerificationException e) {
+            throw new RuntimeException(e); // We created it
+        }
+        stateMachine.transition(State.PROVIDE_MULTISIG_CONTRACT_TO_SERVER);
+    }
+
+    /**
+     * Returns the fees that will be paid if the refund transaction has to be claimed because the server failed to settle
+     * the channel properly. May only be called after {@link PaymentChannelClientState#initiate(KeyParameter, ClientChannelProperties)}
+     */
+    public abstract Coin getRefundTxFees();
+
+    @VisibleForTesting abstract Transaction getRefundTransaction();
+
+    /**
+     * Gets the total value of this channel (ie the maximum payment possible)
+     */
+    public abstract Coin getTotalValue();
+
+    /**
+     * Gets the current amount refunded to us from the multisig contract (ie totalValue-valueSentToServer)
+     */
+    public synchronized Coin getValueRefunded() {
+        stateMachine.checkState(State.READY);
+        return valueToMe;
+    }
+
+    /**
+     * Returns the amount of money sent on this channel so far.
+     */
+    public synchronized Coin getValueSpent() {
+        return getTotalValue().subtract(getValueRefunded());
+    }
+
+    protected abstract Coin getValueToMe();
+
+    protected abstract long getExpiryTime();
+
+    /**
+     * Gets the contract without changing the state machine
+     * @return
+     */
+    protected abstract Transaction getContractInternal();
+
+    protected
