@@ -37,4 +37,48 @@ public class PaymentChannelCloseException extends Exception {
          * <p>The {@link org.bitcoinj.protocols.channels.PaymentChannelClient#settle()} method was called or the
          * client sent a CLOSE message.</p>
          * <p>As long as the server received the CLOSE message, this means that the channel is settling and the payment
-         * transaction (if any) will be broadcast. If the client attempts to open a new connection, a new
+         * transaction (if any) will be broadcast. If the client attempts to open a new connection, a new channel will
+         * have to be opened.</p>
+         */
+        CLIENT_REQUESTED_CLOSE,
+
+        /**
+         * <p>The {@link org.bitcoinj.protocols.channels.PaymentChannelServer#close()} method was called or server
+         * sent a CLOSE message.</p>
+         *
+         * <p>This may occur if the server opts to close the connection for some reason, or automatically if the channel
+         * times out (called by {@link StoredPaymentChannelServerStates}).</p>
+         *
+         * <p>For a client, this usually indicates that we should try again if we need to continue paying (either
+         * opening a new channel or continuing with the same one depending on the server's preference)</p>
+         */
+        SERVER_REQUESTED_CLOSE,
+
+        /** Remote side sent an ERROR message */
+        REMOTE_SENT_ERROR,
+        /** Remote side sent a message we did not understand */
+        REMOTE_SENT_INVALID_MESSAGE,
+
+        /** The connection was closed without an ERROR/CLOSE message */
+        CONNECTION_CLOSED,
+
+        /** The server failed processing an UpdatePayment message */
+        UPDATE_PAYMENT_FAILED,
+    }
+
+    private final CloseReason error;
+
+    public PaymentChannelCloseException(String message, CloseReason error) {
+        super(message);
+        this.error = error;
+    }
+
+    public CloseReason getCloseReason() {
+        return error;
+    }
+
+    @Override
+    public String toString() {
+        return "PaymentChannelCloseException for reason " + getCloseReason();
+    }
+}
