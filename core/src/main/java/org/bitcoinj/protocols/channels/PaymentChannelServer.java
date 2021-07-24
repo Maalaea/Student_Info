@@ -664,3 +664,20 @@ public class PaymentChannelServer {
     public static class DefaultServerChannelProperties implements ServerChannelProperties {
 
         @Override
+        public Coin getMinPayment() {
+            return Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+        }
+
+        @Override
+        public long getMaxTimeWindow() {
+            return DEFAULT_MAX_TIME_WINDOW;
+        }
+
+        @Override
+        public long getMinTimeWindow() {
+            return DEFAULT_MIN_TIME_WINDOW;
+        }
+
+    }
+
+}
