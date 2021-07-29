@@ -122,4 +122,44 @@ public abstract class PaymentChannelServerState {
             this.broadcaster = checkNotNull(broadcaster);
             this.contract = checkNotNull(storedServerChannel.contract);
             this.serverKey = checkNotNull(storedServerChannel.myKey);
-            this.
+            this.storedServerChannel = storedServerChannel;
+            this.bestValueToMe = checkNotNull(storedServerChannel.bestValueToMe);
+            this.minExpireTime = storedServerChannel.refundTransactionUnlockTimeSecs;
+            this.bestValueSignature = storedServerChannel.bestValueSignature;
+            checkArgument(bestValueToMe.equals(Coin.ZERO) || bestValueSignature != null);
+            storedServerChannel.state = this;
+        }
+    }
+
+    /**
+     * Creates a new state object to track the server side of a payment channel.
+     *
+     * @param broadcaster The peer group which we will broadcast transactions to, this should have multiple peers
+     * @param wallet The wallet which will be used to complete transactions
+     * @param serverKey The private key which we use for our part of the multi-sig contract
+     *                  (this MUST be fresh and CANNOT be used elsewhere)
+     * @param minExpireTime The earliest time at which the client can claim the refund transaction (UNIX timestamp of block)
+     */
+    public PaymentChannelServerState(TransactionBroadcaster broadcaster, Wallet wallet, ECKey serverKey, long minExpireTime) {
+        this.stateMachine = new StateMachine<>(State.UNINITIALISED, getStateTransitions());
+        this.serverKey = checkNotNull(serverKey);
+        this.wallet = checkNotNull(wallet);
+        this.broadcaster = checkNotNull(broadcaster);
+        this.minExpireTime = minExpireTime;
+    }
+
+    public abstract int getMajorVersion();
+
+    public synchronized State getState() {
+        return stateMachine.getState();
+    }
+
+    protected abstract Multimap<State, State> getStateTransitions();
+
+    /**
+     * Called when the client provides the multi-sig contract.  Checks that the previously-provided refund transaction
+     * spends this transaction (because we will use it as a base to create payment transactions) as well as output value
+     * and form (ie it is a 2-of-2 multisig to the correct keys).
+     *
+     * @param contract The provided multisig contract. Do not mutate this object after this call.
+     * @return A future which completes when the provided multisig contract successfully broadcasts, or throws if the broadcast fails for 
