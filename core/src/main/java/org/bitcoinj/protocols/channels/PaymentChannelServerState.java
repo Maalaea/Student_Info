@@ -68,4 +68,58 @@ import static com.google.common.base.Preconditions.checkState;
  * the multi-sig contract. We use this pubkey to recreate the multi-sig output and then sign that to the refund
  * transaction. We provide that signature to the client and they then have the ability to spend the refund transaction
  * at the specified expire time. The client then provides us with the full, signed multi-sig contract which we verify
- * and broadcast, locking in their funds until we spend a payment transaction or the expir
+ * and broadcast, locking in their funds until we spend a payment transaction or the expire time is reached. The client
+ * can then begin paying by providing us with signatures for the multi-sig contract which pay some amount back to the
+ * client, and the rest is ours to do with as we wish.</p>
+ */
+public abstract class PaymentChannelServerState {
+    private static final Logger log = LoggerFactory.getLogger(PaymentChannelServerState.class);
+
+    /**
+     * The different logical states the channel can be in. Because the first action we need to track is the client
+     * providing the refund transaction, we begin in WAITING_FOR_REFUND_TRANSACTION. We then step through the states
+     * until READY, at which time the client can increase payment incrementally.
+     */
+    public enum State {
+        UNINITIALISED,
+        WAITING_FOR_REFUND_TRANSACTION,
+        WAITING_FOR_MULTISIG_CONTRACT,
+        WAITING_FOR_MULTISIG_ACCEPTANCE,
+        READY,
+        CLOSING,
+        CLOSED,
+        ERROR,
+    }
+
+    protected StateMachine<State> stateMachine;
+
+    // Package-local for checkArguments in StoredServerChannel
+    final Wallet wallet;
+
+    // The object that will broadcast transactions for us - usually a peer group.
+    protected final TransactionBroadcaster broadcaster;
+
+    // The last signature the client provided for a payment transaction.
+    protected byte[] bestValueSignature;
+
+    protected Coin bestValueToMe = Coin.ZERO;
+
+    // The server key for the multi-sig contract
+    // We currently also use the serverKey for payouts, but this is not required
+    protected ECKey serverKey;
+
+    protected long minExpireTime;
+
+    protected StoredServerChannel storedServerChannel = null;
+
+    // The contract and the output script from it
+    protected Transaction contract = null;
+
+    PaymentChannelServerState(StoredServerChannel storedServerChannel, Wallet wallet, TransactionBroadcaster broadcaster) throws VerificationException {
+        synchronized (storedServerChannel) {
+            this.stateMachine = new StateMachine<>(State.UNINITIALISED, getStateTransitions());
+            this.wallet = checkNotNull(wallet);
+            this.broadcaster = checkNotNull(broadcaster);
+            this.contract = checkNotNull(storedServerChannel.contract);
+            this.serverKey = checkNotNull(storedServerChannel.myKey);
+            this.
