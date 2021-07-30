@@ -162,4 +162,36 @@ public abstract class PaymentChannelServerState {
      * and form (ie it is a 2-of-2 multisig to the correct keys).
      *
      * @param contract The provided multisig contract. Do not mutate this object after this call.
-     * @return A future which completes when the provided multisig contract successfully broadcasts, or throws if the broadcast fails for 
+     * @return A future which completes when the provided multisig contract successfully broadcasts, or throws if the broadcast fails for some reason
+     *         Note that if the network simply rejects the transaction, this future will never complete, a timeout should be used.
+     * @throws VerificationException If the provided multisig contract is not well-formed or does not meet previously-specified parameters
+     */
+    public synchronized ListenableFuture<PaymentChannelServerState> provideContract(final Transaction contract) throws VerificationException {
+        checkNotNull(contract);
+        stateMachine.checkState(State.WAITING_FOR_MULTISIG_CONTRACT);
+        try {
+            contract.verify();
+            this.contract = contract;
+            verifyContract(contract);
+
+            // Check that contract's first output is a 2-of-2 multisig to the correct pubkeys in the correct order
+            final Script expectedScript = createOutputScript();
+            if (!Arrays.equals(getContractScript().getProgram(), expectedScript.getProgram()))
+                throw new VerificationException(getMajorVersion() == 1 ?
+                        "Contract's first output was not a standard 2-of-2 multisig to client and server in that order." :
+                        "Contract was not a P2SH script of a CLTV redeem script to client and server");
+
+            if (getTotalValue().signum() <= 0)
+                throw new VerificationException("Not accepting an attempt to open a contract with zero value.");
+        } catch (VerificationException e) {
+            // We couldn't parse the multisig transaction or its output.
+            log.error("Provided multisig contract did not verify: {}", contract.toString());
+            throw e;
+        }
+        log.info("Broadcasting multisig contract: {}", contract);
+        wallet.addWatchedScripts(ImmutableList.of(contract.getOutput(0).getScriptPubKey()));
+        stateMachine.transition(State.WAITING_FOR_MULTISIG_ACCEPTANCE);
+        final SettableFuture<PaymentChannelServerState> future = SettableFuture.create();
+        Futures.addCallback(broadcaster.broadcastTransaction(contract).future(), new FutureCallback<Transaction>() {
+            @Override public void onSuccess(Transaction transaction) {
+                log.info("Successfully broadcast multisig contract {}. Channel now open.", transaction.getHashAsStrin
