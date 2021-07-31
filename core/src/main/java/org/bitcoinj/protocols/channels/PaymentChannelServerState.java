@@ -194,4 +194,44 @@ public abstract class PaymentChannelServerState {
         final SettableFuture<PaymentChannelServerState> future = SettableFuture.create();
         Futures.addCallback(broadcaster.broadcastTransaction(contract).future(), new FutureCallback<Transaction>() {
             @Override public void onSuccess(Transaction transaction) {
-                log.info("Successfully broadcast multisig contract {}. Channel now open.", transaction.getHashAsStrin
+                log.info("Successfully broadcast multisig contract {}. Channel now open.", transaction.getHashAsString());
+                try {
+                    // Manually add the contract to the wallet, overriding the isRelevant checks so we can track
+                    // it and check for double-spends later
+                    wallet.receivePending(contract, null, true);
+                } catch (VerificationException e) {
+                    throw new RuntimeException(e); // Cannot happen, we already called contract.verify()
+                }
+                stateMachine.transition(State.READY);
+                future.set(PaymentChannelServerState.this);
+            }
+
+            @Override public void onFailure(Throwable throwable) {
+                // Couldn't broadcast the transaction for some reason.
+                log.error("Failed to broadcast contract", throwable);
+                stateMachine.transition(State.ERROR);
+                future.setException(throwable);
+            }
+        });
+        return future;
+    }
+
+    // Create a payment transaction with valueToMe going back to us
+    protected synchronized SendRequest makeUnsignedChannelContract(Coin valueToMe) {
+        Transaction tx = new Transaction(wallet.getParams());
+        if (!getTotalValue().subtract(valueToMe).equals(Coin.ZERO)) {
+            tx.addOutput(getTotalValue().subtract(valueToMe), getClientKey().toAddress(wallet.getParams()));
+        }
+        tx.addInput(contract.getOutput(0));
+        return SendRequest.forTx(tx);
+    }
+
+    /**
+     * Called when the client provides us with a new signature and wishes to increment total payment by size.		+
+     * Verifies the provided signature and only updates values if everything checks out.
+     * If the new refundSize is not the lowest we have seen, it is simply ignored.
+     *
+     * @param refundSize How many satoshis of the original contract are refunded to the client (the rest are ours)
+     * @param signatureBytes The new signature spending the multi-sig contract to a new payment transaction
+     * @throws VerificationException If the signature does not verify or size is out of range (incl being rejected by the network as dust).
+     * @return true if there is more value left on the channel, false
