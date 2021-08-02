@@ -234,4 +234,33 @@ public abstract class PaymentChannelServerState {
      * @param refundSize How many satoshis of the original contract are refunded to the client (the rest are ours)
      * @param signatureBytes The new signature spending the multi-sig contract to a new payment transaction
      * @throws VerificationException If the signature does not verify or size is out of range (incl being rejected by the network as dust).
-     * @return true if there is more value left on the channel, false
+     * @return true if there is more value left on the channel, false if it is now fully used up.
+     */
+    public synchronized boolean incrementPayment(Coin refundSize, byte[] signatureBytes) throws VerificationException, ValueOutOfRangeException, InsufficientMoneyException {
+        stateMachine.checkState(State.READY);
+        checkNotNull(refundSize);
+        checkNotNull(signatureBytes);
+        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(signatureBytes, true);
+        // We allow snapping to zero for the payment amount because it's treated specially later, but not less than
+        // the dust level because that would prevent the transaction from being relayed/mined.
+        final boolean fullyUsedUp = refundSize.equals(Coin.ZERO);
+        Coin newValueToMe = getTotalValue().subtract(refundSize);
+        if (newValueToMe.signum() < 0)
+            throw new ValueOutOfRangeException("Attempt to refund more than the contract allows.");
+        if (newValueToMe.compareTo(bestValueToMe) < 0)
+            throw new ValueOutOfRangeException("Attempt to roll back payment on the channel.");
+
+        SendRequest req = makeUnsignedChannelContract(newValueToMe);
+
+        if (!fullyUsedUp && refundSize.isLessThan(req.tx.getOutput(0).getMinNonDustValue()))
+            throw new ValueOutOfRangeException("Attempt to refund negative value or value too small to be accepted by the network");
+
+        // Get the wallet's copy of the contract (ie with confidence information), if this is null, the wallet
+        // was not connected to the peergroup when the contract was broadcast (which may cause issues down the road, and
+        // disables our double-spend check next)
+        Transaction walletContract = wallet.getTransaction(contract.getHash());
+        checkNotNull(walletContract, "Wallet did not contain multisig contract {} after state was marked READY", contract.getHash());
+
+        // Note that we check for DEAD state here, but this test is essentially useless in production because we will
+        // miss most double-spends due to bloom filtering right now anyway. This will eventually fixed by network-wide
+        // double-spend notifications, so we just wait instead of at
