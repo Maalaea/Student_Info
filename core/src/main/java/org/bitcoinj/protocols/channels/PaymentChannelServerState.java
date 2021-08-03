@@ -263,4 +263,47 @@ public abstract class PaymentChannelServerState {
 
         // Note that we check for DEAD state here, but this test is essentially useless in production because we will
         // miss most double-spends due to bloom filtering right now anyway. This will eventually fixed by network-wide
-        // double-spend notifications, so we just wait instead of at
+        // double-spend notifications, so we just wait instead of attempting to add all dependant outpoints to our bloom
+        // filters (and probably missing lots of edge-cases).
+        if (walletContract.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.DEAD) {
+            close();
+            throw new VerificationException("Multisig contract was double-spent");
+        }
+
+        Transaction.SigHash mode;
+        // If the client doesn't want anything back, they shouldn't sign any outputs at all.
+        if (fullyUsedUp)
+            mode = Transaction.SigHash.NONE;
+        else
+            mode = Transaction.SigHash.SINGLE;
+
+        if (signature.sigHashMode() != mode || !signature.anyoneCanPay())
+            throw new VerificationException("New payment signature was not signed with the right SIGHASH flags.");
+
+        // Now check the signature is correct.
+        // Note that the client must sign with SIGHASH_{SINGLE/NONE} | SIGHASH_ANYONECANPAY to allow us to add additional
+        // inputs (in case we need to add significant fee, or something...) and any outputs we want to pay to.
+        Sha256Hash sighash = req.tx.hashForSignature(0, getSignedScript(), mode, true);
+
+        if (!getClientKey().verify(sighash, signature))
+            throw new VerificationException("Signature does not verify on tx\n" + req.tx);
+        bestValueToMe = newValueToMe;
+        bestValueSignature = signatureBytes;
+        updateChannelInWallet();
+        return !fullyUsedUp;
+    }
+
+    /**
+     * <p>Closes this channel and broadcasts the highest value payment transaction on the network.</p>
+     *
+     * @return a future which completes when the provided multisig contract successfully broadcasts, or throws if the
+     *         broadcast fails for some reason. Note that if the network simply rejects the transaction, this future
+     *         will never complete, a timeout should be used.
+     * @throws InsufficientMoneyException If the payment tx would have cost more in fees to spend than it is worth.
+     */
+    public ListenableFuture<Transaction> close() throws InsufficientMoneyException {
+        return close(null);
+    }
+
+    /**
+     * <p>Closes this channel and broadcasts the
