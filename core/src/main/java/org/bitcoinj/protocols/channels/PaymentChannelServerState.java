@@ -306,4 +306,51 @@ public abstract class PaymentChannelServerState {
     }
 
     /**
-     * <p>Closes this channel and broadcasts the
+     * <p>Closes this channel and broadcasts the highest value payment transaction on the network.</p>
+     *
+     * @param userKey The AES key to use for decryption of the private key. If null then no decryption is required.
+     * @return a future which completes when the provided multisig contract successfully broadcasts, or throws if the
+     *         broadcast fails for some reason. Note that if the network simply rejects the transaction, this future
+     *         will never complete, a timeout should be used.
+     * @throws InsufficientMoneyException If the payment tx would have cost more in fees to spend than it is worth.
+     */
+    public abstract ListenableFuture<Transaction> close(@Nullable KeyParameter userKey) throws InsufficientMoneyException;
+
+    /**
+     * Gets the highest payment to ourselves (which we will receive on settle(), not including fees)
+     */
+    public synchronized Coin getBestValueToMe() {
+        return bestValueToMe;
+    }
+
+    /**
+     * Gets the fee paid in the final payment transaction (only available if settle() did not throw an exception)
+     */
+    public abstract Coin getFeePaid();
+
+    /**
+     * Gets the multisig contract which was used to initialize this channel
+     */
+    public synchronized Transaction getContract() {
+        checkState(contract != null);
+        return contract;
+    }
+
+    public long getExpiryTime() {
+        return minExpireTime;
+    }
+
+    protected synchronized void updateChannelInWallet() {
+        if (storedServerChannel != null) {
+            storedServerChannel.updateValueToMe(bestValueToMe, bestValueSignature);
+            StoredPaymentChannelServerStates channels = (StoredPaymentChannelServerStates)
+                    wallet.getExtensions().get(StoredPaymentChannelServerStates.EXTENSION_ID);
+            channels.updatedChannel(storedServerChannel);
+        }
+    }
+
+    /**
+     * Stores this channel's state in the wallet as a part of a {@link StoredPaymentChannelServerStates} wallet
+     * extension and keeps it up-to-date each time payment is incremented. This will be automatically removed when
+     * a call to {@link PaymentChannelV1ServerState#close()} completes successfully. A channel may only be stored after it
+  
