@@ -353,4 +353,54 @@ public abstract class PaymentChannelServerState {
      * Stores this channel's state in the wallet as a part of a {@link StoredPaymentChannelServerStates} wallet
      * extension and keeps it up-to-date each time payment is incremented. This will be automatically removed when
      * a call to {@link PaymentChannelV1ServerState#close()} completes successfully. A channel may only be stored after it
-  
+     * has fully opened (ie state == State.READY).
+     *
+     * @param connectedHandler Optional {@link PaymentChannelServer} object that manages this object. This will
+     *                         set the appropriate pointer in the newly created {@link StoredServerChannel} before it is
+     *                         committed to wallet. If set, closing the state object will propagate the close to the
+     *                         handler which can then do a TCP disconnect.
+     */
+    public synchronized void storeChannelInWallet(@Nullable PaymentChannelServer connectedHandler) {
+        stateMachine.checkState(State.READY);
+        if (storedServerChannel != null)
+            return;
+
+        log.info("Storing state with contract hash {}.", getContract().getHash());
+        StoredPaymentChannelServerStates channels = (StoredPaymentChannelServerStates)
+                wallet.addOrGetExistingExtension(new StoredPaymentChannelServerStates(wallet, broadcaster));
+        storedServerChannel = new StoredServerChannel(this, getMajorVersion(), getContract(), getClientOutput(), getExpiryTime(), serverKey, getClientKey(), bestValueToMe, bestValueSignature);
+        if (connectedHandler != null)
+            checkState(storedServerChannel.setConnectedHandler(connectedHandler, false) == connectedHandler);
+        channels.putChannel(storedServerChannel);
+    }
+
+    public abstract TransactionOutput getClientOutput();
+
+    public Script getContractScript() {
+        if (contract == null) {
+            return null;
+        }
+        return contract.getOutput(0).getScriptPubKey();
+    }
+
+    /**
+     * Gets the script that signatures should sign against. This is never a P2SH
+     * script, rather the script that would be inside a P2SH script.
+     * @return
+     */
+    protected abstract Script getSignedScript();
+
+    /**
+     * Verifies that the given contract meets a set of extra requirements
+     * @param contract
+     */
+    protected void verifyContract(final Transaction contract) {
+    }
+
+    protected abstract Script createOutputScript();
+
+    protected Coin getTotalValue() {
+        return contract.getOutput(0).getValue();
+    }
+
+    protected abstract ECKey getClientK
