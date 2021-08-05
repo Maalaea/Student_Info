@@ -52,4 +52,38 @@ public class PaymentChannelV1ClientState extends PaymentChannelClientState {
 
     // The refund is a time locked transaction that spends all the money of the channel back to the client.
     private Transaction refundTx;
-    private Coin refundF
+    private Coin refundFees;
+    // The multi-sig contract locks the value of the channel up such that the agreement of both parties is required
+    // to spend it.
+    private Transaction multisigContract;
+    private Script multisigScript;
+
+    PaymentChannelV1ClientState(StoredClientChannel storedClientChannel, Wallet wallet) throws VerificationException {
+        super(storedClientChannel, wallet);
+        // The PaymentChannelClientConnection handles storedClientChannel.active and ensures we aren't resuming channels
+        this.multisigContract = checkNotNull(storedClientChannel.contract);
+        this.multisigScript = multisigContract.getOutput(0).getScriptPubKey();
+        this.refundTx = checkNotNull(storedClientChannel.refund);
+        this.refundFees = checkNotNull(storedClientChannel.refundFees);
+        this.expiryTime = refundTx.getLockTime();
+        this.totalValue = multisigContract.getOutput(0).getValue();
+        stateMachine.transition(State.READY);
+        initWalletListeners();
+    }
+
+    /**
+     * Creates a state object for a payment channel client. It is expected that you be ready to
+     * {@link PaymentChannelClientState#initiate(KeyParameter, ClientChannelProperties)} after construction (to avoid creating objects for channels which are
+     * not going to finish opening) and thus some parameters provided here are only used in
+     * {@link PaymentChannelClientState#initiate(KeyParameter, ClientChannelProperties)} to create the Multisig contract and refund transaction.
+     *
+     * @param wallet a wallet that contains at least the specified amount of value.
+     * @param myKey a freshly generated private key for this channel.
+     * @param serverMultisigKey a public key retrieved from the server used for the initial multisig contract
+     * @param value how many satoshis to put into this contract. If the channel reaches this limit, it must be closed.
+     * @param expiryTimeInSeconds At what point (UNIX timestamp +/- a few hours) the channel will expire
+     *
+     * @throws VerificationException If either myKey's pubkey or serverKey's pubkey are non-canonical (ie invalid)
+     */
+    public PaymentChannelV1ClientState(Wallet wallet, ECKey myKey, ECKey serverMultisigKey,
+                                       Coin value, long expiryTim
