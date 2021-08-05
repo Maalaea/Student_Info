@@ -403,4 +403,5 @@ public abstract class PaymentChannelServerState {
         return contract.getOutput(0).getValue();
     }
 
-    protected abstract ECKey getClientK
+    protected abstract ECKey getClientKey();
+}
