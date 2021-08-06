@@ -127,4 +127,32 @@ public class PaymentChannelV1ClientState extends PaymentChannelClientState {
      * @throws InsufficientMoneyException if the wallet doesn't contain enough balance to initiate
      */
     @Override
-    public synchronized void initiate(@Nullab
+    public synchronized void initiate(@Nullable KeyParameter userKey, ClientChannelProperties clientChannelProperties) throws ValueOutOfRangeException, InsufficientMoneyException {
+        final NetworkParameters params = wallet.getParams();
+        Transaction template = new Transaction(params);
+        // We always place the client key before the server key because, if either side wants some privacy, they can
+        // use a fresh key for the the multisig contract and nowhere else
+        List<ECKey> keys = Lists.newArrayList(myKey, serverKey);
+        // There is also probably a change output, but we don't bother shuffling them as it's obvious from the
+        // format which one is the change. If we start obfuscating the change output better in future this may
+        // be worth revisiting.
+        TransactionOutput multisigOutput = template.addOutput(totalValue, ScriptBuilder.createMultiSigOutputScript(2, keys));
+        if (multisigOutput.isDust())
+            throw new ValueOutOfRangeException("totalValue too small to use");
+        SendRequest req = SendRequest.forTx(template);
+        req.coinSelector = AllowUnconfirmedCoinSelector.get();
+        req.shuffleOutputs = false;   // TODO: Fix things so shuffling is usable.
+        req = clientChannelProperties.modifyContractSendRequest(req);
+        if (userKey != null) req.aesKey = userKey;
+        wallet.completeTx(req);
+        Coin multisigFee = req.tx.getFee();
+        multisigContract = req.tx;
+        // Build a refund transaction that protects us in the case of a bad server that's just trying to cause havoc
+        // by locking up peoples money (perhaps as a precursor to a ransom attempt). We time lock it so the server
+        // has an assurance that we cannot take back our money by claiming a refund before the channel closes - this
+        // relies on the fact that since Bitcoin 0.8 time locked transactions are non-final. This will need to change
+        // in future as it breaks the intended design of timelocking/tx replacement, but for now it simplifies this
+        // specific protocol somewhat.
+        refundTx = new Transaction(params);
+        // don't disable lock time. the sequence will be included in the server's signature and thus won't be changeable.
+        // by us
