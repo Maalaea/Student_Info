@@ -86,4 +86,45 @@ public class PaymentChannelV1ClientState extends PaymentChannelClientState {
      * @throws VerificationException If either myKey's pubkey or serverKey's pubkey are non-canonical (ie invalid)
      */
     public PaymentChannelV1ClientState(Wallet wallet, ECKey myKey, ECKey serverMultisigKey,
-                                       Coin value, long expiryTim
+                                       Coin value, long expiryTimeInSeconds) throws VerificationException {
+        super(wallet, myKey, serverMultisigKey, value, expiryTimeInSeconds);
+        checkArgument(value.signum() > 0);
+        initWalletListeners();
+        this.totalValue = checkNotNull(value);
+        this.expiryTime = expiryTimeInSeconds;
+        stateMachine.transition(State.NEW);
+    }
+
+    @Override
+    protected Multimap<State, State> getStateTransitions() {
+        Multimap<State, State> result = MultimapBuilder.enumKeys(State.class).arrayListValues().build();
+        result.put(State.UNINITIALISED, State.NEW);
+        result.put(State.UNINITIALISED, State.READY);
+        result.put(State.NEW, State.INITIATED);
+        result.put(State.INITIATED, State.WAITING_FOR_SIGNED_REFUND);
+        result.put(State.WAITING_FOR_SIGNED_REFUND, State.SAVE_STATE_IN_WALLET);
+        result.put(State.SAVE_STATE_IN_WALLET, State.PROVIDE_MULTISIG_CONTRACT_TO_SERVER);
+        result.put(State.PROVIDE_MULTISIG_CONTRACT_TO_SERVER, State.READY);
+        result.put(State.READY, State.EXPIRED);
+        result.put(State.READY, State.CLOSED);
+        return result;
+    }
+
+    public int getMajorVersion() {
+        return 1;
+    }
+
+    /**
+     * Creates the initial multisig contract and incomplete refund transaction which can be requested at the appropriate
+     * time using {@link PaymentChannelV1ClientState#getIncompleteRefundTransaction} and
+     * {@link PaymentChannelV1ClientState#getContract()}.
+     * By default unconfirmed coins are allowed to be used, as for micropayments the risk should be relatively low.
+     * @param userKey Key derived from a user password, needed for any signing when the wallet is encrypted.
+     *                The wallet KeyCrypter is assumed.
+     * @param clientChannelProperties Modify the channel's configuration.
+     *
+     * @throws ValueOutOfRangeException   if the value being used is too small to be accepted by the network
+     * @throws InsufficientMoneyException if the wallet doesn't contain enough balance to initiate
+     */
+    @Override
+    public synchronized void initiate(@Nullab
