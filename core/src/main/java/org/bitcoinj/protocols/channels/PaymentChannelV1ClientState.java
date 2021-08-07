@@ -206,4 +206,42 @@ public class PaymentChannelV1ClientState extends PaymentChannelClientState {
 
     /**
      * Returns a partially signed (invalid) refund transaction that should be passed to the server. Once the server
-     * has checked
+     * has checked it out and provided its own signature, call
+     * {@link PaymentChannelV1ClientState#provideRefundSignature(byte[], KeyParameter)} with the result.
+     */
+    public synchronized Transaction getIncompleteRefundTransaction() {
+        checkState(refundTx != null);
+        if (stateMachine.getState() == State.INITIATED) {
+            stateMachine.transition(State.WAITING_FOR_SIGNED_REFUND);
+        }
+        return refundTx;
+    }
+
+    /**
+     * <p>When the servers signature for the refund transaction is received, call this to verify it and sign the
+     * complete refund ourselves.</p>
+     *
+     * <p>If this does not throw an exception, we are secure against the loss of funds and can safely provide the server
+     * with the multi-sig contract to lock in the agreement. In this case, both the multisig contract and the refund
+     * transaction are automatically committed to wallet so that it can handle broadcasting the refund transaction at
+     * the appropriate time if necessary.</p>
+     */
+    public synchronized void provideRefundSignature(byte[] theirSignature, @Nullable KeyParameter userKey)
+            throws VerificationException {
+        checkNotNull(theirSignature);
+        stateMachine.checkState(State.WAITING_FOR_SIGNED_REFUND);
+        TransactionSignature theirSig = TransactionSignature.decodeFromBitcoin(theirSignature, true);
+        if (theirSig.sigHashMode() != Transaction.SigHash.NONE || !theirSig.anyoneCanPay())
+            throw new VerificationException("Refund signature was not SIGHASH_NONE|SIGHASH_ANYONECANPAY");
+        // Sign the refund transaction ourselves.
+        final TransactionOutput multisigContractOutput = multisigContract.getOutput(0);
+        try {
+            multisigScript = multisigContractOutput.getScriptPubKey();
+        } catch (ScriptException e) {
+            throw new RuntimeException(e);  // Cannot happen: we built this ourselves.
+        }
+        TransactionSignature ourSignature =
+                refundTx.calculateSignature(0, myKey.maybeDecrypt(userKey),
+                        multisigScript, Transaction.SigHash.ALL, false);
+        // Insert the signatures.
+        Script scriptSig = ScriptBuilder.createMultiSigInputScript(ourSignature, t
