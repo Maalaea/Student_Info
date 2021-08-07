@@ -155,4 +155,55 @@ public class PaymentChannelV1ClientState extends PaymentChannelClientState {
         // specific protocol somewhat.
         refundTx = new Transaction(params);
         // don't disable lock time. the sequence will be included in the server's signature and thus won't be changeable.
-        // by us
+        // by using this sequence value, we avoid extra full replace-by-fee and relative lock time processing.
+        refundTx.addInput(multisigOutput).setSequenceNumber(TransactionInput.NO_SEQUENCE - 1L);
+        refundTx.setLockTime(expiryTime);
+        if (Context.get().isEnsureMinRequiredFee()) {
+            // Must pay min fee.
+            final Coin valueAfterFee = totalValue.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+            if (Transaction.MIN_NONDUST_OUTPUT.compareTo(valueAfterFee) > 0)
+                throw new ValueOutOfRangeException("totalValue too small to use");
+            refundTx.addOutput(valueAfterFee, myKey.toAddress(params));
+            refundFees = multisigFee.add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
+        } else {
+            refundTx.addOutput(totalValue, myKey.toAddress(params));
+            refundFees = multisigFee;
+        }
+        refundTx.getConfidence().setSource(TransactionConfidence.Source.SELF);
+        log.info("initiated channel with multi-sig contract {}, refund {}", multisigContract.getHashAsString(),
+                refundTx.getHashAsString());
+        stateMachine.transition(State.INITIATED);
+        // Client should now call getIncompleteRefundTransaction() and send it to the server.
+    }
+
+    /**
+     * Returns the transaction that locks the money to the agreement of both parties. Do not mutate the result.
+     * Once this step is done, you can use {@link PaymentChannelClientState#incrementPaymentBy(Coin, KeyParameter)} to
+     * start paying the server.
+     */
+    @Override
+    public synchronized Transaction getContract() {
+        checkState(multisigContract != null);
+        if (stateMachine.getState() == State.PROVIDE_MULTISIG_CONTRACT_TO_SERVER) {
+            stateMachine.transition(State.READY);
+        }
+        return multisigContract;
+    }
+
+    @Override
+    protected synchronized Transaction getContractInternal() {
+        return multisigContract;
+    }
+
+    protected synchronized Script getContractScript() {
+        return multisigScript;
+    }
+
+    @Override
+    protected Script getSignedScript() {
+        return getContractScript();
+    }
+
+    /**
+     * Returns a partially signed (invalid) refund transaction that should be passed to the server. Once the server
+     * has checked
