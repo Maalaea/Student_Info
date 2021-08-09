@@ -244,4 +244,59 @@ public class PaymentChannelV1ClientState extends PaymentChannelClientState {
                 refundTx.calculateSignature(0, myKey.maybeDecrypt(userKey),
                         multisigScript, Transaction.SigHash.ALL, false);
         // Insert the signatures.
-        Script scriptSig = ScriptBuilder.createMultiSigInputScript(ourSignature, t
+        Script scriptSig = ScriptBuilder.createMultiSigInputScript(ourSignature, theirSig);
+        log.info("Refund scriptSig: {}", scriptSig);
+        log.info("Multi-sig contract scriptPubKey: {}", multisigScript);
+        TransactionInput refundInput = refundTx.getInput(0);
+        refundInput.setScriptSig(scriptSig);
+        refundInput.verify(multisigContractOutput);
+        stateMachine.transition(State.SAVE_STATE_IN_WALLET);
+    }
+
+    @Override
+    protected synchronized Coin getValueToMe() {
+        return valueToMe;
+    }
+
+    protected long getExpiryTime() {
+        return expiryTime;
+    }
+
+    @Override
+    @VisibleForTesting synchronized void doStoreChannelInWallet(Sha256Hash id) {
+        StoredPaymentChannelClientStates channels = (StoredPaymentChannelClientStates)
+                wallet.getExtensions().get(StoredPaymentChannelClientStates.EXTENSION_ID);
+        checkNotNull(channels, "You have not added the StoredPaymentChannelClientStates extension to the wallet.");
+        checkState(channels.getChannel(id, multisigContract.getHash()) == null);
+        storedChannel = new StoredClientChannel(getMajorVersion(), id, multisigContract, refundTx, myKey, serverKey, valueToMe, refundFees, 0, true);
+        channels.putChannel(storedChannel);
+    }
+
+    @Override
+    public synchronized Coin getRefundTxFees() {
+        checkState(getState().compareTo(State.NEW) > 0);
+        return refundFees;
+    }
+
+    @VisibleForTesting Transaction getRefundTransaction() {
+        return refundTx;
+    }
+
+    /**
+     * Once the servers signature over the refund transaction has been received and provided using
+     * {@link PaymentChannelV1ClientState#provideRefundSignature(byte[], KeyParameter)} then this
+     * method can be called to receive the now valid and broadcastable refund transaction.
+     */
+    public synchronized Transaction getCompletedRefundTransaction() {
+        checkState(getState().compareTo(State.WAITING_FOR_SIGNED_REFUND) > 0);
+        return refundTx;
+    }
+
+    /**
+     * Gets the total value of this channel (ie the maximum payment possible)
+     */
+    @Override
+    public Coin getTotalValue() {
+        return totalValue;
+    }
+}
