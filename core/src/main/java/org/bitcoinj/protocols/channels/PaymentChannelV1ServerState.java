@@ -57,4 +57,53 @@ public class PaymentChannelV1ServerState extends PaymentChannelServerState {
 
     PaymentChannelV1ServerState(StoredServerChannel storedServerChannel, Wallet wallet, TransactionBroadcaster broadcaster) throws VerificationException {
         super(storedServerChannel, wallet, broadcaster);
-        synchronized (storedServerCh
+        synchronized (storedServerChannel) {
+            this.clientKey = ECKey.fromPublicOnly(getContractScript().getChunks().get(1).data);
+            this.clientOutput = checkNotNull(storedServerChannel.clientOutput);
+            this.refundTransactionUnlockTimeSecs = storedServerChannel.refundTransactionUnlockTimeSecs;
+            stateMachine.transition(State.READY);
+        }
+    }
+
+    /**
+     * Creates a new state object to track the server side of a payment channel.
+     *
+     * @param broadcaster The peer group which we will broadcast transactions to, this should have multiple peers
+     * @param wallet The wallet which will be used to complete transactions
+     * @param serverKey The private key which we use for our part of the multi-sig contract
+     *                  (this MUST be fresh and CANNOT be used elsewhere)
+     * @param minExpireTime The earliest time at which the client can claim the refund transaction (UNIX timestamp of block)
+     */
+    public PaymentChannelV1ServerState(TransactionBroadcaster broadcaster, Wallet wallet, ECKey serverKey, long minExpireTime) {
+        super(broadcaster, wallet, serverKey, minExpireTime);
+        stateMachine.transition(State.WAITING_FOR_REFUND_TRANSACTION);
+    }
+
+    @Override
+    public Multimap<State, State> getStateTransitions() {
+        Multimap<State, State> result = MultimapBuilder.enumKeys(State.class).arrayListValues().build();
+        result.put(State.UNINITIALISED, State.READY);
+        result.put(State.UNINITIALISED, State.WAITING_FOR_REFUND_TRANSACTION);
+        result.put(State.WAITING_FOR_REFUND_TRANSACTION, State.WAITING_FOR_MULTISIG_CONTRACT);
+        result.put(State.WAITING_FOR_MULTISIG_CONTRACT, State.WAITING_FOR_MULTISIG_ACCEPTANCE);
+        result.put(State.WAITING_FOR_MULTISIG_ACCEPTANCE, State.READY);
+        result.put(State.READY, State.CLOSING);
+        result.put(State.CLOSING, State.CLOSED);
+        for (State state : State.values()) {
+            result.put(state, State.ERROR);
+        }
+        return result;
+    }
+
+    @Override
+    public int getMajorVersion() {
+        return 1;
+    }
+
+    @Override
+    public TransactionOutput getClientOutput() {
+        return clientOutput;
+    }
+
+    @Override
+    protected Sc
