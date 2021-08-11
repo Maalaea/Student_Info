@@ -106,4 +106,35 @@ public class PaymentChannelV1ServerState extends PaymentChannelServerState {
     }
 
     @Override
-    protected Sc
+    protected Script getSignedScript() {
+        return getContractScript();
+    }
+
+    /**
+     * Called when the client provides the refund transaction.
+     * The refund transaction must have one input from the multisig contract (that we don't have yet) and one output
+     * that the client creates to themselves. This object will later be modified when we start getting paid.
+     *
+     * @param refundTx The refund transaction, this object will be mutated when payment is incremented.
+     * @param clientMultiSigPubKey The client's pubkey which is required for the multisig output
+     * @return Our signature that makes the refund transaction valid
+     * @throws VerificationException If the transaction isnt valid or did not meet the requirements of a refund transaction.
+     */
+    public synchronized byte[] provideRefundTransaction(Transaction refundTx, byte[] clientMultiSigPubKey) throws VerificationException {
+        checkNotNull(refundTx);
+        checkNotNull(clientMultiSigPubKey);
+        stateMachine.checkState(State.WAITING_FOR_REFUND_TRANSACTION);
+        log.info("Provided with refund transaction: {}", refundTx);
+        // Do a few very basic syntax sanity checks.
+        refundTx.verify();
+        // Verify that the refund transaction has a single input (that we can fill to sign the multisig output).
+        if (refundTx.getInputs().size() != 1)
+            throw new VerificationException("Refund transaction does not have exactly one input");
+        // Verify that the refund transaction has a time lock on it and a sequence number that does not disable lock time.
+        if (refundTx.getInput(0).getSequenceNumber() == TransactionInput.NO_SEQUENCE)
+            throw new VerificationException("Refund transaction's input's sequence number disables lock time");
+        if (refundTx.getLockTime() < minExpireTime)
+            throw new VerificationException("Refund transaction has a lock time too soon");
+        // Verify the transaction has one output (we don't care about its contents, its up to the client)
+        // Note that because we sign with SIGHASH_NONE|SIGHASH_ANYOENCANPAY the client can later add more outputs and
+        // inputs, but we will need only one output later to create the paying transactions
