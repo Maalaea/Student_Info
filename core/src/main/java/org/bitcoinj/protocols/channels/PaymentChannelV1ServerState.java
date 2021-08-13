@@ -138,3 +138,43 @@ public class PaymentChannelV1ServerState extends PaymentChannelServerState {
         // Verify the transaction has one output (we don't care about its contents, its up to the client)
         // Note that because we sign with SIGHASH_NONE|SIGHASH_ANYOENCANPAY the client can later add more outputs and
         // inputs, but we will need only one output later to create the paying transactions
+        if (refundTx.getOutputs().size() != 1)
+            throw new VerificationException("Refund transaction does not have exactly one output");
+
+        refundTransactionUnlockTimeSecs = refundTx.getLockTime();
+
+        // Sign the refund tx with the scriptPubKey and return the signature. We don't have the spending transaction
+        // so do the steps individually.
+        clientKey = ECKey.fromPublicOnly(clientMultiSigPubKey);
+        Script multisigPubKey = ScriptBuilder.createMultiSigOutputScript(2, ImmutableList.of(clientKey, serverKey));
+        // We are really only signing the fact that the transaction has a proper lock time and don't care about anything
+        // else, so we sign SIGHASH_NONE and SIGHASH_ANYONECANPAY.
+        TransactionSignature sig = refundTx.calculateSignature(0, serverKey, multisigPubKey, Transaction.SigHash.NONE, true);
+        log.info("Signed refund transaction.");
+        this.clientOutput = refundTx.getOutput(0);
+        stateMachine.transition(State.WAITING_FOR_MULTISIG_CONTRACT);
+        return sig.encodeToBitcoin();
+    }
+
+    protected Script createOutputScript() {
+        return ScriptBuilder.createMultiSigOutputScript(2, ImmutableList.<ECKey>of(clientKey, serverKey));
+    }
+
+    protected ECKey getClientKey() {
+        return clientKey;
+    }
+
+    // Signs the first input of the transaction which must spend the multisig contract.
+    private void signMultisigInput(Transaction tx, Transaction.SigHash hashType,
+                                   boolean anyoneCanPay, @Nullable KeyParameter userKey) {
+        TransactionSignature signature = tx.calculateSignature(0, serverKey, userKey, getContractScript(), hashType, anyoneCanPay);
+        byte[] mySig = signature.encodeToBitcoin();
+        Script scriptSig = ScriptBuilder.createMultiSigInputScriptBytes(ImmutableList.of(bestValueSignature, mySig));
+        tx.getInput(0).setScriptSig(scriptSig);
+    }
+
+    final SettableFuture<Transaction> closedFuture = SettableFuture.create();
+    /**
+     * <p>Closes this channel and broadcasts the highest value payment transaction on the network.</p>
+     *
+     * <p>This will set the state to {@link State#CLOSED} if the transaction is successfully b
