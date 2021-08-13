@@ -177,4 +177,44 @@ public class PaymentChannelV1ServerState extends PaymentChannelServerState {
     /**
      * <p>Closes this channel and broadcasts the highest value payment transaction on the network.</p>
      *
-     * <p>This will set the state to {@link State#CLOSED} if the transaction is successfully b
+     * <p>This will set the state to {@link State#CLOSED} if the transaction is successfully broadcast on the network.
+     * If we fail to broadcast for some reason, the state is set to {@link State#ERROR}.</p>
+     *
+     * <p>If the current state is before {@link State#READY} (ie we have not finished initializing the channel), we
+     * simply set the state to {@link State#CLOSED} and let the client handle getting its refund transaction confirmed.
+     * </p>
+     *
+     * @param userKey The AES key to use for decryption of the private key. If null then no decryption is required.
+     * @return a future which completes when the provided multisig contract successfully broadcasts, or throws if the
+     *         broadcast fails for some reason. Note that if the network simply rejects the transaction, this future
+     *         will never complete, a timeout should be used.
+     * @throws InsufficientMoneyException If the payment tx would have cost more in fees to spend than it is worth.
+     */
+    @Override
+    public synchronized ListenableFuture<Transaction> close(@Nullable KeyParameter userKey) throws InsufficientMoneyException {
+        if (storedServerChannel != null) {
+            StoredServerChannel temp = storedServerChannel;
+            storedServerChannel = null;
+            StoredPaymentChannelServerStates channels = (StoredPaymentChannelServerStates)
+                    wallet.getExtensions().get(StoredPaymentChannelServerStates.EXTENSION_ID);
+            channels.closeChannel(temp); // May call this method again for us (if it wasn't the original caller)
+            if (getState().compareTo(State.CLOSING) >= 0)
+                return closedFuture;
+        }
+
+        if (getState().ordinal() < State.READY.ordinal()) {
+            log.error("Attempt to settle channel in state " + getState());
+            stateMachine.transition(State.CLOSED);
+            closedFuture.set(null);
+            return closedFuture;
+        }
+        if (getState() != State.READY) {
+            // TODO: What is this codepath for?
+            log.warn("Failed attempt to settle a channel in state " + getState());
+            return closedFuture;
+        }
+        Transaction tx = null;
+        try {
+            SendRequest req = makeUnsignedChannelContract(bestValueToMe);
+            tx = req.tx;
+            // Provide a
