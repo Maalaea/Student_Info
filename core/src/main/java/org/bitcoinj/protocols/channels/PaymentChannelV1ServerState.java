@@ -248,4 +248,38 @@ public class PaymentChannelV1ServerState extends PaymentChannelServerState {
         stateMachine.transition(State.CLOSING);
         log.info("Closing channel, broadcasting tx {}", tx);
         // The act of broadcasting the transaction will add it to the wallet.
-        ListenableFuture<Transaction> future = broadcaster.broadcast
+        ListenableFuture<Transaction> future = broadcaster.broadcastTransaction(tx).future();
+        Futures.addCallback(future, new FutureCallback<Transaction>() {
+            @Override public void onSuccess(Transaction transaction) {
+                log.info("TX {} propagated, channel successfully closed.", transaction.getHash());
+                stateMachine.transition(State.CLOSED);
+                closedFuture.set(transaction);
+            }
+
+            @Override public void onFailure(Throwable throwable) {
+                log.error("Failed to settle channel, could not broadcast: {}", throwable);
+                stateMachine.transition(State.ERROR);
+                closedFuture.setException(throwable);
+            }
+        });
+        return closedFuture;
+    }
+
+    /**
+     * Gets the fee paid in the final payment transaction (only available if settle() did not throw an exception)
+     */
+    @Override
+    public synchronized Coin getFeePaid() {
+        stateMachine.checkState(State.CLOSED, State.CLOSING);
+        return feePaidForPayment;
+    }
+
+    /**
+     * Gets the client's refund transaction which they can spend to get the entire channel value back if it reaches its
+     * lock time.
+     */
+    public synchronized long getRefundTransactionUnlockTime() {
+        checkState(getState().compareTo(State.WAITING_FOR_MULTISIG_CONTRACT) > 0 && getState() != State.ERROR);
+        return refundTransactionUnlockTimeSecs;
+    }
+}
