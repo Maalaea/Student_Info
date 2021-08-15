@@ -217,4 +217,35 @@ public class PaymentChannelV1ServerState extends PaymentChannelServerState {
         try {
             SendRequest req = makeUnsignedChannelContract(bestValueToMe);
             tx = req.tx;
-            // Provide a
+            // Provide a throwaway signature so that completeTx won't complain out about unsigned inputs it doesn't
+            // know how to sign. Note that this signature does actually have to be valid, so we can't use a dummy
+            // signature to save time, because otherwise completeTx will try to re-sign it to make it valid and then
+            // die. We could probably add features to the SendRequest API to make this a bit more efficient.
+            signMultisigInput(tx, Transaction.SigHash.NONE, true, userKey);
+            // Let wallet handle adding additional inputs/fee as necessary.
+            req.shuffleOutputs = false;
+            req.missingSigsMode = Wallet.MissingSigsMode.USE_DUMMY_SIG;
+            wallet.completeTx(req);  // TODO: Fix things so shuffling is usable.
+            feePaidForPayment = req.tx.getFee();
+            log.info("Calculated fee is {}", feePaidForPayment);
+            if (feePaidForPayment.compareTo(bestValueToMe) > 0) {
+                final String msg = String.format(Locale.US, "Had to pay more in fees (%s) than the channel was worth (%s)",
+                        feePaidForPayment, bestValueToMe);
+                throw new InsufficientMoneyException(feePaidForPayment.subtract(bestValueToMe), msg);
+            }
+            // Now really sign the multisig input.
+            signMultisigInput(tx, Transaction.SigHash.ALL, false, userKey);
+            // Some checks that shouldn't be necessary but it can't hurt to check.
+            tx.verify();  // Sanity check syntax.
+            for (TransactionInput input : tx.getInputs())
+                input.verify();  // Run scripts and ensure it is valid.
+        } catch (InsufficientMoneyException e) {
+            throw e;  // Don't fall through.
+        } catch (Exception e) {
+            log.error("Could not verify self-built tx\nMULTISIG {}\nCLOSE {}", contract, tx != null ? tx : "");
+            throw new RuntimeException(e);  // Should never happen.
+        }
+        stateMachine.transition(State.CLOSING);
+        log.info("Closing channel, broadcasting tx {}", tx);
+        // The act of broadcasting the transaction will add it to the wallet.
+        ListenableFuture<Transaction> future = broadcaster.broadcast
