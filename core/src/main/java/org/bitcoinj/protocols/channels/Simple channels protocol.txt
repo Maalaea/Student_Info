@@ -22,4 +22,5 @@ When TX replacement is re-activated, this configuration would become vulnerable 
 by the client. We can require the refund TX to have an input sequence number of zero. The adjustment transactions have
 a sequence number of UINT_MAX as before, this means they would replace the refund tx if it were to be broadcast.
 
-This con
+This configuration is less general than a full payment channel with tx replacement activated, but for our purposes
+it does the trick.
