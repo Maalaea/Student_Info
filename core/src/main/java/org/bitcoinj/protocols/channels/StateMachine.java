@@ -59,4 +59,29 @@ public class StateMachine<State extends Enum<State>> {
             }
         }
         throw new IllegalStateException(String.format(Locale.US,
-               
+                "Expected states %s, but in state %s", Lists.newArrayList(requiredStates), currentState));
+    }
+
+    /**
+     * Transitions to a new state, provided that the required transition exists
+     * @param newState
+     * @throws IllegalStateException If no state transition exists from oldState to newState
+     */
+    public synchronized void transition(State newState) throws IllegalStateException {
+        if (transitions.containsEntry(currentState, newState)) {
+            currentState = newState;
+        } else {
+            throw new IllegalStateException(String.format(Locale.US,
+                    "Attempted invalid transition from %s to %s", currentState, newState));
+        }
+    }
+
+    public synchronized State getState() {
+        return currentState;
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder().append('[').append(getState()).append(']').toString();
+    }
+}
