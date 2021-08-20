@@ -78,4 +78,50 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
     }
 
     /**
-     * Use this setter if the broadcaste
+     * Use this setter if the broadcaster is not available during instantiation and you're not using WalletAppKit.
+     * This setter will let you delay the setting of the broadcaster until the Bitcoin network is ready.
+     *
+     * @param transactionBroadcaster which is used to complete and announce contract and refund transactions.
+     */
+    public final void setTransactionBroadcaster(TransactionBroadcaster transactionBroadcaster) {
+        this.announcePeerGroupFuture.set(checkNotNull(transactionBroadcaster));
+    }
+
+    /** Returns this extension from the given wallet, or null if no such extension was added. */
+    @Nullable
+    public static StoredPaymentChannelClientStates getFromWallet(Wallet wallet) {
+        return (StoredPaymentChannelClientStates) wallet.getExtensions().get(EXTENSION_ID);
+    }
+
+    /** Returns the outstanding amount of money sent back to us for all channels to this server added together. */
+    public Coin getBalanceForServer(Sha256Hash id) {
+        Coin balance = Coin.ZERO;
+        lock.lock();
+        try {
+            Set<StoredClientChannel> setChannels = mapChannels.get(id);
+            for (StoredClientChannel channel : setChannels) {
+                synchronized (channel) {
+                    if (channel.close != null) continue;
+                    balance = balance.add(channel.valueToMe);
+                }
+            }
+            return balance;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the number of seconds from now until this servers next channel will expire, or zero if no unexpired
+     * channels found.
+     */
+    public long getSecondsUntilExpiry(Sha256Hash id) {
+        lock.lock();
+        try {
+            final Set<StoredClientChannel> setChannels = mapChannels.get(id);
+            final long nowSeconds = Utils.currentTimeSeconds();
+            int earliestTime = Integer.MAX_VALUE;
+            for (StoredClientChannel channel : setChannels) {
+                synchronized (channel) {
+                    if (channel.expiryTimeSeconds() > nowSeconds)
+                        earliestTime = Math.min(earliestTime, (
