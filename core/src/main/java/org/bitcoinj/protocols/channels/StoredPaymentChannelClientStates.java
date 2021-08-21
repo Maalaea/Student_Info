@@ -124,4 +124,67 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
             for (StoredClientChannel channel : setChannels) {
                 synchronized (channel) {
                     if (channel.expiryTimeSeconds() > nowSeconds)
-                        earliestTime = Math.min(earliestTime, (
+                        earliestTime = Math.min(earliestTime, (int) channel.expiryTimeSeconds());
+                }
+            }
+            return earliestTime == Integer.MAX_VALUE ? 0 : earliestTime - nowSeconds;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Finds an inactive channel with the given id and returns it, or returns null.
+     */
+    @Nullable
+    StoredClientChannel getUsableChannelForServerID(Sha256Hash id) {
+        lock.lock();
+        try {
+            Set<StoredClientChannel> setChannels = mapChannels.get(id);
+            for (StoredClientChannel channel : setChannels) {
+                synchronized (channel) {
+                    // Check if the channel is usable (has money, inactive) and if so, activate it.
+                    log.info("Considering channel {} contract {}", channel.hashCode(), channel.contract.getHash());
+                    if (channel.close != null || channel.valueToMe.equals(Coin.ZERO)) {
+                        log.info("  ... but is closed or empty");
+                        continue;
+                    }
+                    if (!channel.active) {
+                        log.info("  ... activating");
+                        channel.active = true;
+                        return channel;
+                    }
+                    log.info("  ... but is already active");
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return null;
+    }
+
+    /**
+     * Finds a channel with the given id and contract hash and returns it, or returns null.
+     */
+    @Nullable
+    public StoredClientChannel getChannel(Sha256Hash id, Sha256Hash contractHash) {
+        lock.lock();
+        try {
+            Set<StoredClientChannel> setChannels = mapChannels.get(id);
+            for (StoredClientChannel channel : setChannels) {
+                if (channel.contract.getHash().equals(contractHash))
+                    return channel;
+            }
+            return null;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Get a copy of all {@link StoredClientChannel}s
+     */
+    public Multimap<Sha256Hash, StoredClientChannel> getChannelMap() {
+        lock.lock();
+        try {
+    
