@@ -187,4 +187,56 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
     public Multimap<Sha256Hash, StoredClientChannel> getChannelMap() {
         lock.lock();
         try {
-    
+            return ImmutableMultimap.copyOf(mapChannels);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Notifies the set of stored states that a channel has been updated. Use to notify the wallet of an update to this
+     * wallet extension.
+     */
+    void updatedChannel(final StoredClientChannel channel) {
+        log.info("Stored client channel {} was updated", channel.hashCode());
+        containingWallet.addOrUpdateExtension(this);
+    }
+
+    /**
+     * Adds the given channel to this set of stored states, broadcasting the contract and refund transactions when the
+     * channel expires and notifies the wallet of an update to this wallet extension
+     */
+    void putChannel(final StoredClientChannel channel) {
+        putChannel(channel, true);
+    }
+
+    // Adds this channel and optionally notifies the wallet of an update to this extension (used during deserialize)
+    private void putChannel(final StoredClientChannel channel, boolean updateWallet) {
+        lock.lock();
+        try {
+            mapChannels.put(channel.id, channel);
+            channelTimeoutHandler.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        TransactionBroadcaster announcePeerGroup = getAnnouncePeerGroup();
+                        removeChannel(channel);
+                        announcePeerGroup.broadcastTransaction(channel.contract);
+                        announcePeerGroup.broadcastTransaction(channel.refund);
+                    } catch (Exception e) {
+                        // Something went wrong closing the channel - we catch
+                        // here or else we take down the whole Timer.
+                        log.error("Auto-closing channel failed", e);
+                    }
+                }
+                // Add the difference between real time and Utils.now() so that test-cases can use a mock clock.
+            }, new Date(channel.expiryTimeSeconds() * 1000 + (System.currentTimeMillis() - Utils.currentTimeMillis())));
+        } finally {
+            lock.unlock();
+        }
+        if (updateWallet)
+            updatedChannel(channel);
+    }
+
+    /**
+     * If the peer group has 
