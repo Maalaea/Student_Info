@@ -239,4 +239,59 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
     }
 
     /**
-     * If the peer group has 
+     * If the peer group has not been set for MAX_SECONDS_TO_WAIT_FOR_BROADCASTER_TO_BE_SET seconds, then
+     * the programmer probably forgot to set it and we should throw exception.
+     */
+    private TransactionBroadcaster getAnnouncePeerGroup() {
+        try {
+            return announcePeerGroupFuture.get(MAX_SECONDS_TO_WAIT_FOR_BROADCASTER_TO_BE_SET, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (TimeoutException e) {
+            String err = "Transaction broadcaster not set";
+            log.error(err);
+            throw new RuntimeException(err, e);
+        }
+    }
+
+    /**
+     * <p>Removes the channel with the given id from this set of stored states and notifies the wallet of an update to
+     * this wallet extension.</p>
+     *
+     * <p>Note that the channel will still have its contract and refund transactions broadcast via the connected
+     * {@link TransactionBroadcaster} as long as this {@link StoredPaymentChannelClientStates} continues to
+     * exist in memory.</p>
+     */
+    void removeChannel(StoredClientChannel channel) {
+        lock.lock();
+        try {
+            mapChannels.remove(channel.id, channel);
+        } finally {
+            lock.unlock();
+        }
+        updatedChannel(channel);
+    }
+
+    @Override
+    public String getWalletExtensionID() {
+        return EXTENSION_ID;
+    }
+
+    @Override
+    public boolean isWalletExtensionMandatory() {
+        return false;
+    }
+
+    @Override
+    public byte[] serializeWalletExtension() {
+        lock.lock();
+        try {
+            final NetworkParameters params = getNetworkParameters();
+            // If we haven't attached to a wallet yet we can't check against network parameters
+            final boolean hasMaxMoney = params != null ? params.hasMaxMoney() : true;
+            final Coin networkMaxMoney = params != null ? params.getMaxMoney() : NetworkParameters.MAX_MONEY;
+            ClientState.StoredClientPaymentChannels.Builder builder = ClientState.StoredClientPaymentChannels.newBuilder();
+            for (StoredClientChannel channel : mapChannels.values()) {
+                // First a few 
