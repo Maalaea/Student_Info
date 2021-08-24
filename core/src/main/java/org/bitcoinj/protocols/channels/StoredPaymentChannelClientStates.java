@@ -294,4 +294,40 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
             final Coin networkMaxMoney = params != null ? params.getMaxMoney() : NetworkParameters.MAX_MONEY;
             ClientState.StoredClientPaymentChannels.Builder builder = ClientState.StoredClientPaymentChannels.newBuilder();
             for (StoredClientChannel channel : mapChannels.values()) {
-                // First a few 
+                // First a few asserts to make sure things won't break
+                checkState(channel.valueToMe.signum() >= 0 &&
+                        (!hasMaxMoney || channel.valueToMe.compareTo(networkMaxMoney) <= 0));
+                checkState(channel.refundFees.signum() >= 0 &&
+                        (!hasMaxMoney || channel.refundFees.compareTo(networkMaxMoney) <= 0));
+                checkNotNull(channel.myKey.getPubKey());
+                checkState(channel.refund.getConfidence().getSource() == TransactionConfidence.Source.SELF);
+                checkNotNull(channel.myKey.getPubKey());
+                final ClientState.StoredClientPaymentChannel.Builder value = ClientState.StoredClientPaymentChannel.newBuilder()
+                        .setMajorVersion(channel.majorVersion)
+                        .setId(ByteString.copyFrom(channel.id.getBytes()))
+                        .setContractTransaction(ByteString.copyFrom(channel.contract.unsafeBitcoinSerialize()))
+                        .setRefundFees(channel.refundFees.value)
+                        .setRefundTransaction(ByteString.copyFrom(channel.refund.unsafeBitcoinSerialize()))
+                        .setMyKey(ByteString.copyFrom(new byte[0])) // Not  used, but protobuf message requires
+                        .setMyPublicKey(ByteString.copyFrom(channel.myKey.getPubKey()))
+                        .setServerKey(ByteString.copyFrom(channel.serverKey.getPubKey()))
+                        .setValueToMe(channel.valueToMe.value)
+                        .setExpiryTime(channel.expiryTime);
+                if (channel.close != null)
+                    value.setCloseTransactionHash(ByteString.copyFrom(channel.close.getHash().getBytes()));
+                builder.addChannels(value);
+            }
+            return builder.build().toByteArray();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void deserializeWalletExtension(Wallet containingWallet, byte[] data) throws Exception {
+        lock.lock();
+        try {
+            checkState(this.containingWallet == null || this.containingWallet == containingWallet);
+            this.containingWallet = containingWallet;
+            NetworkParameters params = containingWallet.getParams();
+  
