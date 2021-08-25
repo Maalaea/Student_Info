@@ -330,4 +330,46 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
             checkState(this.containingWallet == null || this.containingWallet == containingWallet);
             this.containingWallet = containingWallet;
             NetworkParameters params = containingWallet.getParams();
-  
+            ClientState.StoredClientPaymentChannels states = ClientState.StoredClientPaymentChannels.parseFrom(data);
+            for (ClientState.StoredClientPaymentChannel storedState : states.getChannelsList()) {
+                Transaction refundTransaction = params.getDefaultSerializer().makeTransaction(storedState.getRefundTransaction().toByteArray());
+                refundTransaction.getConfidence().setSource(TransactionConfidence.Source.SELF);
+                ECKey myKey = (storedState.getMyKey().isEmpty()) ?
+                        containingWallet.findKeyFromPubKey(storedState.getMyPublicKey().toByteArray()) :
+                        ECKey.fromPrivate(storedState.getMyKey().toByteArray());
+                ECKey serverKey = storedState.hasServerKey() ? ECKey.fromPublicOnly(storedState.getServerKey().toByteArray()) : null;
+                StoredClientChannel channel = new StoredClientChannel(storedState.getMajorVersion(),
+                        Sha256Hash.wrap(storedState.getId().toByteArray()),
+                        params.getDefaultSerializer().makeTransaction(storedState.getContractTransaction().toByteArray()),
+                        refundTransaction,
+                        myKey,
+                        serverKey,
+                        Coin.valueOf(storedState.getValueToMe()),
+                        Coin.valueOf(storedState.getRefundFees()),
+                        storedState.getExpiryTime(),
+                        false);
+                if (storedState.hasCloseTransactionHash()) {
+                    Sha256Hash closeTxHash = Sha256Hash.wrap(storedState.getCloseTransactionHash().toByteArray());
+                    channel.close = containingWallet.getTransaction(closeTxHash);
+                }
+                putChannel(channel, false);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public String toString() {
+        lock.lock();
+        try {
+            StringBuilder buf = new StringBuilder("Client payment channel states:\n");
+            for (StoredClientChannel channel : mapChannels.values())
+                buf.append("  ").append(channel).append("\n");
+            return buf.toString();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private
