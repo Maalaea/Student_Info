@@ -429,4 +429,16 @@ class StoredClientChannel {
         return String.format(Locale.US, "Stored client channel for server ID %s (%s)%n" +
                 "    Version:     %d%n" +
                 "    Key:         %s%n" +
-                "  
+                "    Server key:  %s%n" +
+                "    Value left:  %s%n" +
+                "    Refund fees: %s%n" +
+                "    Expiry     : %s%n" +
+                "    Contract:  %s" +
+                "Refund:    %s" +
+                "Close:     %s",
+                id, active ? "active" : "inactive", majorVersion, myKey, serverKey, valueToMe, refundFees, expiryTime,
+                contract.toString().replaceAll(newline, newline + "    "),
+                refund.toString().replaceAll(newline, newline + "    "),
+                closeStr);
+    }
+}
