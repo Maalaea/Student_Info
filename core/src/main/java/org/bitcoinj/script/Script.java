@@ -85,4 +85,66 @@ public class Script {
     public static final EnumSet<VerifyFlag> ALL_VERIFY_FLAGS = EnumSet.allOf(VerifyFlag.class);
 
     private static final Logger log = LoggerFactory.getLogger(Script.class);
-    public static final long MAX_SCR
+    public static final long MAX_SCRIPT_ELEMENT_SIZE = 520;  // bytes
+    public static final int SIG_SIZE = 75;
+    /** Max number of sigops allowed in a standard p2sh redeem script */
+    public static final int MAX_P2SH_SIGOPS = 15;
+
+    // The program is a set of chunks where each element is either [opcode] or [data, data, data ...]
+    protected List<ScriptChunk> chunks;
+    // Unfortunately, scripts are not ever re-serialized or canonicalized when used in signature hashing. Thus we
+    // must preserve the exact bytes that we read off the wire, along with the parsed form.
+    protected byte[] program;
+
+    // Creation time of the associated keys in seconds since the epoch.
+    private long creationTimeSeconds;
+
+    /** Creates an empty script that serializes to nothing. */
+    private Script() {
+        chunks = Lists.newArrayList();
+    }
+
+    // Used from ScriptBuilder.
+    Script(List<ScriptChunk> chunks) {
+        this.chunks = Collections.unmodifiableList(new ArrayList<>(chunks));
+        creationTimeSeconds = Utils.currentTimeSeconds();
+    }
+
+    /**
+     * Construct a Script that copies and wraps the programBytes array. The array is parsed and checked for syntactic
+     * validity.
+     * @param programBytes Array of program bytes from a transaction.
+     */
+    public Script(byte[] programBytes) throws ScriptException {
+        program = programBytes;
+        parse(programBytes);
+        creationTimeSeconds = 0;
+    }
+
+    public Script(byte[] programBytes, long creationTimeSeconds) throws ScriptException {
+        program = programBytes;
+        parse(programBytes);
+        this.creationTimeSeconds = creationTimeSeconds;
+    }
+
+    public long getCreationTimeSeconds() {
+        return creationTimeSeconds;
+    }
+
+    public void setCreationTimeSeconds(long creationTimeSeconds) {
+        this.creationTimeSeconds = creationTimeSeconds;
+    }
+
+    /**
+     * Returns the program opcodes as a string, for example "[1234] DUP HASH160"
+     */
+    @Override
+    public String toString() {
+        return Utils.join(chunks);
+    }
+
+    /** Returns the serialized program as a newly created byte array. */
+    public byte[] getProgram() {
+        try {
+            // Don't round-trip as Bitcoin Core doesn't and it would introduce a mismatch.
+            if (program != null)
