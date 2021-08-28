@@ -45,4 +45,44 @@ import static com.google.common.base.Preconditions.*;
 /**
  * <p>Programs embedded inside transactions that control redemption of payments.</p>
  *
- * <p>Bitcoin transactions don't specify what the
+ * <p>Bitcoin transactions don't specify what they do directly. Instead <a href="https://en.bitcoin.it/wiki/Script">a
+ * small binary stack language</a> is used to define programs that when evaluated return whether the transaction
+ * "accepts" or rejects the other transactions connected to it.</p>
+ *
+ * <p>In SPV mode, scripts are not run, because that would require all transactions to be available and lightweight
+ * clients don't have that data. In full mode, this class is used to run the interpreted language. It also has
+ * static methods for building scripts.</p>
+ */
+public class Script {
+
+    /** Enumeration to encapsulate the type of this script. */
+    public enum ScriptType {
+        // Do NOT change the ordering of the following definitions because their ordinals are stored in databases.
+        NO_TYPE,
+        P2PKH,
+        PUB_KEY,
+        P2SH,
+        P2WPKH,
+        P2WSH
+    }
+
+    /** Flags to pass to {@link Script#correctlySpends(Transaction, long, Script, Set)}.
+     * Note currently only P2SH, DERSIG and NULLDUMMY are actually supported.
+     */
+    public enum VerifyFlag {
+        P2SH, // Enable BIP16-style subscript evaluation.
+        STRICTENC, // Passing a non-strict-DER signature or one with undefined hashtype to a checksig operation causes script failure.
+        DERSIG, // Passing a non-strict-DER signature to a checksig operation causes script failure (softfork safe, BIP66 rule 1)
+        LOW_S, // Passing a non-strict-DER signature or one with S > order/2 to a checksig operation causes script failure
+        NULLDUMMY, // Verify dummy stack item consumed by CHECKMULTISIG is of zero-length.
+        SIGPUSHONLY, // Using a non-push operator in the scriptSig causes script failure (softfork safe, BIP62 rule 2).
+        MINIMALDATA, // Require minimal encodings for all push operations
+        DISCOURAGE_UPGRADABLE_NOPS, // Discourage use of NOPs reserved for upgrades (NOP1-10)
+        CLEANSTACK, // Require that only a single stack element remains after evaluation.
+        CHECKLOCKTIMEVERIFY, // Enable CHECKLOCKTIMEVERIFY operation
+        SEGWIT // Enable segregated witnesses
+    }
+    public static final EnumSet<VerifyFlag> ALL_VERIFY_FLAGS = EnumSet.allOf(VerifyFlag.class);
+
+    private static final Logger log = LoggerFactory.getLogger(Script.class);
+    public static final long MAX_SCR
