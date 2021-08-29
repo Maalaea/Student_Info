@@ -194,4 +194,42 @@ public class Script {
                 // Read some bytes of data, where how many is the opcode value itself.
                 dataToRead = opcode;
             } else if (opcode == OP_PUSHDATA1) {
-                if (bis.available() < 1) throw new ScriptException("Unexpected
+                if (bis.available() < 1) throw new ScriptException("Unexpected end of script");
+                dataToRead = bis.read();
+            } else if (opcode == OP_PUSHDATA2) {
+                // Read a short, then read that many bytes of data.
+                if (bis.available() < 2) throw new ScriptException("Unexpected end of script");
+                dataToRead = bis.read() | (bis.read() << 8);
+            } else if (opcode == OP_PUSHDATA4) {
+                // Read a uint32, then read that many bytes of data.
+                // Though this is allowed, because its value cannot be > 520, it should never actually be used
+                if (bis.available() < 4) throw new ScriptException("Unexpected end of script");
+                dataToRead = ((long)bis.read()) | (((long)bis.read()) << 8) | (((long)bis.read()) << 16) | (((long)bis.read()) << 24);
+            }
+
+            ScriptChunk chunk;
+            if (dataToRead == -1) {
+                chunk = new ScriptChunk(opcode, null, startLocationInProgram);
+            } else {
+                if (dataToRead > bis.available())
+                    throw new ScriptException("Push of data element that is larger than remaining data");
+                byte[] data = new byte[(int)dataToRead];
+                checkState(dataToRead == 0 || bis.read(data, 0, (int)dataToRead) == dataToRead);
+                chunk = new ScriptChunk(opcode, data, startLocationInProgram);
+            }
+            // Save some memory by eliminating redundant copies of the same chunk objects.
+            for (ScriptChunk c : STANDARD_TRANSACTION_SCRIPT_CHUNKS) {
+                if (c.equals(chunk)) chunk = c;
+            }
+            chunks.add(chunk);
+        }
+    }
+
+    /**
+     * Returns true if this script is of the form <pubkey> OP_CHECKSIG. This form was originally intended for transactions
+     * where the peers talked to each other directly via TCP/IP, but has fallen out of favor with time due to that mode
+     * of operation being susceptible to man-in-the-middle attacks. It is still used in coinbase outputs and can be
+     * useful more exotic types of transaction, but today most payments are to addresses.
+     */
+    public boolean isSentToRawPubKey() {
+        return chunks.size() == 2 && chunks.get(1).equalsOpCode(OP_CHECKSIG) 
