@@ -148,3 +148,50 @@ public class Script {
         try {
             // Don't round-trip as Bitcoin Core doesn't and it would introduce a mismatch.
             if (program != null)
+                return Arrays.copyOf(program, program.length);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            for (ScriptChunk chunk : chunks) {
+                chunk.write(bos);
+            }
+            program = bos.toByteArray();
+            return program;
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        }
+    }
+
+    /** Returns an immutable list of the scripts parsed form. Each chunk is either an opcode or data element. */
+    public List<ScriptChunk> getChunks() {
+        return Collections.unmodifiableList(chunks);
+    }
+
+    private static final ScriptChunk[] STANDARD_TRANSACTION_SCRIPT_CHUNKS = {
+        new ScriptChunk(ScriptOpCodes.OP_DUP, null, 0),
+        new ScriptChunk(ScriptOpCodes.OP_HASH160, null, 1),
+        new ScriptChunk(ScriptOpCodes.OP_EQUALVERIFY, null, 23),
+        new ScriptChunk(ScriptOpCodes.OP_CHECKSIG, null, 24),
+    };
+
+    /**
+     * <p>To run a script, first we parse it which breaks it up into chunks representing pushes of data or logical
+     * opcodes. Then we can run the parsed chunks.</p>
+     *
+     * <p>The reason for this split, instead of just interpreting directly, is to make it easier
+     * to reach into a programs structure and pull out bits of data without having to run it.
+     * This is necessary to render the to/from addresses of transactions in a user interface.
+     * Bitcoin Core does something similar.</p>
+     */
+    private void parse(byte[] program) throws ScriptException {
+        chunks = new ArrayList<>(5);   // Common size.
+        ByteArrayInputStream bis = new ByteArrayInputStream(program);
+        int initialSize = bis.available();
+        while (bis.available() > 0) {
+            int startLocationInProgram = initialSize - bis.available();
+            int opcode = bis.read();
+
+            long dataToRead = -1;
+            if (opcode >= 0 && opcode < OP_PUSHDATA1) {
+                // Read some bytes of data, where how many is the opcode value itself.
+                dataToRead = opcode;
+            } else if (opcode == OP_PUSHDATA1) {
+                if (bis.available() < 1) throw new ScriptException("Unexpected
