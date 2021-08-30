@@ -232,4 +232,64 @@ public class Script {
      * useful more exotic types of transaction, but today most payments are to addresses.
      */
     public boolean isSentToRawPubKey() {
-        return chunks.size() == 2 && chunks.get(1).equalsOpCode(OP_CHECKSIG) 
+        return chunks.size() == 2 && chunks.get(1).equalsOpCode(OP_CHECKSIG) &&
+               !chunks.get(0).isOpCode() && chunks.get(0).data.length > 1;
+    }
+
+    /**
+     * Returns true if this script is of the form DUP HASH160 <pubkey hash> EQUALVERIFY CHECKSIG, ie, payment to an
+     * address like 1VayNert3x1KzbpzMGt2qdqrAThiRovi8. This form was originally intended for the case where you wish
+     * to send somebody money with a written code because their node is offline, but over time has become the standard
+     * way to make payments due to the short and recognizable base58 form addresses come in.
+     */
+    public boolean isSentToAddress() {
+        return chunks.size() == 5 &&
+               chunks.get(0).equalsOpCode(OP_DUP) &&
+               chunks.get(1).equalsOpCode(OP_HASH160) &&
+               chunks.get(2).data.length == Address.LENGTH &&
+               chunks.get(3).equalsOpCode(OP_EQUALVERIFY) &&
+               chunks.get(4).equalsOpCode(OP_CHECKSIG);
+    }
+
+    /**
+     * An alias for isPayToScriptHash.
+     */
+    @Deprecated
+    public boolean isSentToP2SH() {
+        return isPayToScriptHash();
+    }
+
+    /**
+     * Returns true if this script is of the form OP_0 &lt;160-bit pubkey hash&gt; (segwit P2WPKH).
+     */
+    public boolean isSentToP2WPKH() {
+        return chunks.size() == 2 &&
+               chunks.get(0).equalsOpCode(OP_0) &&
+               chunks.get(1).data.length == 20;
+    }
+
+    /**
+     * Returns true if this script is P2SH wrapping P2WPKH for provided key.
+     * @param pubKey
+     * @return
+     */
+    public boolean isSentToP2WPKHP2SH(ECKey pubKey) {
+        byte[] scriptHash = Utils.sha256hash160(ScriptBuilder.createP2WPKHOutputScript(pubKey).getProgram());
+        return (isPayToScriptHash() && Arrays.equals(scriptHash, getPubKeyHash()));
+    }
+
+    /**
+     * Returns true if this script is of the form OP_0 &lt;256-bit script hash&gt; (segwit P2WSH).
+     */
+    public boolean isSentToP2WSH() {
+        return chunks.size() == 2 &&
+               chunks.get(0).equalsOpCode(OP_0) &&
+               chunks.get(1).data.length == 32;
+    }
+
+    /**
+     * Returns true if this is a P2SH pubKeyScript wrapping a P2WSH redeem script for provided segwit script.
+     * @param script
+     * @return
+     */
+    public bool
