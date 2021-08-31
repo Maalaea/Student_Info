@@ -334,4 +334,55 @@ public class Script {
      * @throws ScriptException if the script is none of the named forms.
      */
     public byte[] getPubKey() throws ScriptException {
-       
+        if (chunks.size() != 2) {
+            throw new ScriptException("Script not of right size, expecting 2 but got " + chunks.size());
+        }
+        final ScriptChunk chunk0 = chunks.get(0);
+        final byte[] chunk0data = chunk0.data;
+        final ScriptChunk chunk1 = chunks.get(1);
+        final byte[] chunk1data = chunk1.data;
+        if (chunk0data != null && chunk0data.length > 2 && chunk1data != null && chunk1data.length > 2) {
+            // If we have two large constants assume the input to a pay-to-address output.
+            return chunk1data;
+        } else if (chunk1.equalsOpCode(OP_CHECKSIG) && chunk0data != null && chunk0data.length > 2) {
+            // A large constant followed by an OP_CHECKSIG is the key.
+            return chunk0data;
+        } else {
+            throw new ScriptException("Script did not match expected form: " + this);
+        }
+    }
+
+    /**
+     * Retrieves the sender public key from a LOCKTIMEVERIFY transaction
+     * @return
+     * @throws ScriptException
+     */
+    public byte[] getCLTVPaymentChannelSenderPubKey() throws ScriptException {
+        if (!isSentToCLTVPaymentChannel()) {
+            throw new ScriptException("Script not a standard CHECKLOCKTIMVERIFY transaction: " + this);
+        }
+        return chunks.get(8).data;
+    }
+
+    /**
+     * Retrieves the recipient public key from a LOCKTIMEVERIFY transaction
+     * @return
+     * @throws ScriptException
+     */
+    public byte[] getCLTVPaymentChannelRecipientPubKey() throws ScriptException {
+        if (!isSentToCLTVPaymentChannel()) {
+            throw new ScriptException("Script not a standard CHECKLOCKTIMVERIFY transaction: " + this);
+        }
+        return chunks.get(1).data;
+    }
+
+    public BigInteger getCLTVPaymentChannelExpiry() {
+        if (!isSentToCLTVPaymentChannel()) {
+            throw new ScriptException("Script not a standard CHECKLOCKTIMEVERIFY transaction: " + this);
+        }
+        return castToBigInteger(chunks.get(4).data, 5);
+    }
+
+    /**
+     * For 2-element [input] scripts assumes that the paid-to-address can be derived from the public key.
+     * The concept of a "from address" isn't well defined in Bitcoin and you should not assume the sende
