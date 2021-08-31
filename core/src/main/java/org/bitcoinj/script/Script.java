@@ -292,4 +292,46 @@ public class Script {
      * @param script
      * @return
      */
-    public bool
+    public boolean isSentToP2WSHP2SH(Script script) {
+        Script segwitProgram = ScriptBuilder.createP2WSHOutputScript(script);
+        byte[] scriptHash = Utils.sha256hash160(segwitProgram.getProgram());
+        return (isPayToScriptHash() && Arrays.equals(scriptHash, getPubKeyHash()));
+    }
+
+    /**
+     * <p>If a program matches the standard template DUP HASH160 &lt;pubkey hash&gt; EQUALVERIFY CHECKSIG
+     * then this function retrieves the third element.
+     * In this case, this is useful for fetching the destination address of a transaction.</p>
+     * 
+     * <p>If a program matches the standard template HASH160 &lt;script hash&gt; EQUAL
+     * then this function retrieves the second element.
+     * In this case, this is useful for fetching the hash of the redeem script of a transaction.</p>
+     *
+     * <p>If a program matches the segwit template 0 &lt;pubkey hash&gt; then this function retrieves the second
+     * element, which is the hash of the public key.</p>
+     *
+     * <p>If a program matches the segwit template 0 &lt;script hash&gt; then this function retrieves the second
+     * element, which is the hash of the segwit script.</p>
+     * 
+     * <p>Otherwise it throws a ScriptException.</p>
+     *
+     */
+    public byte[] getPubKeyHash() throws ScriptException {
+        if (isSentToAddress())
+            return chunks.get(2).data;
+        else if (isPayToScriptHash() || isSentToP2WPKH() || isSentToP2WSH())
+            return chunks.get(1).data;
+        else
+            throw new ScriptException("Script not in the standard scriptPubKey form");
+    }
+
+    /**
+     * Returns the public key in this script. If a script contains two constants and nothing else, it is assumed to
+     * be a scriptSig (input) for a pay-to-address output and the second constant is returned (the first is the
+     * signature). If a script contains a constant and an OP_CHECKSIG opcode, the constant is returned as it is
+     * assumed to be a direct pay-to-key scriptPubKey (output) and the first constant is the public key.
+     *
+     * @throws ScriptException if the script is none of the named forms.
+     */
+    public byte[] getPubKey() throws ScriptException {
+       
