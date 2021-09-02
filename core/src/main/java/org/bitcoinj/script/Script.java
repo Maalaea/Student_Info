@@ -385,4 +385,55 @@ public class Script {
 
     /**
      * For 2-element [input] scripts assumes that the paid-to-address can be derived from the public key.
-     * The concept of a "from address" isn't well defined in Bitcoin and you should not assume the sende
+     * The concept of a "from address" isn't well defined in Bitcoin and you should not assume the sender of a
+     * transaction can actually receive coins on it. This method may be removed in future.
+     */
+    @Deprecated
+    public Address getFromAddress(NetworkParameters params) throws ScriptException {
+        return new Address(params, Utils.sha256hash160(getPubKey()));
+    }
+
+    /**
+     * Gets the destination address from this script, if it's in the required form (see getPubKey).
+     */
+    public Address getToAddress(NetworkParameters params) throws ScriptException {
+        return getToAddress(params, false);
+    }
+
+    /**
+     * Gets the destination address from this script, if it's in the required form (see getPubKey).
+     * 
+     * @param forcePayToPubKey
+     *            If true, allow payToPubKey to be casted to the corresponding address. This is useful if you prefer
+     *            showing addresses rather than pubkeys.
+     */
+    public Address getToAddress(NetworkParameters params, boolean forcePayToPubKey) throws ScriptException {
+        if (isSentToAddress())
+            return new Address(params, getPubKeyHash());
+        else if (isPayToScriptHash())
+            return Address.fromP2SHScript(params, this);
+        else if (isSentToP2WPKH())
+            return Address.fromP2WPKHHash(params, getPubKeyHash());
+        else if (isSentToP2WSH())
+            return Address.fromP2WSHHash(params, getPubKeyHash());
+        else if (forcePayToPubKey && isSentToRawPubKey())
+            return ECKey.fromPublicOnly(getPubKey()).toAddress(params);
+        else
+            throw new ScriptException("Cannot cast this script to a pay-to-address type");
+    }
+
+    ////////////////////// Interface for writing scripts from scratch ////////////////////////////////
+
+    /**
+     * Writes out the given byte buffer to the output stream with the correct opcode prefix
+     * To write an integer call writeBytes(out, Utils.reverseBytes(Utils.encodeMPI(val, false)));
+     */
+    public static void writeBytes(OutputStream os, byte[] buf) throws IOException {
+        if (buf.length < OP_PUSHDATA1) {
+            os.write(buf.length);
+            os.write(buf);
+        } else if (buf.length < 256) {
+            os.write(OP_PUSHDATA1);
+            os.write(buf.length);
+            os.write(buf);
+        } el
