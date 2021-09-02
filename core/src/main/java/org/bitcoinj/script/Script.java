@@ -436,4 +436,55 @@ public class Script {
             os.write(OP_PUSHDATA1);
             os.write(buf.length);
             os.write(buf);
-        } el
+        } else if (buf.length < 65536) {
+            os.write(OP_PUSHDATA2);
+            os.write(0xFF & (buf.length));
+            os.write(0xFF & (buf.length >> 8));
+            os.write(buf);
+        } else {
+            throw new RuntimeException("Unimplemented");
+        }
+    }
+
+    /** Creates a program that requires at least N of the given keys to sign, using OP_CHECKMULTISIG. */
+    public static byte[] createMultiSigOutputScript(int threshold, List<ECKey> pubkeys) {
+        checkArgument(threshold > 0);
+        checkArgument(threshold <= pubkeys.size());
+        checkArgument(pubkeys.size() <= 16);  // That's the max we can represent with a single opcode.
+        if (pubkeys.size() > 3) {
+            log.warn("Creating a multi-signature output that is non-standard: {} pubkeys, should be <= 3", pubkeys.size());
+        }
+        try {
+            ByteArrayOutputStream bits = new ByteArrayOutputStream();
+            bits.write(encodeToOpN(threshold));
+            for (ECKey key : pubkeys) {
+                writeBytes(bits, key.getPubKey());
+            }
+            bits.write(encodeToOpN(pubkeys.size()));
+            bits.write(OP_CHECKMULTISIG);
+            return bits.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);  // Cannot happen.
+        }
+    }
+
+    public static byte[] createInputScript(byte[] signature, byte[] pubkey) {
+        try {
+            // TODO: Do this by creating a Script *first* then having the script reassemble itself into bytes.
+            ByteArrayOutputStream bits = new UnsafeByteArrayOutputStream(signature.length + pubkey.length + 2);
+            writeBytes(bits, signature);
+            writeBytes(bits, pubkey);
+            return bits.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] createInputScript(byte[] signature) {
+        try {
+            // TODO: Do this by creating a Script *first* then having the script reassemble itself into bytes.
+            ByteArrayOutputStream bits = new UnsafeByteArrayOutputStream(signature.length + 2);
+            writeBytes(bits, signature);
+            return bits.toByteArray();
+        } catch (IOException e) {
+      
