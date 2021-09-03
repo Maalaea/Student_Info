@@ -535,4 +535,56 @@ public class Script {
      */
     public int getSigInsertionIndex(Sha256Hash hash, ECKey signingKey) {
         // Iterate over existing signatures, skipping the initial OP_0, the final redeem script
-        // and
+        // and any placeholder OP_0 sigs.
+        List<ScriptChunk> existingChunks = chunks.subList(1, chunks.size() - 1);
+        ScriptChunk redeemScriptChunk = chunks.get(chunks.size() - 1);
+        checkNotNull(redeemScriptChunk.data);
+        Script redeemScript = new Script(redeemScriptChunk.data);
+
+        int sigCount = 0;
+        int myIndex = redeemScript.findKeyInRedeem(signingKey);
+        for (ScriptChunk chunk : existingChunks) {
+            if (chunk.opcode == OP_0) {
+                // OP_0, skip
+            } else {
+                checkNotNull(chunk.data);
+                if (myIndex < redeemScript.findSigInRedeem(chunk.data, hash))
+                    return sigCount;
+                sigCount++;
+            }
+        }
+        return sigCount;
+    }
+
+    private int findKeyInRedeem(ECKey key) {
+        checkArgument(chunks.get(0).isOpCode()); // P2SH scriptSig
+        int numKeys = Script.decodeFromOpN(chunks.get(chunks.size() - 2).opcode);
+        for (int i = 0 ; i < numKeys ; i++) {
+            if (Arrays.equals(chunks.get(1 + i).data, key.getPubKey())) {
+                return i;
+            }
+        }
+
+        throw new IllegalStateException("Could not find matching key " + key.toString() + " in script " + this);
+    }
+
+    /**
+     * Returns a list of the keys required by this script, assuming a multi-sig script.
+     *
+     * @throws ScriptException if the script type is not understood or is pay to address or is P2SH (run this method on the "Redeem script" instead).
+     */
+    public List<ECKey> getPubKeys() {
+        if (!isSentToMultiSig())
+            throw new ScriptException("Only usable for multisig scripts.");
+
+        ArrayList<ECKey> result = Lists.newArrayList();
+        int numKeys = Script.decodeFromOpN(chunks.get(chunks.size() - 2).opcode);
+        for (int i = 0 ; i < numKeys ; i++)
+            result.add(ECKey.fromPublicOnly(chunks.get(1 + i).data));
+        return result;
+    }
+
+    private int findSigInRedeem(byte[] signatureBytes, Sha256Hash hash) {
+        checkArgument(chunks.get(0).isOpCode()); // P2SH scriptSig
+        int numKeys = Script.decodeFromOpN(chunks.get(chunks.size() - 2).opcode);
+        TransactionSignature signature = TransactionSignature.deco
