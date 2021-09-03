@@ -487,4 +487,52 @@ public class Script {
             writeBytes(bits, signature);
             return bits.toByteArray();
         } catch (IOException e) {
-      
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates an incomplete scriptSig that, once filled with signatures, can redeem output containing this scriptPubKey.
+     * Instead of the signatures resulting script has OP_0.
+     * Having incomplete input script allows to pass around partially signed tx.
+     * It is expected that this program later on will be updated with proper signatures.
+     */
+    public Script createEmptyInputScript(@Nullable ECKey key, @Nullable Script redeemScript) {
+        if (isSentToAddress()) {
+            checkArgument(key != null, "Key required to create pay-to-address input script");
+            return ScriptBuilder.createInputScript(null, key);
+        } else if (isSentToRawPubKey()) {
+            return ScriptBuilder.createInputScript(null);
+        } else if (isPayToScriptHash()) {
+            checkArgument(redeemScript != null, "Redeem script required to create P2SH input script");
+            return ScriptBuilder.createP2SHMultiSigInputScript(null, redeemScript);
+        } else {
+            throw new ScriptException("Do not understand script type: " + this);
+        }
+    }
+
+    /**
+     * Returns a copy of the given scriptSig with the signature inserted in the given position.
+     */
+    public Script getScriptSigWithSignature(Script scriptSig, byte[] sigBytes, int index) {
+        int sigsPrefixCount = 0;
+        int sigsSuffixCount = 0;
+        if (isPayToScriptHash()) {
+            sigsPrefixCount = 1; // OP_0 <sig>* <redeemScript>
+            sigsSuffixCount = 1;
+        } else if (isSentToMultiSig()) {
+            sigsPrefixCount = 1; // OP_0 <sig>*
+        } else if (isSentToAddress()) {
+            sigsSuffixCount = 1; // <sig> <pubkey>
+        }
+        return ScriptBuilder.updateScriptWithSignature(scriptSig, sigBytes, index, sigsPrefixCount, sigsSuffixCount);
+    }
+
+
+    /**
+     * Returns the index where a signature by the key should be inserted.  Only applicable to
+     * a P2SH scriptSig.
+     */
+    public int getSigInsertionIndex(Sha256Hash hash, ECKey signingKey) {
+        // Iterate over existing signatures, skipping the initial OP_0, the final redeem script
+        // and
