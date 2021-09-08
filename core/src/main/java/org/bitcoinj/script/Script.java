@@ -587,4 +587,65 @@ public class Script {
     private int findSigInRedeem(byte[] signatureBytes, Sha256Hash hash) {
         checkArgument(chunks.get(0).isOpCode()); // P2SH scriptSig
         int numKeys = Script.decodeFromOpN(chunks.get(chunks.size() - 2).opcode);
-        TransactionSignature signature = TransactionSignature.deco
+        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(signatureBytes, true);
+        for (int i = 0 ; i < numKeys ; i++) {
+            if (ECKey.fromPublicOnly(chunks.get(i + 1).data).verify(hash, signature)) {
+                return i;
+            }
+        }
+
+        throw new IllegalStateException("Could not find matching key for signature on " + hash.toString() + " sig " + HEX.encode(signatureBytes));
+    }
+
+
+
+    ////////////////////// Interface used during verification of transactions/blocks ////////////////////////////////
+
+    private static int getSigOpCount(List<ScriptChunk> chunks, boolean accurate) throws ScriptException {
+        int sigOps = 0;
+        int lastOpCode = OP_INVALIDOPCODE;
+        for (ScriptChunk chunk : chunks) {
+            if (chunk.isOpCode()) {
+                switch (chunk.opcode) {
+                case OP_CHECKSIG:
+                case OP_CHECKSIGVERIFY:
+                    sigOps++;
+                    break;
+                case OP_CHECKMULTISIG:
+                case OP_CHECKMULTISIGVERIFY:
+                    if (accurate && lastOpCode >= OP_1 && lastOpCode <= OP_16)
+                        sigOps += decodeFromOpN(lastOpCode);
+                    else
+                        sigOps += 20;
+                    break;
+                default:
+                    break;
+                }
+                lastOpCode = chunk.opcode;
+            }
+        }
+        return sigOps;
+    }
+
+    static int decodeFromOpN(int opcode) {
+        checkArgument((opcode == OP_0 || opcode == OP_1NEGATE) || (opcode >= OP_1 && opcode <= OP_16), "decodeFromOpN called on non OP_N opcode");
+        if (opcode == OP_0)
+            return 0;
+        else if (opcode == OP_1NEGATE)
+            return -1;
+        else
+            return opcode + 1 - OP_1;
+    }
+
+    static int encodeToOpN(int value) {
+        checkArgument(value >= -1 && value <= 16, "encodeToOpN called for " + value + " which we cannot encode in an opcode.");
+        if (value == 0)
+            return OP_0;
+        else if (value == -1)
+            return OP_1NEGATE;
+        else
+            return value - 1 + OP_1;
+    }
+
+    /**
+     * Gets the count of regular SigOps in the script program (counting multisig ops as
