@@ -648,4 +648,60 @@ public class Script {
     }
 
     /**
-     * Gets the count of regular SigOps in the script program (counting multisig ops as
+     * Gets the count of regular SigOps in the script program (counting multisig ops as 20)
+     */
+    public static int getSigOpCount(byte[] program) throws ScriptException {
+        Script script = new Script();
+        try {
+            script.parse(program);
+        } catch (ScriptException e) {
+            // Ignore errors and count up to the parse-able length
+        }
+        return getSigOpCount(script.chunks, false);
+    }
+    
+    /**
+     * Gets the count of P2SH Sig Ops in the Script scriptSig
+     */
+    public static long getP2SHSigOpCount(byte[] scriptSig) throws ScriptException {
+        Script script = new Script();
+        try {
+            script.parse(scriptSig);
+        } catch (ScriptException e) {
+            // Ignore errors and count up to the parse-able length
+        }
+        for (int i = script.chunks.size() - 1; i >= 0; i--)
+            if (!script.chunks.get(i).isOpCode()) {
+                Script subScript =  new Script();
+                subScript.parse(script.chunks.get(i).data);
+                return getSigOpCount(subScript.chunks, true);
+            }
+        return 0;
+    }
+
+    /**
+     * Returns number of signatures required to satisfy this script.
+     */
+    public int getNumberOfSignaturesRequiredToSpend() {
+        if (isSentToMultiSig()) {
+            // for N of M CHECKMULTISIG script we will need N signatures to spend
+            ScriptChunk nChunk = chunks.get(0);
+            return Script.decodeFromOpN(nChunk.opcode);
+        } else if (isSentToAddress() || isSentToRawPubKey()) {
+            // pay-to-address and pay-to-pubkey require single sig
+            return 1;
+        } else if (isPayToScriptHash()) {
+            throw new IllegalStateException("For P2SH number of signatures depends on redeem script");
+        } else {
+            throw new IllegalStateException("Unsupported script type");
+        }
+    }
+
+    /**
+     * Returns number of bytes required to spend this script. It accepts optional ECKey and redeemScript that may
+     * be required for certain types of script to estimate target size.
+     */
+    public int getNumberOfBytesRequiredToSpend(@Nullable ECKey pubKey, @Nullable Script redeemScript) {
+        if (isPayToScriptHash()) {
+            // scriptSig: <sig> [sig] [sig...] <redeemscript>
+            checkArgument(redeemS
