@@ -704,4 +704,38 @@ public class Script {
     public int getNumberOfBytesRequiredToSpend(@Nullable ECKey pubKey, @Nullable Script redeemScript) {
         if (isPayToScriptHash()) {
             // scriptSig: <sig> [sig] [sig...] <redeemscript>
-            checkArgument(redeemS
+            checkArgument(redeemScript != null, "P2SH script requires redeemScript to be spent");
+            return redeemScript.getNumberOfSignaturesRequiredToSpend() * SIG_SIZE + redeemScript.getProgram().length;
+        } else if (isSentToMultiSig()) {
+            // scriptSig: OP_0 <sig> [sig] [sig...]
+            return getNumberOfSignaturesRequiredToSpend() * SIG_SIZE + 1;
+        } else if (isSentToRawPubKey()) {
+            // scriptSig: <sig>
+            return SIG_SIZE;
+        } else if (isSentToAddress()) {
+            // scriptSig: <sig> <pubkey>
+            int uncompressedPubKeySize = 65;
+            return SIG_SIZE + (pubKey != null ? pubKey.getPubKey().length : uncompressedPubKeySize);
+        } else {
+            throw new IllegalStateException("Unsupported script type");
+        }
+    }
+
+    /**
+     * <p>Whether or not this is a scriptPubKey representing a pay-to-script-hash output. In such outputs, the logic that
+     * controls reclamation is not actually in the output at all. Instead there's just a hash, and it's up to the
+     * spending input to provide a program matching that hash. This rule is "soft enforced" by the network as it does
+     * not exist in Bitcoin Core. It means blocks containing P2SH transactions that don't match
+     * correctly are considered valid, but won't be mined upon, so they'll be rapidly re-orgd out of the chain. This
+     * logic is defined by <a href="https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki">BIP 16</a>.</p>
+     *
+     * <p>bitcoinj does not support creation of P2SH transactions today. The goal of P2SH is to allow short addresses
+     * even for complex scripts (eg, multi-sig outputs) so they are convenient to work with in things like QRcodes or
+     * with copy/paste, and also to minimize the size of the unspent output set (which improves performance of the
+     * Bitcoin system).</p>
+     */
+    public boolean isPayToScriptHash() {
+        // We have to check against the serialized form because BIP16 defines a P2SH output using an exact byte
+        // template, not the logical program structure. Thus you can have two programs that look identical when
+        // printed out but one is a P2SH script and the other isn't! :(
+        byte[] program = g
