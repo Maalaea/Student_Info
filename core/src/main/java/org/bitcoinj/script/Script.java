@@ -787,4 +787,59 @@ public class Script {
         return true;
     }
 
-    private static boolean equalsRange(byte[] a, 
+    private static boolean equalsRange(byte[] a, int start, byte[] b) {
+        if (start + b.length > a.length)
+            return false;
+        for (int i = 0; i < b.length; i++)
+            if (a[i + start] != b[i])
+                return false;
+        return true;
+    }
+    
+    /**
+     * Returns the script bytes of inputScript with all instances of the specified script object removed
+     */
+    public static byte[] removeAllInstancesOf(byte[] inputScript, byte[] chunkToRemove) {
+        // We usually don't end up removing anything
+        UnsafeByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(inputScript.length);
+
+        int cursor = 0;
+        while (cursor < inputScript.length) {
+            boolean skip = equalsRange(inputScript, cursor, chunkToRemove);
+            
+            int opcode = inputScript[cursor++] & 0xFF;
+            int additionalBytes = 0;
+            if (opcode >= 0 && opcode < OP_PUSHDATA1) {
+                additionalBytes = opcode;
+            } else if (opcode == OP_PUSHDATA1) {
+                additionalBytes = (0xFF & inputScript[cursor]) + 1;
+            } else if (opcode == OP_PUSHDATA2) {
+                additionalBytes = ((0xFF & inputScript[cursor]) |
+                                  ((0xFF & inputScript[cursor+1]) << 8)) + 2;
+            } else if (opcode == OP_PUSHDATA4) {
+                additionalBytes = ((0xFF & inputScript[cursor]) |
+                                  ((0xFF & inputScript[cursor+1]) << 8) |
+                                  ((0xFF & inputScript[cursor+1]) << 16) |
+                                  ((0xFF & inputScript[cursor+1]) << 24)) + 4;
+            }
+            if (!skip) {
+                try {
+                    bos.write(opcode);
+                    bos.write(Arrays.copyOfRange(inputScript, cursor, cursor + additionalBytes));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            cursor += additionalBytes;
+        }
+        return bos.toByteArray();
+    }
+    
+    /**
+     * Returns the script bytes of inputScript with all instances of the given op code removed
+     */
+    public static byte[] removeAllInstancesOfOp(byte[] inputScript, int opCode) {
+        return removeAllInstancesOf(inputScript, new byte[] {(byte)opCode});
+    }
+    
+    ////////////////////// Script ve
