@@ -842,4 +842,52 @@ public class Script {
         return removeAllInstancesOf(inputScript, new byte[] {(byte)opCode});
     }
     
-    ////////////////////// Script ve
+    ////////////////////// Script verification and helpers ////////////////////////////////
+    
+    private static boolean castToBool(byte[] data) {
+        for (int i = 0; i < data.length; i++)
+        {
+            // "Can be negative zero" - Bitcoin Core (see OpenSSL's BN_bn2mpi)
+            if (data[i] != 0)
+                return !(i == data.length - 1 && (data[i] & 0xFF) == 0x80);
+        }
+        return false;
+    }
+    
+    /**
+     * Cast a script chunk to a BigInteger.
+     *
+     * @see #castToBigInteger(byte[], int) for values with different maximum
+     * sizes.
+     * @throws ScriptException if the chunk is longer than 4 bytes.
+     */
+    private static BigInteger castToBigInteger(byte[] chunk) throws ScriptException {
+        if (chunk.length > 4)
+            throw new ScriptException("Script attempted to use an integer larger than 4 bytes");
+        return Utils.decodeMPI(Utils.reverseBytes(chunk), false);
+    }
+
+    /**
+     * Cast a script chunk to a BigInteger. Normally you would want
+     * {@link #castToBigInteger(byte[])} instead, this is only for cases where
+     * the normal maximum length does not apply (i.e. CHECKLOCKTIMEVERIFY).
+     *
+     * @param maxLength the maximum length in bytes.
+     * @throws ScriptException if the chunk is longer than the specified maximum.
+     */
+    private static BigInteger castToBigInteger(final byte[] chunk, final int maxLength) throws ScriptException {
+        if (chunk.length > maxLength)
+            throw new ScriptException("Script attempted to use an integer larger than "
+                + maxLength + " bytes");
+        return Utils.decodeMPI(Utils.reverseBytes(chunk), false);
+    }
+
+    public boolean isOpReturn() {
+        return chunks.size() > 0 && chunks.get(0).equalsOpCode(OP_RETURN);
+    }
+
+    /**
+     * Exposes the script interpreter. Normally you should not use this directly, instead use
+     * {@link org.bitcoinj.core.TransactionInput#verify(org.bitcoinj.core.TransactionOutput)} or
+     * {@link org.bitcoinj.script.Script#correctlySpends(org.bitcoinj.core.Transaction, long, Script)}. This method
+     * is useful if you need more pr
