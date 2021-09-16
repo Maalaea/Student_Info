@@ -890,4 +890,45 @@ public class Script {
      * Exposes the script interpreter. Normally you should not use this directly, instead use
      * {@link org.bitcoinj.core.TransactionInput#verify(org.bitcoinj.core.TransactionOutput)} or
      * {@link org.bitcoinj.script.Script#correctlySpends(org.bitcoinj.core.Transaction, long, Script)}. This method
-     * is useful if you need more pr
+     * is useful if you need more precise control or access to the final state of the stack. This interface is very
+     * likely to change in future.
+     *
+     * @deprecated Use {@link #executeScript(org.bitcoinj.core.Transaction, long, org.bitcoinj.script.Script, java.util.LinkedList, java.util.Set)}
+     * instead.
+     */
+    @Deprecated
+    public static void executeScript(@Nullable Transaction txContainingThis, long index,
+                                     Script script, LinkedList<byte[]> stack, boolean enforceNullDummy) throws ScriptException {
+        final EnumSet<VerifyFlag> flags = enforceNullDummy
+            ? EnumSet.of(VerifyFlag.NULLDUMMY)
+            : EnumSet.noneOf(VerifyFlag.class);
+
+        executeScript(txContainingThis, index, script, stack, flags);
+    }
+
+    @Deprecated
+    public static void executeScript(@Nullable Transaction txContainingThis, long index,
+                                     Script script, LinkedList<byte[]> stack, Set<VerifyFlag> verifyFlags) throws ScriptException {
+        executeScript(txContainingThis, index, script, stack, Coin.ZERO, false, verifyFlags);
+    }
+
+    /**
+     * Exposes the script interpreter. Normally you should not use this directly, instead use
+     * {@link org.bitcoinj.core.TransactionInput#verify(org.bitcoinj.core.TransactionOutput)} or
+     * {@link org.bitcoinj.script.Script#correctlySpends(org.bitcoinj.core.Transaction, long, Script, Coin, Set<VerifyFlag>)}. This method
+     * is useful if you need more precise control or access to the final state of the stack. This interface is very
+     * likely to change in future.
+     */
+    public static void executeScript(@Nullable Transaction txContainingThis, long index,
+                                     Script script, LinkedList<byte[]> stack, Coin value, boolean segwit,
+                                     Set<VerifyFlag> verifyFlags) throws ScriptException {
+        int opCount = 0;
+        int lastCodeSepLocation = 0;
+
+        LinkedList<byte[]> altstack = new LinkedList<>();
+        LinkedList<Boolean> ifStack = new LinkedList<>();
+
+        for (ScriptChunk chunk : script.chunks) {
+            boolean shouldExecute = !ifStack.contains(false);
+
+            if (chunk.opcod
