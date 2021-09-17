@@ -931,4 +931,52 @@ public class Script {
         for (ScriptChunk chunk : script.chunks) {
             boolean shouldExecute = !ifStack.contains(false);
 
-            if (chunk.opcod
+            if (chunk.opcode == OP_0) {
+                if (!shouldExecute)
+                    continue;
+
+                stack.add(new byte[] {});
+            } else if (!chunk.isOpCode()) {
+                if (chunk.data.length > MAX_SCRIPT_ELEMENT_SIZE)
+                    throw new ScriptException("Attempted to push a data string larger than 520 bytes");
+                
+                if (!shouldExecute)
+                    continue;
+                
+                stack.add(chunk.data);
+            } else {
+                int opcode = chunk.opcode;
+                if (opcode > OP_16) {
+                    opCount++;
+                    if (opCount > 201)
+                        throw new ScriptException("More script operations than is allowed");
+                }
+                
+                if (opcode == OP_VERIF || opcode == OP_VERNOTIF)
+                    throw new ScriptException("Script included OP_VERIF or OP_VERNOTIF");
+                
+                if (opcode == OP_CAT || opcode == OP_SUBSTR || opcode == OP_LEFT || opcode == OP_RIGHT ||
+                    opcode == OP_INVERT || opcode == OP_AND || opcode == OP_OR || opcode == OP_XOR ||
+                    opcode == OP_2MUL || opcode == OP_2DIV || opcode == OP_MUL || opcode == OP_DIV ||
+                    opcode == OP_MOD || opcode == OP_LSHIFT || opcode == OP_RSHIFT)
+                    throw new ScriptException("Script included a disabled Script Op.");
+                
+                switch (opcode) {
+                case OP_IF:
+                    if (!shouldExecute) {
+                        ifStack.add(false);
+                        continue;
+                    }
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_IF on an empty stack");
+                    ifStack.add(castToBool(stack.pollLast()));
+                    continue;
+                case OP_NOTIF:
+                    if (!shouldExecute) {
+                        ifStack.add(false);
+                        continue;
+                    }
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_NOTIF on an empty stack");
+                    ifStack.add(!castToBool(stack.pollLast()));
+                    c
