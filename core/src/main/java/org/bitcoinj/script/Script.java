@@ -979,4 +979,56 @@ public class Script {
                     if (stack.size() < 1)
                         throw new ScriptException("Attempted OP_NOTIF on an empty stack");
                     ifStack.add(!castToBool(stack.pollLast()));
-                    c
+                    continue;
+                case OP_ELSE:
+                    if (ifStack.isEmpty())
+                        throw new ScriptException("Attempted OP_ELSE without OP_IF/NOTIF");
+                    ifStack.add(!ifStack.pollLast());
+                    continue;
+                case OP_ENDIF:
+                    if (ifStack.isEmpty())
+                        throw new ScriptException("Attempted OP_ENDIF without OP_IF/NOTIF");
+                    ifStack.pollLast();
+                    continue;
+                }
+                
+                if (!shouldExecute)
+                    continue;
+                
+                switch(opcode) {
+                // OP_0 is no opcode
+                case OP_1NEGATE:
+                    stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ONE.negate(), false)));
+                    break;
+                case OP_1:
+                case OP_2:
+                case OP_3:
+                case OP_4:
+                case OP_5:
+                case OP_6:
+                case OP_7:
+                case OP_8:
+                case OP_9:
+                case OP_10:
+                case OP_11:
+                case OP_12:
+                case OP_13:
+                case OP_14:
+                case OP_15:
+                case OP_16:
+                    stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.valueOf(decodeFromOpN(opcode)), false)));
+                    break;
+                case OP_NOP:
+                    break;
+                case OP_VERIFY:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_VERIFY on an empty stack");
+                    if (!castToBool(stack.pollLast()))
+                        throw new ScriptException("OP_VERIFY failed");
+                    break;
+                case OP_RETURN:
+                    throw new ScriptException("Script called OP_RETURN");
+                case OP_TOALTSTACK:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_TOALTSTACK on an empty stack");
+                    altstack.add(
