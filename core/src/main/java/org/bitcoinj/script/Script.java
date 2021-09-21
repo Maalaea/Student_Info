@@ -1073,4 +1073,47 @@ public class Script {
                     stack.add(OP2OVERtmpChunk2);
                     break;
                 case OP_2ROT:
-                    if (stack.size()
+                    if (stack.size() < 6)
+                        throw new ScriptException("Attempted OP_2ROT on a stack with size < 6");
+                    byte[] OP2ROTtmpChunk6 = stack.pollLast();
+                    byte[] OP2ROTtmpChunk5 = stack.pollLast();
+                    byte[] OP2ROTtmpChunk4 = stack.pollLast();
+                    byte[] OP2ROTtmpChunk3 = stack.pollLast();
+                    byte[] OP2ROTtmpChunk2 = stack.pollLast();
+                    byte[] OP2ROTtmpChunk1 = stack.pollLast();
+                    stack.add(OP2ROTtmpChunk3);
+                    stack.add(OP2ROTtmpChunk4);
+                    stack.add(OP2ROTtmpChunk5);
+                    stack.add(OP2ROTtmpChunk6);
+                    stack.add(OP2ROTtmpChunk1);
+                    stack.add(OP2ROTtmpChunk2);
+                    break;
+                case OP_2SWAP:
+                    if (stack.size() < 4)
+                        throw new ScriptException("Attempted OP_2SWAP on a stack with size < 4");
+                    byte[] OP2SWAPtmpChunk4 = stack.pollLast();
+                    byte[] OP2SWAPtmpChunk3 = stack.pollLast();
+                    byte[] OP2SWAPtmpChunk2 = stack.pollLast();
+                    byte[] OP2SWAPtmpChunk1 = stack.pollLast();
+                    stack.add(OP2SWAPtmpChunk3);
+                    stack.add(OP2SWAPtmpChunk4);
+                    stack.add(OP2SWAPtmpChunk1);
+                    stack.add(OP2SWAPtmpChunk2);
+                    break;
+                case OP_IFDUP:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_IFDUP on an empty stack");
+                    if (castToBool(stack.getLast()))
+                        stack.add(stack.getLast());
+                    break;
+                case OP_DEPTH:
+                    stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.valueOf(stack.size()), false)));
+                    break;
+                case OP_DROP:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_DROP on an empty stack");
+                    stack.pollLast();
+                    break;
+                case OP_DUP:
+                    if (stack.size() < 1)
+                        throw
