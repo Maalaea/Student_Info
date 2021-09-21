@@ -1031,4 +1031,46 @@ public class Script {
                 case OP_TOALTSTACK:
                     if (stack.size() < 1)
                         throw new ScriptException("Attempted OP_TOALTSTACK on an empty stack");
-                    altstack.add(
+                    altstack.add(stack.pollLast());
+                    break;
+                case OP_FROMALTSTACK:
+                    if (altstack.size() < 1)
+                        throw new ScriptException("Attempted OP_TOALTSTACK on an empty altstack");
+                    stack.add(altstack.pollLast());
+                    break;
+                case OP_2DROP:
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted OP_2DROP on a stack with size < 2");
+                    stack.pollLast();
+                    stack.pollLast();
+                    break;
+                case OP_2DUP:
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted OP_2DUP on a stack with size < 2");
+                    Iterator<byte[]> it2DUP = stack.descendingIterator();
+                    byte[] OP2DUPtmpChunk2 = it2DUP.next();
+                    stack.add(it2DUP.next());
+                    stack.add(OP2DUPtmpChunk2);
+                    break;
+                case OP_3DUP:
+                    if (stack.size() < 3)
+                        throw new ScriptException("Attempted OP_3DUP on a stack with size < 3");
+                    Iterator<byte[]> it3DUP = stack.descendingIterator();
+                    byte[] OP3DUPtmpChunk3 = it3DUP.next();
+                    byte[] OP3DUPtmpChunk2 = it3DUP.next();
+                    stack.add(it3DUP.next());
+                    stack.add(OP3DUPtmpChunk2);
+                    stack.add(OP3DUPtmpChunk3);
+                    break;
+                case OP_2OVER:
+                    if (stack.size() < 4)
+                        throw new ScriptException("Attempted OP_2OVER on a stack with size < 4");
+                    Iterator<byte[]> it2OVER = stack.descendingIterator();
+                    it2OVER.next();
+                    it2OVER.next();
+                    byte[] OP2OVERtmpChunk2 = it2OVER.next();
+                    stack.add(it2OVER.next());
+                    stack.add(OP2OVERtmpChunk2);
+                    break;
+                case OP_2ROT:
+                    if (stack.size()
