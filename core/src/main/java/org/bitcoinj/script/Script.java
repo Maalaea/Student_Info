@@ -1116,4 +1116,48 @@ public class Script {
                     break;
                 case OP_DUP:
                     if (stack.size() < 1)
-                        throw
+                        throw new ScriptException("Attempted OP_DUP on an empty stack");
+                    stack.add(stack.getLast());
+                    break;
+                case OP_NIP:
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted OP_NIP on a stack with size < 2");
+                    byte[] OPNIPtmpChunk = stack.pollLast();
+                    stack.pollLast();
+                    stack.add(OPNIPtmpChunk);
+                    break;
+                case OP_OVER:
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted OP_OVER on a stack with size < 2");
+                    Iterator<byte[]> itOVER = stack.descendingIterator();
+                    itOVER.next();
+                    stack.add(itOVER.next());
+                    break;
+                case OP_PICK:
+                case OP_ROLL:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_PICK/OP_ROLL on an empty stack");
+                    long val = castToBigInteger(stack.pollLast()).longValue();
+                    if (val < 0 || val >= stack.size())
+                        throw new ScriptException("OP_PICK/OP_ROLL attempted to get data deeper than stack size");
+                    Iterator<byte[]> itPICK = stack.descendingIterator();
+                    for (long i = 0; i < val; i++)
+                        itPICK.next();
+                    byte[] OPROLLtmpChunk = itPICK.next();
+                    if (opcode == OP_ROLL)
+                        itPICK.remove();
+                    stack.add(OPROLLtmpChunk);
+                    break;
+                case OP_ROT:
+                    if (stack.size() < 3)
+                        throw new ScriptException("Attempted OP_ROT on a stack with size < 3");
+                    byte[] OPROTtmpChunk3 = stack.pollLast();
+                    byte[] OPROTtmpChunk2 = stack.pollLast();
+                    byte[] OPROTtmpChunk1 = stack.pollLast();
+                    stack.add(OPROTtmpChunk2);
+                    stack.add(OPROTtmpChunk3);
+                    stack.add(OPROTtmpChunk1);
+                    break;
+                case OP_SWAP:
+                case OP_TUCK:
+           
