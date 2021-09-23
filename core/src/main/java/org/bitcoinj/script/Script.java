@@ -1203,4 +1203,54 @@ public class Script {
                 case OP_0NOTEQUAL:
                     if (stack.size() < 1)
                         throw new ScriptException("Attempted a numeric op on an empty stack");
-                    BigInteger 
+                    BigInteger numericOPnum = castToBigInteger(stack.pollLast());
+                                        
+                    switch (opcode) {
+                    case OP_1ADD:
+                        numericOPnum = numericOPnum.add(BigInteger.ONE);
+                        break;
+                    case OP_1SUB:
+                        numericOPnum = numericOPnum.subtract(BigInteger.ONE);
+                        break;
+                    case OP_NEGATE:
+                        numericOPnum = numericOPnum.negate();
+                        break;
+                    case OP_ABS:
+                        if (numericOPnum.signum() < 0)
+                            numericOPnum = numericOPnum.negate();
+                        break;
+                    case OP_NOT:
+                        if (numericOPnum.equals(BigInteger.ZERO))
+                            numericOPnum = BigInteger.ONE;
+                        else
+                            numericOPnum = BigInteger.ZERO;
+                        break;
+                    case OP_0NOTEQUAL:
+                        if (numericOPnum.equals(BigInteger.ZERO))
+                            numericOPnum = BigInteger.ZERO;
+                        else
+                            numericOPnum = BigInteger.ONE;
+                        break;
+                    default:
+                        throw new AssertionError("Unreachable");
+                    }
+                    
+                    stack.add(Utils.reverseBytes(Utils.encodeMPI(numericOPnum, false)));
+                    break;
+                case OP_2MUL:
+                case OP_2DIV:
+                    throw new ScriptException("Attempted to use disabled Script Op.");
+                case OP_ADD:
+                case OP_SUB:
+                case OP_BOOLAND:
+                case OP_BOOLOR:
+                case OP_NUMEQUAL:
+                case OP_NUMNOTEQUAL:
+                case OP_LESSTHAN:
+                case OP_GREATERTHAN:
+                case OP_LESSTHANOREQUAL:
+                case OP_GREATERTHANOREQUAL:
+                case OP_MIN:
+                case OP_MAX:
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted a numeric op on a stack with size
