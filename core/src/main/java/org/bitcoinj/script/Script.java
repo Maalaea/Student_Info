@@ -1160,4 +1160,47 @@ public class Script {
                     break;
                 case OP_SWAP:
                 case OP_TUCK:
-           
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted OP_SWAP on a stack with size < 2");
+                    byte[] OPSWAPtmpChunk2 = stack.pollLast();
+                    byte[] OPSWAPtmpChunk1 = stack.pollLast();
+                    stack.add(OPSWAPtmpChunk2);
+                    stack.add(OPSWAPtmpChunk1);
+                    if (opcode == OP_TUCK)
+                        stack.add(OPSWAPtmpChunk2);
+                    break;
+                case OP_CAT:
+                case OP_SUBSTR:
+                case OP_LEFT:
+                case OP_RIGHT:
+                    throw new ScriptException("Attempted to use disabled Script Op.");
+                case OP_SIZE:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_SIZE on an empty stack");
+                    stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.valueOf(stack.getLast().length), false)));
+                    break;
+                case OP_INVERT:
+                case OP_AND:
+                case OP_OR:
+                case OP_XOR:
+                    throw new ScriptException("Attempted to use disabled Script Op.");
+                case OP_EQUAL:
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted OP_EQUALVERIFY on a stack with size < 2");
+                    stack.add(Arrays.equals(stack.pollLast(), stack.pollLast()) ? new byte[] {1} : new byte[] {});
+                    break;
+                case OP_EQUALVERIFY:
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted OP_EQUALVERIFY on a stack with size < 2");
+                    if (!Arrays.equals(stack.pollLast(), stack.pollLast()))
+                        throw new ScriptException("OP_EQUALVERIFY: non-equal data");
+                    break;
+                case OP_1ADD:
+                case OP_1SUB:
+                case OP_NEGATE:
+                case OP_ABS:
+                case OP_NOT:
+                case OP_0NOTEQUAL:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted a numeric op on an empty stack");
+                    BigInteger 
