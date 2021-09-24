@@ -1253,4 +1253,46 @@ public class Script {
                 case OP_MIN:
                 case OP_MAX:
                     if (stack.size() < 2)
-                        throw new ScriptException("Attempted a numeric op on a stack with size
+                        throw new ScriptException("Attempted a numeric op on a stack with size < 2");
+                    BigInteger numericOPnum2 = castToBigInteger(stack.pollLast());
+                    BigInteger numericOPnum1 = castToBigInteger(stack.pollLast());
+
+                    BigInteger numericOPresult;
+                    switch (opcode) {
+                    case OP_ADD:
+                        numericOPresult = numericOPnum1.add(numericOPnum2);
+                        break;
+                    case OP_SUB:
+                        numericOPresult = numericOPnum1.subtract(numericOPnum2);
+                        break;
+                    case OP_BOOLAND:
+                        if (!numericOPnum1.equals(BigInteger.ZERO) && !numericOPnum2.equals(BigInteger.ZERO))
+                            numericOPresult = BigInteger.ONE;
+                        else
+                            numericOPresult = BigInteger.ZERO;
+                        break;
+                    case OP_BOOLOR:
+                        if (!numericOPnum1.equals(BigInteger.ZERO) || !numericOPnum2.equals(BigInteger.ZERO))
+                            numericOPresult = BigInteger.ONE;
+                        else
+                            numericOPresult = BigInteger.ZERO;
+                        break;
+                    case OP_NUMEQUAL:
+                        if (numericOPnum1.equals(numericOPnum2))
+                            numericOPresult = BigInteger.ONE;
+                        else
+                            numericOPresult = BigInteger.ZERO;
+                        break;
+                    case OP_NUMNOTEQUAL:
+                        if (!numericOPnum1.equals(numericOPnum2))
+                            numericOPresult = BigInteger.ONE;
+                        else
+                            numericOPresult = BigInteger.ZERO;
+                        break;
+                    case OP_LESSTHAN:
+                        if (numericOPnum1.compareTo(numericOPnum2) < 0)
+                            numericOPresult = BigInteger.ONE;
+                        else
+                            numericOPresult = BigInteger.ZERO;
+                        break;
+                    case OP_GREAT
