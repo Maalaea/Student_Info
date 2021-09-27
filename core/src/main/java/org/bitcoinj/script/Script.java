@@ -1295,4 +1295,49 @@ public class Script {
                         else
                             numericOPresult = BigInteger.ZERO;
                         break;
-                    case OP_GREAT
+                    case OP_GREATERTHAN:
+                        if (numericOPnum1.compareTo(numericOPnum2) > 0)
+                            numericOPresult = BigInteger.ONE;
+                        else
+                            numericOPresult = BigInteger.ZERO;
+                        break;
+                    case OP_LESSTHANOREQUAL:
+                        if (numericOPnum1.compareTo(numericOPnum2) <= 0)
+                            numericOPresult = BigInteger.ONE;
+                        else
+                            numericOPresult = BigInteger.ZERO;
+                        break;
+                    case OP_GREATERTHANOREQUAL:
+                        if (numericOPnum1.compareTo(numericOPnum2) >= 0)
+                            numericOPresult = BigInteger.ONE;
+                        else
+                            numericOPresult = BigInteger.ZERO;
+                        break;
+                    case OP_MIN:
+                        if (numericOPnum1.compareTo(numericOPnum2) < 0)
+                            numericOPresult = numericOPnum1;
+                        else
+                            numericOPresult = numericOPnum2;
+                        break;
+                    case OP_MAX:
+                        if (numericOPnum1.compareTo(numericOPnum2) > 0)
+                            numericOPresult = numericOPnum1;
+                        else
+                            numericOPresult = numericOPnum2;
+                        break;
+                    default:
+                        throw new RuntimeException("Opcode switched at runtime?");
+                    }
+                    
+                    stack.add(Utils.reverseBytes(Utils.encodeMPI(numericOPresult, false)));
+                    break;
+                case OP_MUL:
+                case OP_DIV:
+                case OP_MOD:
+                case OP_LSHIFT:
+                case OP_RSHIFT:
+                    throw new ScriptException("Attempted to use disabled Script Op.");
+                case OP_NUMEQUALVERIFY:
+                    if (stack.size() < 2)
+                        throw new ScriptException("Attempted OP_NUMEQUALVERIFY on a stack with size < 2");
+                    BigInteger 
