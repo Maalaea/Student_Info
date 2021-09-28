@@ -1340,4 +1340,40 @@ public class Script {
                 case OP_NUMEQUALVERIFY:
                     if (stack.size() < 2)
                         throw new ScriptException("Attempted OP_NUMEQUALVERIFY on a stack with size < 2");
-                    BigInteger 
+                    BigInteger OPNUMEQUALVERIFYnum2 = castToBigInteger(stack.pollLast());
+                    BigInteger OPNUMEQUALVERIFYnum1 = castToBigInteger(stack.pollLast());
+                    
+                    if (!OPNUMEQUALVERIFYnum1.equals(OPNUMEQUALVERIFYnum2))
+                        throw new ScriptException("OP_NUMEQUALVERIFY failed");
+                    break;
+                case OP_WITHIN:
+                    if (stack.size() < 3)
+                        throw new ScriptException("Attempted OP_WITHIN on a stack with size < 3");
+                    BigInteger OPWITHINnum3 = castToBigInteger(stack.pollLast());
+                    BigInteger OPWITHINnum2 = castToBigInteger(stack.pollLast());
+                    BigInteger OPWITHINnum1 = castToBigInteger(stack.pollLast());
+                    if (OPWITHINnum2.compareTo(OPWITHINnum1) <= 0 && OPWITHINnum1.compareTo(OPWITHINnum3) < 0)
+                        stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ONE, false)));
+                    else
+                        stack.add(Utils.reverseBytes(Utils.encodeMPI(BigInteger.ZERO, false)));
+                    break;
+                case OP_RIPEMD160:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_RIPEMD160 on an empty stack");
+                    RIPEMD160Digest digest = new RIPEMD160Digest();
+                    byte[] dataToHash = stack.pollLast();
+                    digest.update(dataToHash, 0, dataToHash.length);
+                    byte[] ripmemdHash = new byte[20];
+                    digest.doFinal(ripmemdHash, 0);
+                    stack.add(ripmemdHash);
+                    break;
+                case OP_SHA1:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_SHA1 on an empty stack");
+                    try {
+                        stack.add(MessageDigest.getInstance("SHA-1").digest(stack.pollLast()));
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);  // Cannot happen.
+                    }
+                    break;
+                case 
