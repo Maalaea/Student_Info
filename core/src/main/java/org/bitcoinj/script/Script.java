@@ -1376,4 +1376,53 @@ public class Script {
                         throw new RuntimeException(e);  // Cannot happen.
                     }
                     break;
-                case 
+                case OP_SHA256:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_SHA256 on an empty stack");
+                    stack.add(Sha256Hash.hash(stack.pollLast()));
+                    break;
+                case OP_HASH160:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_HASH160 on an empty stack");
+                    stack.add(Utils.sha256hash160(stack.pollLast()));
+                    break;
+                case OP_HASH256:
+                    if (stack.size() < 1)
+                        throw new ScriptException("Attempted OP_SHA256 on an empty stack");
+                    stack.add(Sha256Hash.hashTwice(stack.pollLast()));
+                    break;
+                case OP_CODESEPARATOR:
+                    lastCodeSepLocation = chunk.getStartLocationInProgram() + 1;
+                    break;
+                case OP_CHECKSIG:
+                case OP_CHECKSIGVERIFY:
+                    if (txContainingThis == null)
+                        throw new IllegalStateException("Script attempted signature check but no tx was provided");
+                    executeCheckSig(
+                        txContainingThis,
+                        (int) index,
+                        script,
+                        stack,
+                        lastCodeSepLocation,
+                        opcode,
+                        value,
+                        segwit,
+                        verifyFlags);
+                    break;
+                case OP_CHECKMULTISIG:
+                case OP_CHECKMULTISIGVERIFY:
+                    if (txContainingThis == null)
+                        throw new IllegalStateException("Script attempted signature check but no tx was provided");
+                    opCount = executeMultiSig(
+                        txContainingThis,
+                        (int) index,
+                        script,
+                        stack,
+                        opCount,
+                        lastCodeSepLocation,
+                        opcode,
+                        value,
+                        segwit,
+                        verifyFlags);
+                    break;
+            
