@@ -1471,4 +1471,42 @@ public class Script {
 
         // Thus as a special case we tell CScriptNum to accept up
         // to 5-byte bignums to avoid year 2038 issue.
-        f
+        final BigInteger nLockTime = castToBigInteger(stack.getLast(), 5);
+
+        if (nLockTime.compareTo(BigInteger.ZERO) < 0)
+            throw new ScriptException("Negative locktime");
+
+        // There are two kinds of nLockTime, need to ensure we're comparing apples-to-apples
+        if (!(
+            ((txContainingThis.getLockTime() <  Transaction.LOCKTIME_THRESHOLD) && (nLockTime.compareTo(Transaction.LOCKTIME_THRESHOLD_BIG)) < 0) ||
+            ((txContainingThis.getLockTime() >= Transaction.LOCKTIME_THRESHOLD) && (nLockTime.compareTo(Transaction.LOCKTIME_THRESHOLD_BIG)) >= 0))
+        )
+            throw new ScriptException("Locktime requirement type mismatch");
+
+        // Now that we know we're comparing apples-to-apples, the
+        // comparison is a simple numeric one.
+        if (nLockTime.compareTo(BigInteger.valueOf(txContainingThis.getLockTime())) > 0)
+            throw new ScriptException("Locktime requirement not satisfied");
+
+        // Finally the nLockTime feature can be disabled and thus
+        // CHECKLOCKTIMEVERIFY bypassed if every txin has been
+        // finalized by setting nSequence to maxint. The
+        // transaction would be allowed into the blockchain, making
+        // the opcode ineffective.
+        //
+        // Testing if this vin is not final is sufficient to
+        // prevent this condition. Alternatively we could test all
+        // inputs, but testing just this input minimizes the data
+        // required to prove correct CHECKLOCKTIMEVERIFY execution.
+        if (!txContainingThis.getInput(index).hasSequence())
+            throw new ScriptException("Transaction contains a final transaction input for a CHECKLOCKTIMEVERIFY script.");
+    }
+
+    private static void executeCheckSig(Transaction txContainingThis, int index, Script script,
+                                        LinkedList<byte[]> stack, int lastCodeSepLocation, int opcode,
+                                        Set<VerifyFlag> verifyFlags) throws ScriptException {
+        executeCheckSig(txContainingThis, index, script, stack, lastCodeSepLocation, opcode,
+            Coin.ZERO, false, verifyFlags);
+    }
+
+    private static void executeCheckSig(Transaction txContainingThis, int 
