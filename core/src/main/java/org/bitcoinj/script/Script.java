@@ -1425,4 +1425,50 @@ public class Script {
                         segwit,
                         verifyFlags);
                     break;
+                case OP_CHECKLOCKTIMEVERIFY:
+                    if (!verifyFlags.contains(VerifyFlag.CHECKLOCKTIMEVERIFY)) {
+                        // not enabled; treat as a NOP2
+                        if (verifyFlags.contains(VerifyFlag.DISCOURAGE_UPGRADABLE_NOPS)) {
+                            throw new ScriptException("Script used a reserved opcode " + opcode);
+                        }
+                        break;
+                    }
+                    executeCheckLockTimeVerify(txContainingThis, (int) index, script, stack, lastCodeSepLocation, opcode, verifyFlags);
+                    break;
+                case OP_NOP1:
+                case OP_NOP3:
+                case OP_NOP4:
+                case OP_NOP5:
+                case OP_NOP6:
+                case OP_NOP7:
+                case OP_NOP8:
+                case OP_NOP9:
+                case OP_NOP10:
+                    if (verifyFlags.contains(VerifyFlag.DISCOURAGE_UPGRADABLE_NOPS)) {
+                        throw new ScriptException("Script used a reserved opcode " + opcode);
+                    }
+                    break;
+                    
+                default:
+                    throw new ScriptException("Script used a reserved opcode " + opcode);
+                }
+            }
             
+            if (stack.size() + altstack.size() > 1000 || stack.size() + altstack.size() < 0)
+                throw new ScriptException("Stack size exceeded range");
+        }
+        
+        if (!ifStack.isEmpty())
+            throw new ScriptException("OP_IF/OP_NOTIF without OP_ENDIF");
+    }
+
+    // This is more or less a direct translation of the code in Bitcoin Core
+    private static void executeCheckLockTimeVerify(Transaction txContainingThis, int index, Script script, LinkedList<byte[]> stack,
+                                        int lastCodeSepLocation, int opcode,
+                                        Set<VerifyFlag> verifyFlags) throws ScriptException {
+        if (stack.size() < 1)
+            throw new ScriptException("Attempted OP_CHECKLOCKTIMEVERIFY on a stack with size < 1");
+
+        // Thus as a special case we tell CScriptNum to accept up
+        // to 5-byte bignums to avoid year 2038 issue.
+        f
