@@ -1509,4 +1509,44 @@ public class Script {
             Coin.ZERO, false, verifyFlags);
     }
 
-    private static void executeCheckSig(Transaction txContainingThis, int 
+    private static void executeCheckSig(Transaction txContainingThis, int index, Script script,
+                                        LinkedList<byte[]> stack, int lastCodeSepLocation, int opcode,
+                                        Coin value, boolean segwit,
+                                        Set<VerifyFlag> verifyFlags) throws ScriptException {
+        final boolean requireCanonical = verifyFlags.contains(VerifyFlag.STRICTENC)
+            || verifyFlags.contains(VerifyFlag.DERSIG)
+            || verifyFlags.contains(VerifyFlag.LOW_S);
+        if (stack.size() < 2)
+            throw new ScriptException("Attempted OP_CHECKSIG(VERIFY) on a stack with size < 2");
+        byte[] pubKey = stack.pollLast();
+        byte[] sigBytes = stack.pollLast();
+
+        byte[] prog = script.getProgram();
+        byte[] connectedScript = Arrays.copyOfRange(prog, lastCodeSepLocation, prog.length);
+
+        UnsafeByteArrayOutputStream outStream = new UnsafeByteArrayOutputStream(sigBytes.length + 1);
+        try {
+            writeBytes(outStream, sigBytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e); // Cannot happen
+        }
+        if (!segwit) connectedScript = removeAllInstancesOf(connectedScript, outStream.toByteArray());
+
+        // TODO: Use int for indexes everywhere, we can't have that many inputs/outputs
+        boolean sigValid = false;
+        try {
+            TransactionSignature sig  = TransactionSignature.decodeFromBitcoin(sigBytes, requireCanonical,
+                verifyFlags.contains(VerifyFlag.LOW_S));
+
+            // TODO: Should check hash type is known
+            Sha256Hash hash = segwit
+                ? txContainingThis.hashForSignatureWitness(
+                    index, connectedScript, value, sig.sigHashMode(), sig.anyoneCanPay())
+                : txContainingThis.hashForSignature(
+                    index, connectedScript, (byte) sig.sighashFlags);
+            sigValid = ECKey.verify(hash.getBytes(), sig, pubKey);
+        } catch (Exception e1) {
+            // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
+            // Because I can't verify there aren't more, we use a very generic Exception catch
+
+        
