@@ -1549,4 +1549,39 @@ public class Script {
             // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
             // Because I can't verify there aren't more, we use a very generic Exception catch
 
-        
+            // This RuntimeException occurs when signing as we run partial/invalid scripts to see if they need more
+            // signing work to be done inside LocalTransactionSigner.signInputs.
+            if (!e1.getMessage().contains("Reached past end of ASN.1 stream"))
+                log.warn("Signature checking failed!", e1);
+        }
+
+        if (opcode == OP_CHECKSIG)
+            stack.add(sigValid ? new byte[] {1} : new byte[] {});
+        else if (opcode == OP_CHECKSIGVERIFY)
+            if (!sigValid)
+                throw new ScriptException("Script failed OP_CHECKSIGVERIFY");
+    }
+
+    private static int executeMultiSig(Transaction txContainingThis, int index, Script script, LinkedList<byte[]> stack,
+                                       int opCount, int lastCodeSepLocation, int opcode,
+                                       Set<VerifyFlag> verifyFlags) throws ScriptException {
+        return executeMultiSig(txContainingThis, index, script, stack, opCount, lastCodeSepLocation, opcode,
+            Coin.ZERO, false, verifyFlags);
+    }
+
+    private static int executeMultiSig(Transaction txContainingThis, int index, Script script, LinkedList<byte[]> stack,
+                                       int opCount, int lastCodeSepLocation, int opcode, Coin value, boolean segwit,
+                                       Set<VerifyFlag> verifyFlags) throws ScriptException {
+        final boolean requireCanonical = verifyFlags.contains(VerifyFlag.STRICTENC)
+            || verifyFlags.contains(VerifyFlag.DERSIG)
+            || verifyFlags.contains(VerifyFlag.LOW_S);
+        if (stack.size() < 2)
+            throw new ScriptException("Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < 2");
+        int pubKeyCount = castToBigInteger(stack.pollLast()).intValue();
+        if (pubKeyCount < 0 || pubKeyCount > 20)
+            throw new ScriptException("OP_CHECKMULTISIG(VERIFY) with pubkey count out of range");
+        opCount += pubKeyCount;
+        if (opCount > 201)
+            throw new ScriptException("Total op count > 201 during OP_CHECKMULTISIG(VERIFY)");
+        if (stack.size() < pubKeyCount + 1)
+            throw new ScriptException("Attempted OP_CHECKMULTISIG(VERIFY) on a stack 
