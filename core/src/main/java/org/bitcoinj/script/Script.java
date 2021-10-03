@@ -1584,4 +1584,51 @@ public class Script {
         if (opCount > 201)
             throw new ScriptException("Total op count > 201 during OP_CHECKMULTISIG(VERIFY)");
         if (stack.size() < pubKeyCount + 1)
-            throw new ScriptException("Attempted OP_CHECKMULTISIG(VERIFY) on a stack 
+            throw new ScriptException("Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < num_of_pubkeys + 2");
+
+        LinkedList<byte[]> pubkeys = new LinkedList<>();
+        for (int i = 0; i < pubKeyCount; i++) {
+            byte[] pubKey = stack.pollLast();
+            pubkeys.add(pubKey);
+        }
+
+        int sigCount = castToBigInteger(stack.pollLast()).intValue();
+        if (sigCount < 0 || sigCount > pubKeyCount)
+            throw new ScriptException("OP_CHECKMULTISIG(VERIFY) with sig count out of range");
+        if (stack.size() < sigCount + 1)
+            throw new ScriptException("Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < num_of_pubkeys + num_of_signatures + 3");
+
+        LinkedList<byte[]> sigs = new LinkedList<>();
+        for (int i = 0; i < sigCount; i++) {
+            byte[] sig = stack.pollLast();
+            sigs.add(sig);
+        }
+
+        byte[] prog = script.getProgram();
+        byte[] connectedScript = Arrays.copyOfRange(prog, lastCodeSepLocation, prog.length);
+
+        if (!segwit) {
+            for (byte[] sig : sigs) {
+                UnsafeByteArrayOutputStream outStream = new UnsafeByteArrayOutputStream(sig.length + 1);
+                try {
+                    writeBytes(outStream, sig);
+                } catch (IOException e) {
+                    throw new RuntimeException(e); // Cannot happen
+                }
+                connectedScript = removeAllInstancesOf(connectedScript, outStream.toByteArray());
+            }
+        }
+
+        boolean valid = true;
+        while (sigs.size() > 0) {
+            byte[] pubKey = pubkeys.pollFirst();
+            // We could reasonably move this out of the loop, but because signature verification is significantly
+            // more expensive than hashing, its not a big deal.
+            try {
+                TransactionSignature sig = TransactionSignature.decodeFromBitcoin(sigs.getFirst(), requireCanonical);
+                Sha256Hash hash = segwit
+                    ? txContainingThis.hashForSignatureWitness(
+                        index, connectedScript, value, sig.sigHashMode(), sig.anyoneCanPay())
+                    : txContainingThis.hashForSignature(
+                        index, connectedScript, (byte) sig.sighashFlags);
+            
