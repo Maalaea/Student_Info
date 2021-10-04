@@ -1676,4 +1676,35 @@ public class Script {
     }
 
     @Deprecated
-  
+    public void correctlySpends(Transaction txContainingThis, long scriptSigIndex, Script scriptPubKey,
+                                Set<VerifyFlag> verifyFlags) throws ScriptException {
+        correctlySpends(txContainingThis, scriptSigIndex, scriptPubKey, Coin.ZERO, verifyFlags);
+    }
+
+    /**
+     * Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey.
+     * @param txContainingThis The transaction in which this input scriptSig resides.
+     *                         Accessing txContainingThis from another thread while this method runs results in undefined behavior.
+     * @param scriptSigIndex The index in txContainingThis of the scriptSig (note: NOT the index of the scriptPubKey).
+     * @param scriptPubKey The connected scriptPubKey containing the conditions needed to claim the value.
+     * @param value The amount being spent by this script.
+     * @param verifyFlags Each flag enables one validation rule. If in doubt, use {@link #ALL_VERIFY_FLAGS)}
+     *                    which sets all flags.
+     */
+    public void correctlySpends(Transaction txContainingThis, long scriptSigIndex, Script scriptPubKey, Coin value,
+                                Set<VerifyFlag> verifyFlags) throws ScriptException {
+        // Clone the transaction because executing the script involves editing it, and if we die, we'll leave
+        // the tx half broken (also it's not so thread safe to work on it directly.
+        try {
+            txContainingThis = txContainingThis.getParams().getDefaultSerializer().makeTransaction(txContainingThis.bitcoinSerialize());
+        } catch (ProtocolException e) {
+            throw new RuntimeException(e);   // Should not happen unless we were given a totally broken transaction.
+        }
+        if (getProgram().length > 10000 || scriptPubKey.getProgram().length > 10000)
+            throw new ScriptException("Script larger than 10,000 bytes");
+
+        LinkedList<byte[]> stack = new LinkedList<>();
+        LinkedList<byte[]> p2shStack = null;
+        
+        executeScript(txContainingThis, scriptSigIndex, this, stack, value, false, verifyFlags);
+   
