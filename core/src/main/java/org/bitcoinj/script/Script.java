@@ -1631,4 +1631,49 @@ public class Script {
                         index, connectedScript, value, sig.sigHashMode(), sig.anyoneCanPay())
                     : txContainingThis.hashForSignature(
                         index, connectedScript, (byte) sig.sighashFlags);
-            
+                if (ECKey.verify(hash.getBytes(), sig, pubKey))
+                    sigs.pollFirst();
+            } catch (Exception e) {
+                // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
+                // Because I can't verify there aren't more, we use a very generic Exception catch
+            }
+
+            if (sigs.size() > pubkeys.size()) {
+                valid = false;
+                break;
+            }
+        }
+
+        // We uselessly remove a stack object to emulate a Bitcoin Core bug.
+        byte[] nullDummy = stack.pollLast();
+        if (verifyFlags.contains(VerifyFlag.NULLDUMMY) && nullDummy.length > 0)
+            throw new ScriptException("OP_CHECKMULTISIG(VERIFY) with non-null nulldummy: " + Arrays.toString(nullDummy));
+
+        if (opcode == OP_CHECKMULTISIG) {
+            stack.add(valid ? new byte[] {1} : new byte[] {});
+        } else if (opcode == OP_CHECKMULTISIGVERIFY) {
+            if (!valid)
+                throw new ScriptException("Script failed OP_CHECKMULTISIGVERIFY");
+        }
+        return opCount;
+    }
+
+    /**
+     * Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey, enabling all
+     * validation rules.
+     * @param txContainingThis The transaction in which this input scriptSig resides.
+     *                         Accessing txContainingThis from another thread while this method runs results in undefined behavior.
+     * @param scriptSigIndex The index in txContainingThis of the scriptSig (note: NOT the index of the scriptPubKey).
+     * @param scriptPubKey The connected scriptPubKey containing the conditions needed to claim the value.
+     * @deprecated Use {@link #correctlySpends(org.bitcoinj.core.Transaction, long, org.bitcoinj.script.Script, java.util.Set)}
+     * instead so that verification flags do not change as new verification options
+     * are added.
+     */
+    @Deprecated
+    public void correctlySpends(Transaction txContainingThis, long scriptSigIndex, Script scriptPubKey)
+            throws ScriptException {
+        correctlySpends(txContainingThis, scriptSigIndex, scriptPubKey, Coin.ZERO, ALL_VERIFY_FLAGS);
+    }
+
+    @Deprecated
+  
