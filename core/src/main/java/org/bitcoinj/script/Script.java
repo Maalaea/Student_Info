@@ -1738,4 +1738,61 @@ public class Script {
             byte[] scriptPubKeyBytes = p2shStack.pollLast();
             Script scriptPubKeyP2SH = new Script(scriptPubKeyBytes);
             
-            executeScript(txContainingThis, scriptSigIndex, scriptPubKeyP2SH, p2shS
+            executeScript(txContainingThis, scriptSigIndex, scriptPubKeyP2SH, p2shStack, value, false, verifyFlags);
+
+            if (p2shStack.size() == 0)
+                throw new ScriptException("P2SH stack empty at end of script execution.");
+
+            if (!castToBool(p2shStack.pollLast()))
+                throw new ScriptException("P2SH script execution resulted in a non-true stack: " + p2shStack);
+
+            scriptPubKeyP2SH.checkWitness(txContainingThis, scriptSigIndex, value, verifyFlags);
+        } else {
+            scriptPubKey.checkWitness(txContainingThis, scriptSigIndex, value, verifyFlags);
+        }
+    }
+
+    private void checkWitness(Transaction tx, long index, Coin value, Set<VerifyFlag> verifyFlags) {
+        if (verifyFlags.contains(VerifyFlag.SEGWIT) && isWitnessProgram()) {
+            TransactionWitness witness = tx.getWitness((int) index);
+            Script scriptCode = scriptCode(witness);
+            LinkedList<byte[]> witnessStack = witnessStack(witness);
+            executeScript(tx, index, scriptCode, witnessStack, value, true, verifyFlags);
+
+            if (witnessStack.isEmpty())
+                throw new ScriptException("Witness stack empty at end of script execution.");
+
+            if (!castToBool(witnessStack.pollLast()))
+                throw new ScriptException("Witness script execution resulted in a non-true stack: " + witnessStack);
+        }
+    }
+
+    // Utility that doesn't copy for internal use
+    private byte[] getQuickProgram() {
+        if (program != null)
+            return program;
+        return getProgram();
+    }
+
+    /**
+     * Get the {@link org.bitcoinj.script.Script.ScriptType}.
+     * @return The script type.
+     */
+    public ScriptType getScriptType() {
+        ScriptType type = ScriptType.NO_TYPE;
+        if (isSentToAddress()) {
+            type = ScriptType.P2PKH;
+        } else if (isSentToRawPubKey()) {
+            type = ScriptType.PUB_KEY;
+        } else if (isPayToScriptHash()) {
+            type = ScriptType.P2SH;
+        } else if (isSentToP2WPKH()) {
+            type = ScriptType.P2WPKH;
+        } else if (isSentToP2WSH()) {
+            type = ScriptType.P2WSH;
+        }
+        return type;
+    }
+
+    @Override
+    public boolean 
