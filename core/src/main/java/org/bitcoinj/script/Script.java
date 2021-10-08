@@ -1795,4 +1795,67 @@ public class Script {
     }
 
     @Override
-    public boolean 
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return Arrays.equals(getQuickProgram(), ((Script)o).getQuickProgram());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(getQuickProgram());
+    }
+
+    public boolean isWitnessProgram() {
+        return (chunks.size() == 2 && chunks.get(0).equalsOpCode(OP_0))
+            && (chunks.get(1).isPushData());
+    }
+
+    /**
+     * scriptCode for witness. Read BIP143 for more information.
+     * @return
+     */
+    public Script scriptCode(TransactionWitness witness) {
+        byte[] expectedHash = getPubKeyHash();
+        byte[] pubKeyOrScript = witness.getPush(witness.getPushCount() - 1);
+
+        if (isSentToP2WPKH()) {
+            byte[] pubKeyHash = Utils.sha256hash160(pubKeyOrScript);
+            if (witness.getPushCount() == 2 && Arrays.equals(expectedHash, pubKeyHash))
+                return scriptCode();
+            else
+                throw new ScriptException("Incorrect public key hash or P2WPKH witness push count");
+        } else if (isSentToP2WSH()) {
+            byte[] scriptHash = Sha256Hash.hash(pubKeyOrScript);
+            if (Arrays.equals(expectedHash, scriptHash))
+                return new Script(pubKeyOrScript);
+            else
+                throw new ScriptException("Incorrect witness script hash");
+        } else {
+            throw new ScriptException("Not a valid witness program");
+        }
+    }
+
+    /**
+     * scriptCode for P2WPKH transactions. See BIP143.
+     * @return
+     */
+    public Script scriptCode() {
+        if (isSentToP2WPKH())
+            return new ScriptBuilder()
+                .op(OP_DUP)
+                .op(OP_HASH160)
+                .data(getPubKeyHash())
+                .op(OP_EQUALVERIFY)
+                .op(OP_CHECKSIG)
+                .build();
+        else
+            throw new IllegalStateException("This method cannot compute scriptCode for anything but P2WPKH");
+    }
+
+    public LinkedList<byte[]> witnessStack(TransactionWitness witness) {
+        LinkedList<byte[]> stack = new LinkedList<byte[]>();
+
+        if (isSentToP2WPKH()) {
+            stack.add(witness.getPush(0));
+            stack.ad
