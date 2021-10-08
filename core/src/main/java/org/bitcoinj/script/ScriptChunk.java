@@ -42,4 +42,75 @@ public class ScriptChunk {
     public final byte[] data;
     private int startLocationInProgram;
 
-    public
+    public ScriptChunk(int opcode, byte[] data) {
+        this(opcode, data, -1);
+    }
+
+    public ScriptChunk(int opcode, byte[] data, int startLocationInProgram) {
+        this.opcode = opcode;
+        this.data = data;
+        this.startLocationInProgram = startLocationInProgram;
+    }
+
+    public boolean equalsOpCode(int opcode) {
+        return opcode == this.opcode;
+    }
+
+    /**
+     * If this chunk is a single byte of non-pushdata content (could be OP_RESERVED or some invalid Opcode)
+     */
+    public boolean isOpCode() {
+        return opcode > OP_PUSHDATA4;
+    }
+
+    /**
+     * Returns true if this chunk is pushdata content, including the single-byte pushdatas.
+     */
+    public boolean isPushData() {
+        return opcode <= OP_16;
+    }
+
+    public int getStartLocationInProgram() {
+        checkState(startLocationInProgram >= 0);
+        return startLocationInProgram;
+    }
+
+    /** If this chunk is an OP_N opcode returns the equivalent integer value. */
+    public int decodeOpN() {
+        checkState(isOpCode());
+        return Script.decodeFromOpN(opcode);
+    }
+
+    /**
+     * Called on a pushdata chunk, returns true if it uses the smallest possible way (according to BIP62) to push the data.
+     */
+    public boolean isShortestPossiblePushData() {
+        checkState(isPushData());
+        if (data == null)
+            return true;   // OP_N
+        if (data.length == 0)
+            return opcode == OP_0;
+        if (data.length == 1) {
+            byte b = data[0];
+            if (b >= 0x01 && b <= 0x10)
+                return opcode == OP_1 + b - 1;
+            if ((b & 0xFF) == 0x81)
+                return opcode == OP_1NEGATE;
+        }
+        if (data.length < OP_PUSHDATA1)
+            return opcode == data.length;
+        if (data.length < 256)
+            return opcode == OP_PUSHDATA1;
+        if (data.length < 65536)
+            return opcode == OP_PUSHDATA2;
+
+        // can never be used, but implemented for completeness
+        return opcode == OP_PUSHDATA4;
+    }
+
+    public void write(OutputStream stream) throws IOException {
+        if (isOpCode()) {
+            checkState(data == null);
+            stream.write(opcode);
+        } else if (data != null) {
+            if (opcode 
