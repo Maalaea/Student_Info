@@ -1858,4 +1858,13 @@ public class Script {
 
         if (isSentToP2WPKH()) {
             stack.add(witness.getPush(0));
-            stack.ad
+            stack.add(witness.getPush(1));
+        } else if (isSentToP2WSH()) {
+            for (int i = 0; i < witness.getPushCount() - 1; i++) {
+                stack.add(witness.getPush(i));
+            }
+        }
+
+        return stack;
+    }
+}
