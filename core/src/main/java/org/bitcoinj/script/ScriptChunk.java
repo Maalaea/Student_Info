@@ -113,4 +113,57 @@ public class ScriptChunk {
             checkState(data == null);
             stream.write(opcode);
         } else if (data != null) {
-            if (opcode 
+            if (opcode < OP_PUSHDATA1) {
+                checkState(data.length == opcode);
+                stream.write(opcode);
+            } else if (opcode == OP_PUSHDATA1) {
+                checkState(data.length <= 0xFF);
+                stream.write(OP_PUSHDATA1);
+                stream.write(data.length);
+            } else if (opcode == OP_PUSHDATA2) {
+                checkState(data.length <= 0xFFFF);
+                stream.write(OP_PUSHDATA2);
+                stream.write(0xFF & data.length);
+                stream.write(0xFF & (data.length >> 8));
+            } else if (opcode == OP_PUSHDATA4) {
+                checkState(data.length <= Script.MAX_SCRIPT_ELEMENT_SIZE);
+                stream.write(OP_PUSHDATA4);
+                Utils.uint32ToByteStreamLE(data.length, stream);
+            } else {
+                throw new RuntimeException("Unimplemented");
+            }
+            stream.write(data);
+        } else {
+            stream.write(opcode); // smallNum
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        if (isOpCode()) {
+            buf.append(getOpCodeName(opcode));
+        } else if (data != null) {
+            // Data chunk
+            buf.append(getPushDataName(opcode)).append("[").append(Utils.HEX.encode(data)).append("]");
+        } else {
+            // Small num
+            buf.append(Script.decodeFromOpN(opcode));
+        }
+        return buf.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ScriptChunk other = (ScriptChunk) o;
+        return opcode == other.opcode && startLocationInProgram == other.startLocationInProgram
+            && Arrays.equals(data, other.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(opcode, startLocationInProgram, Arrays.hashCode(data));
+    }
+}
