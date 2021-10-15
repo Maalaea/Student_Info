@@ -70,4 +70,41 @@ public class LocalTransactionSigner extends StatelessTransactionSigner {
 
             try {
                 // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
-                // we sign missing pieces (to check this would require either assuming any sign
+                // we sign missing pieces (to check this would require either assuming any signatures are signing
+                // standard output types or a way to get processed signatures out of script execution)
+                txIn.getScriptSig().correctlySpends(tx, i, txIn.getConnectedOutput().getScriptPubKey(), MINIMUM_VERIFY_FLAGS);
+                log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", i);
+                continue;
+            } catch (ScriptException e) {
+                // Expected.
+            }
+
+            RedeemData redeemData = txIn.getConnectedRedeemData(keyBag);
+
+            Script scriptPubKey = txIn.getConnectedOutput().getScriptPubKey();
+
+            // For P2SH inputs we need to share derivation path of the signing key with other signers, so that they
+            // use correct key to calculate their signatures.
+            // Married keys all have the same derivation path, so we can safely just take first one here.
+            ECKey pubKey = redeemData.keys.get(0);
+            if (pubKey instanceof DeterministicKey)
+                propTx.keyPaths.put(scriptPubKey, (((DeterministicKey) pubKey).getPath()));
+
+            ECKey key;
+            // locate private key in redeem data. For pay-to-address and pay-to-key inputs RedeemData will always contain
+            // only one key (with private bytes). For P2SH inputs RedeemData will contain multiple keys, one of which MAY
+            // have private bytes
+            if ((key = redeemData.getFullKey()) == null) {
+                log.warn("No local key found for input {}", i);
+                continue;
+            }
+
+            Script inputScript = txIn.getScriptSig();
+            // script here would be either a standard CHECKSIG program for pay-to-address or pay-to-pubkey inputs or
+            // a CHECKMULTISIG program for P2SH inputs
+            byte[] script = redeemData.redeemScript.getProgram();
+            try {
+                TransactionSignature signature = tx.calculateSignature(i, key, script, Transaction.SigHash.ALL, false);
+
+                // at this point we have incomplete inputScript with OP_0 in place of one or more signatures. We already
+                // have calculated the signature using t
