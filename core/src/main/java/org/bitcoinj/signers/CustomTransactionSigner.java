@@ -78,4 +78,30 @@ public abstract class CustomTransactionSigner extends StatelessTransactionSigner
 
             RedeemData redeemData = txIn.getConnectedRedeemData(keyBag);
             if (redeemData == null) {
-                log.warn("No redeem data found f
+                log.warn("No redeem data found for input {}", i);
+                continue;
+            }
+
+            Sha256Hash sighash = tx.hashForSignature(i, redeemData.redeemScript, Transaction.SigHash.ALL, false);
+            SignatureAndKey sigKey = getSignature(sighash, propTx.keyPaths.get(scriptPubKey));
+            TransactionSignature txSig = new TransactionSignature(sigKey.sig, Transaction.SigHash.ALL, false);
+            int sigIndex = inputScript.getSigInsertionIndex(sighash, sigKey.pubKey);
+            inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, txSig.encodeToBitcoin(), sigIndex);
+            txIn.setScriptSig(inputScript);
+        }
+        return true;
+    }
+
+    protected abstract SignatureAndKey getSignature(Sha256Hash sighash, List<ChildNumber> derivationPath);
+
+    public class SignatureAndKey {
+        public final ECKey.ECDSASignature sig;
+        public final ECKey pubKey;
+
+        public SignatureAndKey(ECKey.ECDSASignature sig, ECKey pubKey) {
+            this.sig = sig;
+            this.pubKey = pubKey;
+        }
+    }
+
+}
