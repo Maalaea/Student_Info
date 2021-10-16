@@ -107,4 +107,23 @@ public class LocalTransactionSigner extends StatelessTransactionSigner {
                 TransactionSignature signature = tx.calculateSignature(i, key, script, Transaction.SigHash.ALL, false);
 
                 // at this point we have incomplete inputScript with OP_0 in place of one or more signatures. We already
-                // have calculated the signature using t
+                // have calculated the signature using the local key and now need to insert it in the correct place
+                // within inputScript. For pay-to-address and pay-to-key script there is only one signature and it always
+                // goes first in an inputScript (sigIndex = 0). In P2SH input scripts we need to figure out our relative
+                // position relative to other signers.  Since we don't have that information at this point, and since
+                // we always run first, we have to depend on the other signers rearranging the signatures as needed.
+                // Therefore, always place as first signature.
+                int sigIndex = 0;
+                inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToBitcoin(), sigIndex);
+                txIn.setScriptSig(inputScript);
+            } catch (ECKey.KeyIsEncryptedException e) {
+                throw e;
+            } catch (ECKey.MissingPrivateKeyException e) {
+                log.warn("No private key in keypair for input {}", i);
+            }
+
+        }
+        return true;
+    }
+
+}
