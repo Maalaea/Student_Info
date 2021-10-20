@@ -101,3 +101,46 @@ public class LevelDBBlockStore implements BlockStore {
     @Override
     public synchronized void setChainHead(StoredBlock chainHead) throws BlockStoreException {
         db.put(CHAIN_HEAD_KEY, chainHead.getHeader().getHash().getBytes());
+    }
+
+    @Override
+    public synchronized void close() throws BlockStoreException {
+        try {
+            db.close();
+        } catch (IOException e) {
+            throw new BlockStoreException(e);
+        }
+    }
+
+    /** Erases the contents of the database (but NOT the underlying files themselves) and then reinitialises with the genesis block. */
+    public synchronized void reset() throws BlockStoreException {
+        try {
+            WriteBatch batch = db.createWriteBatch();
+            try {
+                DBIterator it = db.iterator();
+                try {
+                    it.seekToFirst();
+                    while (it.hasNext())
+                        batch.delete(it.next().getKey());
+                    db.write(batch);
+                } finally {
+                    it.close();
+                }
+            } finally {
+                batch.close();
+            }
+            initStoreIfNeeded();
+        } catch (IOException e) {
+            throw new BlockStoreException(e);
+        }
+    }
+
+    public synchronized void destroy() throws IOException {
+        JniDBFactory.factory.destroy(path, new Options());
+    }
+
+    @Override
+    public NetworkParameters getParams() {
+        return context.getParams();
+    }
+}
