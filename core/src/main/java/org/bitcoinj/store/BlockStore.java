@@ -50,4 +50,19 @@ public interface BlockStore {
      * or perhaps {@link org.bitcoinj.core.BlockChain#getBestChainHeight()} which will run in constant time and
      * not take any heavyweight locks.
      */
-    StoredBlock getChainHead() throws B
+    StoredBlock getChainHead() throws BlockStoreException;
+
+    /**
+     * Sets the {@link StoredBlock} that represents the top of the chain of greatest total work.
+     */
+    void setChainHead(StoredBlock chainHead) throws BlockStoreException;
+    
+    /** Closes the store. */
+    void close() throws BlockStoreException;
+
+    /**
+     * Get the {@link org.bitcoinj.core.NetworkParameters} of this store.
+     * @return The network params.
+     */
+    NetworkParameters getParams();
+}
