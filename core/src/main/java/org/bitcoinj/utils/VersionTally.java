@@ -79,4 +79,48 @@ public class VersionTally {
             return null;
         }
         int count = 0;
-        for (int versionIdx = 0; versionIdx < versi
+        for (int versionIdx = 0; versionIdx < versionWindow.length; versionIdx++) {
+            if (versionWindow[versionIdx] >= version) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * Initialize the version tally from the block store. Note this does not
+     * search backwards past the start of the block store, so if starting from
+     * a checkpoint this may not fill the window.
+     *
+     * @param blockStore block store to load blocks from.
+     * @param chainHead current chain tip.
+     */
+    public void initialize(final BlockStore blockStore, final StoredBlock chainHead)
+        throws BlockStoreException {
+        StoredBlock versionBlock = chainHead;
+        final Stack<Long> versions = new Stack<>();
+
+        // We don't know how many blocks back we can go, so load what we can first
+        versions.push(versionBlock.getHeader().getVersion());
+        for (int headOffset = 0; headOffset < versionWindow.length; headOffset++) {
+            versionBlock = versionBlock.getPrev(blockStore);
+            if (null == versionBlock) {
+                break;
+            }
+            versions.push(versionBlock.getHeader().getVersion());
+        }
+
+        // Replay the versions into the tally
+        while (!versions.isEmpty()) {
+            add(versions.pop());
+        }
+    }
+
+    /**
+     * Get the size of the version window.
+     */
+    public int size() {
+        return versionWindow.length;
+    }
+}
