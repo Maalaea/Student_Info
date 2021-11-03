@@ -99,4 +99,64 @@ public class BasicKeyChain implements EncryptableKeyChain {
             if (hashToKeys.size() < numberOfKeys) {
                 checkState(keyCrypter == null);
 
-            
+                List<ECKey> keys = new ArrayList<>();
+                for (int i = 0; i < numberOfKeys - hashToKeys.size(); i++) {
+                    keys.add(new ECKey());
+                }
+
+                ImmutableList<ECKey> immutableKeys = ImmutableList.copyOf(keys);
+                importKeysLocked(immutableKeys);
+                queueOnKeysAdded(immutableKeys);
+            }
+
+            List<ECKey> keysToReturn = new ArrayList<>();
+            int count = 0;
+            while (hashToKeys.values().iterator().hasNext() && numberOfKeys != count) {
+                keysToReturn.add(hashToKeys.values().iterator().next());
+                count++;
+            }
+            return keysToReturn;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Returns a copy of the list of keys that this chain is managing. */
+    public List<ECKey> getKeys() {
+        lock.lock();
+        try {
+            return new ArrayList<>(hashToKeys.values());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public int importKeys(ECKey... keys) {
+        return importKeys(ImmutableList.copyOf(keys));
+    }
+
+    public int importKeys(List<? extends ECKey> keys) {
+        lock.lock();
+        try {
+            // Check that if we're encrypted, the keys are all encrypted, and if we're not, that none are.
+            // We are NOT checking that the actual password matches here because we don't have access to the password at
+            // this point: if you screw up and import keys with mismatched passwords, you lose! So make sure the
+            // password is checked first.
+            for (ECKey key : keys) {
+                checkKeyEncryptionStateMatches(key);
+            }
+            List<ECKey> actuallyAdded = new ArrayList<>(keys.size());
+            for (final ECKey key : keys) {
+                if (hasKey(key)) continue;
+                actuallyAdded.add(key);
+                importKeyLocked(key);
+            }
+            if (actuallyAdded.size() > 0)
+                queueOnKeysAdded(actuallyAdded);
+            return actuallyAdded.size();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+   
