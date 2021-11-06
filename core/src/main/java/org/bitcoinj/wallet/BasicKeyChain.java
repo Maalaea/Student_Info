@@ -159,4 +159,67 @@ public class BasicKeyChain implements EncryptableKeyChain {
         }
     }
 
-   
+    private void checkKeyEncryptionStateMatches(ECKey key) {
+        if (keyCrypter == null && key.isEncrypted())
+            throw new KeyCrypterException("Key is encrypted but chain is not");
+        else if (keyCrypter != null && !key.isEncrypted())
+            throw new KeyCrypterException("Key is not encrypted but chain is");
+        else if (keyCrypter != null && key.getKeyCrypter() != null && !key.getKeyCrypter().equals(keyCrypter))
+            throw new KeyCrypterException("Key encrypted under different parameters to chain");
+    }
+
+    private void importKeyLocked(ECKey key) {
+        if (hashToKeys.isEmpty()) {
+            isWatching = key.isWatching();
+        } else {
+            if (key.isWatching() && !isWatching)
+                throw new IllegalArgumentException("Key is watching but chain is not");
+            if (!key.isWatching() && isWatching)
+                throw new IllegalArgumentException("Key is not watching but chain is");
+        }
+        ECKey previousKey = pubkeyToKeys.put(ByteString.copyFrom(key.getPubKey()), key);
+        hashToKeys.put(ByteString.copyFrom(key.getPubKeyHash()), key);
+        checkState(previousKey == null);
+    }
+
+    private void importKeysLocked(List<ECKey> keys) {
+        for (ECKey key : keys) {
+            importKeyLocked(key);
+        }
+    }
+
+    /**
+     * Imports a key to the key chain. If key is present in the key chain, ignore it.
+     */
+    public void importKey(ECKey key) {
+        lock.lock();
+        try {
+            checkKeyEncryptionStateMatches(key);
+            if (hasKey(key)) return;
+            importKeyLocked(key);
+            queueOnKeysAdded(ImmutableList.of(key));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public ECKey findKeyFromPubHash(byte[] pubkeyHash) {
+        lock.lock();
+        try {
+            return hashToKeys.get(ByteString.copyFrom(pubkeyHash));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public ECKey findKeyFromPubKey(byte[] pubkey) {
+        lock.lock();
+        try {
+            return pubkeyToKeys.get(ByteString.copyFrom(pubkey));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public bool
