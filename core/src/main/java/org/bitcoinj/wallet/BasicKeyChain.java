@@ -291,4 +291,42 @@ public class BasicKeyChain implements EncryptableKeyChain {
     //
     // Serialization support
     //
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    Map<ECKey, Protos.Key.Builder> serializeToEditableProtobufs() {
+        Map<ECKey, Protos.Key.Builder> result = new LinkedHashMap<>();
+        for (ECKey ecKey : hashToKeys.values()) {
+            Protos.Key.Builder protoKey = serializeEncryptableItem(ecKey);
+            protoKey.setPublicKey(ByteString.copyFrom(ecKey.getPubKey()));
+            result.put(ecKey, protoKey);
+        }
+        return result;
+    }
+
+    @Override
+    public List<Protos.Key> serializeToProtobuf() {
+        Collection<Protos.Key.Builder> builders = serializeToEditableProtobufs().values();
+        List<Protos.Key> result = new ArrayList<>(builders.size());
+        for (Protos.Key.Builder builder : builders) result.add(builder.build());
+        return result;
+    }
+
+    /*package*/ static Protos.Key.Builder serializeEncryptableItem(EncryptableItem item) {
+        Protos.Key.Builder proto = Protos.Key.newBuilder();
+        proto.setCreationTimestamp(item.getCreationTimeSeconds() * 1000);
+        if (item.isEncrypted() && item.getEncryptedData() != null) {
+            // The encrypted data can be missing for an "encrypted" key in the case of a deterministic wallet for
+            // which the leaf keys chain to an encrypted parent and rederive their private keys on the fly. In that
+            // case the caller in DeterministicKeyChain will take care of setting the type.
+            EncryptedData data = item.getEncryptedData();
+            proto.getEncryptedDataBuilder()
+                    .setEncryptedPrivateKey(ByteString.copyFrom(data.encryptedBytes))
+                    .setInitialisationVector(ByteString.copyFrom(data.initialisationVector));
+            // We don't allow mixing of encryption types at the moment.
+            checkState(item.getEncryptionType() == Protos.Wallet.EncryptionType.ENCRYPTED_SCRYPT_AES);
+            proto.setType(Protos.Key.Type.ENCRYPTED_SCRYPT_AES);
+        } else {
+            final byte[] secret = item.getSecretBytes();
+            // The secret might be missing in the case of a watching wallet, or a key for which the private key
+            // is expected to be rederived on the fly from its parent.
+            
