@@ -222,4 +222,73 @@ public class BasicKeyChain implements EncryptableKeyChain {
     }
 
     @Override
-    public bool
+    public boolean hasKey(ECKey key) {
+        return findKeyFromPubKey(key.getPubKey()) != null;
+    }
+
+    @Override
+    public int numKeys() {
+        return pubkeyToKeys.size();
+    }
+
+    /** Whether this basic key chain is empty, full of regular (usable for signing) keys, or full of watching keys. */
+    public enum State {
+        EMPTY,
+        WATCHING,
+        REGULAR
+    }
+
+    /**
+     * Returns whether this chain consists of pubkey only (watching) keys, regular keys (usable for signing), or
+     * has no keys in it yet at all (thus we cannot tell).
+     */
+    public State isWatching() {
+        lock.lock();
+        try {
+            if (hashToKeys.isEmpty())
+                return State.EMPTY;
+            return isWatching ? State.WATCHING : State.REGULAR;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Removes the given key from the keychain. Be very careful with this - losing a private key <b>destroys the
+     * money associated with it</b>.
+     * @return Whether the key was removed or not.
+     */
+    public boolean removeKey(ECKey key) {
+        lock.lock();
+        try {
+            boolean a = hashToKeys.remove(ByteString.copyFrom(key.getPubKeyHash())) != null;
+            boolean b = pubkeyToKeys.remove(ByteString.copyFrom(key.getPubKey())) != null;
+            checkState(a == b);   // Should be in both maps or neither.
+            return a;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public long getEarliestKeyCreationTime() {
+        lock.lock();
+        try {
+            long time = Long.MAX_VALUE;
+            for (ECKey key : hashToKeys.values())
+                time = Math.min(key.getCreationTimeSeconds(), time);
+            return time;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public List<ListenerRegistration<KeyChainEventListener>> getListeners() {
+        return new ArrayList<>(listeners);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Serialization support
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
