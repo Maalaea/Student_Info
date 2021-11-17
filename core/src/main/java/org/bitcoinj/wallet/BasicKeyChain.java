@@ -329,4 +329,47 @@ public class BasicKeyChain implements EncryptableKeyChain {
             final byte[] secret = item.getSecretBytes();
             // The secret might be missing in the case of a watching wallet, or a key for which the private key
             // is expected to be rederived on the fly from its parent.
-            
+            if (secret != null)
+                proto.setSecretBytes(ByteString.copyFrom(secret));
+            proto.setType(Protos.Key.Type.ORIGINAL);
+        }
+        return proto;
+    }
+
+    /**
+     * Returns a new BasicKeyChain that contains all basic, ORIGINAL type keys extracted from the list. Unrecognised
+     * key types are ignored.
+     */
+    public static BasicKeyChain fromProtobufUnencrypted(List<Protos.Key> keys) throws UnreadableWalletException {
+        BasicKeyChain chain = new BasicKeyChain();
+        chain.deserializeFromProtobuf(keys);
+        return chain;
+    }
+
+    /**
+     * Returns a new BasicKeyChain that contains all basic, ORIGINAL type keys and also any encrypted keys extracted
+     * from the list. Unrecognised key types are ignored.
+     * @throws org.bitcoinj.wallet.UnreadableWalletException.BadPassword if the password doesn't seem to match
+     * @throws org.bitcoinj.wallet.UnreadableWalletException if the data structures are corrupted/inconsistent
+     */
+    public static BasicKeyChain fromProtobufEncrypted(List<Protos.Key> keys, KeyCrypter crypter) throws UnreadableWalletException {
+        BasicKeyChain chain = new BasicKeyChain(checkNotNull(crypter));
+        chain.deserializeFromProtobuf(keys);
+        return chain;
+    }
+
+    private void deserializeFromProtobuf(List<Protos.Key> keys) throws UnreadableWalletException {
+        lock.lock();
+        try {
+            checkState(hashToKeys.isEmpty(), "Tried to deserialize into a non-empty chain");
+            for (Protos.Key key : keys) {
+                if (key.getType() != Protos.Key.Type.ORIGINAL && key.getType() != Protos.Key.Type.ENCRYPTED_SCRYPT_AES)
+                    continue;
+                boolean encrypted = key.getType() == Protos.Key.Type.ENCRYPTED_SCRYPT_AES;
+                byte[] priv = key.hasSecretBytes() ? key.getSecretBytes().toByteArray() : null;
+                if (!key.hasPublicKey())
+                    throw new UnreadableWalletException("Public key missing");
+                byte[] pub = key.getPublicKey().toByteArray();
+                ECKey ecKey;
+                if (encrypted) {
+                    checkState(keyCrypter != null, "This wallet is
