@@ -372,4 +372,59 @@ public class BasicKeyChain implements EncryptableKeyChain {
                 byte[] pub = key.getPublicKey().toByteArray();
                 ECKey ecKey;
                 if (encrypted) {
-                    checkState(keyCrypter != null, "This wallet is
+                    checkState(keyCrypter != null, "This wallet is encrypted but encrypt() was not called prior to deserialization");
+                    if (!key.hasEncryptedData())
+                        throw new UnreadableWalletException("Encrypted private key data missing");
+                    Protos.EncryptedData proto = key.getEncryptedData();
+                    EncryptedData e = new EncryptedData(proto.getInitialisationVector().toByteArray(),
+                            proto.getEncryptedPrivateKey().toByteArray());
+                    ecKey = ECKey.fromEncrypted(e, keyCrypter, pub);
+                } else {
+                    if (priv != null)
+                        ecKey = ECKey.fromPrivateAndPrecalculatedPublic(priv, pub);
+                    else
+                        ecKey = ECKey.fromPublicOnly(pub);
+                }
+                ecKey.setCreationTimeSeconds(key.getCreationTimestamp() / 1000);
+                importKeyLocked(ecKey);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Event listener support
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void addEventListener(KeyChainEventListener listener) {
+        addEventListener(listener, Threading.USER_THREAD);
+    }
+
+    @Override
+    public void addEventListener(KeyChainEventListener listener, Executor executor) {
+        listeners.add(new ListenerRegistration<>(listener, executor));
+    }
+
+    @Override
+    public boolean removeEventListener(KeyChainEventListener listener) {
+        return ListenerRegistration.removeFromList(listener, listeners);
+    }
+
+    private void queueOnKeysAdded(final List<ECKey> keys) {
+        checkState(lock.isHeldByCurrentThread());
+        for (final ListenerRegistration<KeyChainEventListener> registration : listeners) {
+            registration.executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    registration.listener.onKeysAdded(keys);
+                }
+            });
+        }
+    }
+
+    ////
