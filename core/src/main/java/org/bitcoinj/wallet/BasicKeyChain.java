@@ -527,4 +527,69 @@ public class BasicKeyChain implements EncryptableKeyChain {
         try {
             // If no keys then cannot decrypt.
             if (hashToKeys.isEmpty()) return false;
-            checkState(
+            checkState(keyCrypter != null, "Key chain is not encrypted");
+
+            // Find the first encrypted key in the wallet.
+            ECKey first = null;
+            for (ECKey key : hashToKeys.values()) {
+                if (key.isEncrypted()) {
+                    first = key;
+                    break;
+                }
+            }
+            checkState(first != null, "No encrypted keys in the wallet");
+
+            try {
+                ECKey rebornKey = first.decrypt(aesKey);
+                return Arrays.equals(first.getPubKey(), rebornKey.getPubKey());
+            } catch (KeyCrypterException e) {
+                // The AES key supplied is incorrect.
+                return false;
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Bloom filtering support
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    @Override
+    public BloomFilter getFilter(int size, double falsePositiveRate, long tweak) {
+        lock.lock();
+        try {
+            BloomFilter filter = new BloomFilter(size, falsePositiveRate, tweak);
+            for (ECKey key : hashToKeys.values())
+                filter.insert(key);
+            return filter;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public int numBloomFilterEntries() {
+        return numKeys() * 2;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Key rotation support
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /** Returns the first ECKey created after the given UNIX time, or null if there is none. */
+    @Nullable
+    public ECKey findOldestKeyAfter(long timeSecs) {
+        lock.lock();
+        try {
+            ECKey oldest = null;
+            for (ECKey key : hashToKeys.values()) {
+                final long keyTime = key.getCreationTimeSeconds();
+                if (keyTime > timeSecs) {
+     
