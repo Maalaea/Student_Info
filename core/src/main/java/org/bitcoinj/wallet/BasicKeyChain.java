@@ -468,4 +468,63 @@ public class BasicKeyChain implements EncryptableKeyChain {
                 // Check that the encrypted key can be successfully decrypted.
                 // This is done as it is a critical failure if the private key cannot be decrypted successfully
                 // (all bitcoin controlled by that private key is lost forever).
-                // For a correctly constructed keyCrypter 
+                // For a correctly constructed keyCrypter the encryption should always be reversible so it is just
+                // being as cautious as possible.
+                if (!ECKey.encryptionIsReversible(key, encryptedKey, keyCrypter, aesKey))
+                    throw new KeyCrypterException("The key " + key.toString() + " cannot be successfully decrypted after encryption so aborting wallet encryption.");
+                encrypted.importKeyLocked(encryptedKey);
+            }
+            return encrypted;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public BasicKeyChain toDecrypted(CharSequence password) {
+        checkNotNull(keyCrypter, "Wallet is already decrypted");
+        KeyParameter aesKey = keyCrypter.deriveKey(password);
+        return toDecrypted(aesKey);
+    }
+
+    @Override
+    public BasicKeyChain toDecrypted(KeyParameter aesKey) {
+        lock.lock();
+        try {
+            checkState(keyCrypter != null, "Wallet is already decrypted");
+            // Do an up-front check.
+            if (numKeys() > 0 && !checkAESKey(aesKey))
+                throw new KeyCrypterException("Password/key was incorrect.");
+            BasicKeyChain decrypted = new BasicKeyChain();
+            for (ECKey key : hashToKeys.values()) {
+                decrypted.importKeyLocked(key.decrypt(aesKey));
+            }
+            return decrypted;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns whether the given password is correct for this key chain.
+     * @throws IllegalStateException if the chain is not encrypted at all.
+     */
+    @Override
+    public boolean checkPassword(CharSequence password) {
+        checkNotNull(password);
+        checkState(keyCrypter != null, "Key chain not encrypted");
+        return checkAESKey(keyCrypter.deriveKey(password));
+    }
+
+    /**
+     * Check whether the AES key can decrypt the first encrypted key in the wallet.
+     *
+     * @return true if AES key supplied can decrypt the first encrypted private key in the wallet, false otherwise.
+     */
+    @Override
+    public boolean checkAESKey(KeyParameter aesKey) {
+        lock.lock();
+        try {
+            // If no keys then cannot decrypt.
+            if (hashToKeys.isEmpty()) return false;
+            checkState(
