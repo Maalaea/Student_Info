@@ -427,4 +427,45 @@ public class BasicKeyChain implements EncryptableKeyChain {
         }
     }
 
-    ////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Encryption support
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Convenience wrapper around {@link #toEncrypted(org.bitcoinj.crypto.KeyCrypter,
+     * org.bouncycastle.crypto.params.KeyParameter)} which uses the default Scrypt key derivation algorithm and
+     * parameters, derives a key from the given password and returns the created key.
+     */
+    @Override
+    public BasicKeyChain toEncrypted(CharSequence password) {
+        checkNotNull(password);
+        checkArgument(password.length() > 0);
+        KeyCrypter scrypt = new KeyCrypterScrypt();
+        KeyParameter derivedKey = scrypt.deriveKey(password);
+        return toEncrypted(scrypt, derivedKey);
+    }
+
+    /**
+     * Encrypt the wallet using the KeyCrypter and the AES key. A good default KeyCrypter to use is
+     * {@link org.bitcoinj.crypto.KeyCrypterScrypt}.
+     *
+     * @param keyCrypter The KeyCrypter that specifies how to encrypt/ decrypt a key
+     * @param aesKey AES key to use (normally created using KeyCrypter#deriveKey and cached as it is time consuming
+     *               to create from a password)
+     * @throws KeyCrypterException Thrown if the wallet encryption fails. If so, the wallet state is unchanged.
+     */
+    @Override
+    public BasicKeyChain toEncrypted(KeyCrypter keyCrypter, KeyParameter aesKey) {
+        lock.lock();
+        try {
+            checkNotNull(keyCrypter);
+            checkState(this.keyCrypter == null, "Key chain is already encrypted");
+            BasicKeyChain encrypted = new BasicKeyChain(keyCrypter);
+            for (ECKey key : hashToKeys.values()) {
+                ECKey encryptedKey = key.encrypt(keyCrypter, aesKey);
+                // Check that the encrypted key can be successfully decrypted.
+                // This is done as it is a critical failure if the private key cannot be decrypted successfully
+                // (all bitcoin controlled by that private key is lost forever).
+                // For a correctly constructed keyCrypter 
