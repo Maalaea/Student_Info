@@ -77,4 +77,29 @@ public class DefaultCoinSelector implements CoinSelector {
                 // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
                 BigInteger aHash = a.getParentTransactionHash().toBigInteger();
                 BigInteger bHash = b.getParentTransactionHash().toBigInteger();
-                return 
+                return aHash.compareTo(bHash);
+            }
+        });
+    }
+
+    /** Sub-classes can override this to just customize whether transactions are usable, but keep age sorting. */
+    protected boolean shouldSelect(Transaction tx) {
+        if (tx != null) {
+            return isSelectable(tx);
+        }
+        return true;
+    }
+
+    public static boolean isSelectable(Transaction tx) {
+        // Only pick chain-included transactions, or transactions that are ours and pending.
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
+
+               type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
+               confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
+               // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
+               // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
+               (confidence.numBroadcastPeers() > 1 || tx.getParams().getId().equals(NetworkParameters.ID_REGTEST));
+    }
+}
