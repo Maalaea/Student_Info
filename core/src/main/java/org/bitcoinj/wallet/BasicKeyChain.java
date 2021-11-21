@@ -592,4 +592,30 @@ public class BasicKeyChain implements EncryptableKeyChain {
             for (ECKey key : hashToKeys.values()) {
                 final long keyTime = key.getCreationTimeSeconds();
                 if (keyTime > timeSecs) {
-     
+                    if (oldest == null || oldest.getCreationTimeSeconds() > keyTime)
+                        oldest = key;
+                }
+            }
+            return oldest;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Returns a list of all ECKeys created after the given UNIX time. */
+    public List<ECKey> findKeysBefore(long timeSecs) {
+        lock.lock();
+        try {
+            List<ECKey> results = Lists.newLinkedList();
+            for (ECKey key : hashToKeys.values()) {
+                final long keyTime = key.getCreationTimeSeconds();
+                if (keyTime < timeSecs) {
+                    results.add(key);
+                }
+            }
+            return results;
+        } finally {
+            lock.unlock();
+        }
+    }
+}
