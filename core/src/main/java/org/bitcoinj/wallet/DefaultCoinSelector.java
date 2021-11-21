@@ -40,4 +40,41 @@ public class DefaultCoinSelector implements CoinSelector {
         ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
         // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
         // them in order to improve performance.
-        // TODO: Take in network parameters when instanatiated, and then test against the current network. Or just have
+        // TODO: Take in network parameters when instanatiated, and then test against the current network. Or just have a boolean parameter for "give me everything"
+        if (!target.equals(NetworkParameters.MAX_MONEY)) {
+            sortOutputs(sortedOutputs);
+        }
+        // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
+        // bit over (excessive value will be change).
+        long total = 0;
+        for (TransactionOutput output : sortedOutputs) {
+            if (total >= target.value) break;
+            // Only pick chain-included transactions, or transactions that are ours and pending.
+            if (!shouldSelect(output.getParentTransaction())) continue;
+            selected.add(output);
+            total += output.getValue().value;
+        }
+        // Total may be lower than target here, if the given candidates were insufficient to create to requested
+        // transaction.
+        return new CoinSelection(Coin.valueOf(total), selected);
+    }
+
+    @VisibleForTesting static void sortOutputs(ArrayList<TransactionOutput> outputs) {
+        Collections.sort(outputs, new Comparator<TransactionOutput>() {
+            @Override
+            public int compare(TransactionOutput a, TransactionOutput b) {
+                int depth1 = a.getParentTransactionDepthInBlocks();
+                int depth2 = b.getParentTransactionDepthInBlocks();
+                Coin aValue = a.getValue();
+                Coin bValue = b.getValue();
+                BigInteger aCoinDepth = BigInteger.valueOf(aValue.value).multiply(BigInteger.valueOf(depth1));
+                BigInteger bCoinDepth = BigInteger.valueOf(bValue.value).multiply(BigInteger.valueOf(depth2));
+                int c1 = bCoinDepth.compareTo(aCoinDepth);
+                if (c1 != 0) return c1;
+                // The "coin*days" destroyed are equal, sort by value alone to get the lowest transaction size.
+                int c2 = bValue.compareTo(aValue);
+                if (c2 != 0) return c2;
+                // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
+                BigInteger aHash = a.getParentTransactionHash().toBigInteger();
+                BigInteger bHash = b.getParentTransactionHash().toBigInteger();
+                return 
