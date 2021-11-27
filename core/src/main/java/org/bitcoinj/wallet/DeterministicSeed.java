@@ -40,4 +40,48 @@ import static com.google.common.base.Preconditions.checkState;
  * code.
  */
 public class DeterministicSeed implements EncryptableItem {
-    // It would take more than 10^12 years to brute-force a 128 bit seed using $1B worth of comput
+    // It would take more than 10^12 years to brute-force a 128 bit seed using $1B worth of computing equipment.
+    public static final int DEFAULT_SEED_ENTROPY_BITS = 128;
+    public static final int MAX_SEED_ENTROPY_BITS = 512;
+
+    @Nullable private final byte[] seed;
+    @Nullable private final List<String> mnemonicCode; // only one of mnemonicCode/encryptedMnemonicCode will be set
+    @Nullable private final EncryptedData encryptedMnemonicCode;
+    @Nullable private EncryptedData encryptedSeed;
+    private long creationTimeSeconds;
+
+    public DeterministicSeed(String mnemonicCode, byte[] seed, String passphrase, long creationTimeSeconds) throws UnreadableWalletException {
+        this(decodeMnemonicCode(mnemonicCode), seed, passphrase, creationTimeSeconds);
+    }
+
+    public DeterministicSeed(byte[] seed, List<String> mnemonic, long creationTimeSeconds) {
+        this.seed = checkNotNull(seed);
+        this.mnemonicCode = checkNotNull(mnemonic);
+        this.encryptedMnemonicCode = null;
+        this.creationTimeSeconds = creationTimeSeconds;
+    }
+
+    public DeterministicSeed(EncryptedData encryptedMnemonic, @Nullable EncryptedData encryptedSeed, long creationTimeSeconds) {
+        this.seed = null;
+        this.mnemonicCode = null;
+        this.encryptedMnemonicCode = checkNotNull(encryptedMnemonic);
+        this.encryptedSeed = encryptedSeed;
+        this.creationTimeSeconds = creationTimeSeconds;
+    }
+
+    /**
+     * Constructs a seed from a BIP 39 mnemonic code. See {@link org.bitcoinj.crypto.MnemonicCode} for more
+     * details on this scheme.
+     * @param mnemonicCode A list of words.
+     * @param seed The derived seed, or pass null to derive it from mnemonicCode (slow)
+     * @param passphrase A user supplied passphrase, or an empty string if there is no passphrase
+     * @param creationTimeSeconds When the seed was originally created, UNIX time.
+     */
+    public DeterministicSeed(List<String> mnemonicCode, @Nullable byte[] seed, String passphrase, long creationTimeSeconds) {
+        this((seed != null ? seed : MnemonicCode.toSeed(mnemonicCode, checkNotNull(passphrase))), mnemonicCode, creationTimeSeconds);
+    }
+
+    /**
+     * Constructs a seed from a BIP 39 mnemonic code. See {@link org.bitcoinj.crypto.MnemonicCode} for more
+     * details on this scheme.
+     * @param 
