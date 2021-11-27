@@ -84,4 +84,54 @@ public class DeterministicSeed implements EncryptableItem {
     /**
      * Constructs a seed from a BIP 39 mnemonic code. See {@link org.bitcoinj.crypto.MnemonicCode} for more
      * details on this scheme.
-     * @param 
+     * @param random Entropy source
+     * @param bits number of bits, must be divisible by 32
+     * @param passphrase A user supplied passphrase, or an empty string if there is no passphrase
+     * @param creationTimeSeconds When the seed was originally created, UNIX time.
+     */
+    public DeterministicSeed(SecureRandom random, int bits, String passphrase, long creationTimeSeconds) {
+        this(getEntropy(random, bits), checkNotNull(passphrase), creationTimeSeconds);
+    }
+
+    /**
+     * Constructs a seed from a BIP 39 mnemonic code. See {@link org.bitcoinj.crypto.MnemonicCode} for more
+     * details on this scheme.
+     * @param entropy entropy bits, length must be divisible by 32
+     * @param passphrase A user supplied passphrase, or an empty string if there is no passphrase
+     * @param creationTimeSeconds When the seed was originally created, UNIX time.
+     */
+    public DeterministicSeed(byte[] entropy, String passphrase, long creationTimeSeconds) {
+        checkArgument(entropy.length % 4 == 0, "entropy size in bits not divisible by 32");
+        checkArgument(entropy.length * 8 >= DEFAULT_SEED_ENTROPY_BITS, "entropy size too small");
+        checkNotNull(passphrase);
+
+        try {
+            this.mnemonicCode = MnemonicCode.INSTANCE.toMnemonic(entropy);
+        } catch (MnemonicException.MnemonicLengthException e) {
+            // cannot happen
+            throw new RuntimeException(e);
+        }
+        this.seed = MnemonicCode.toSeed(mnemonicCode, passphrase);
+        this.encryptedMnemonicCode = null;
+        this.creationTimeSeconds = creationTimeSeconds;
+    }
+
+    private static byte[] getEntropy(SecureRandom random, int bits) {
+        checkArgument(bits <= MAX_SEED_ENTROPY_BITS, "requested entropy size too large");
+
+        byte[] seed = new byte[bits / 8];
+        random.nextBytes(seed);
+        return seed;
+    }
+
+    @Override
+    public boolean isEncrypted() {
+        checkState(mnemonicCode != null || encryptedMnemonicCode != null);
+        return encryptedMnemonicCode != null;
+    }
+
+    @Override
+    public String toString() {
+        return isEncrypted()
+            ? "DeterministicSeed [encrypted]"
+            : "DeterministicSeed " + toHe
