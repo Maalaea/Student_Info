@@ -134,4 +134,71 @@ public class DeterministicSeed implements EncryptableItem {
     public String toString() {
         return isEncrypted()
             ? "DeterministicSeed [encrypted]"
-            : "DeterministicSeed " + toHe
+            : "DeterministicSeed " + toHexString() + " " + Utils.join(mnemonicCode);
+    }
+
+    /** Returns the seed as hex or null if encrypted. */
+    @Nullable
+    public String toHexString() {
+        return seed != null ? HEX.encode(seed) : null;
+    }
+
+    @Nullable
+    @Override
+    public byte[] getSecretBytes() {
+        return getMnemonicAsBytes();
+    }
+
+    @Nullable
+    public byte[] getSeedBytes() {
+        return seed;
+    }
+
+    @Nullable
+    @Override
+    public EncryptedData getEncryptedData() {
+        return encryptedMnemonicCode;
+    }
+
+    @Override
+    public Protos.Wallet.EncryptionType getEncryptionType() {
+        return Protos.Wallet.EncryptionType.ENCRYPTED_SCRYPT_AES;
+    }
+
+    @Nullable
+    public EncryptedData getEncryptedSeedData() {
+        return encryptedSeed;
+    }
+
+    @Override
+    public long getCreationTimeSeconds() {
+        return creationTimeSeconds;
+    }
+
+    public void setCreationTimeSeconds(long creationTimeSeconds) {
+        this.creationTimeSeconds = creationTimeSeconds;
+    }
+
+    public DeterministicSeed encrypt(KeyCrypter keyCrypter, KeyParameter aesKey) {
+        checkState(encryptedMnemonicCode == null, "Trying to encrypt seed twice");
+        checkState(mnemonicCode != null, "Mnemonic missing so cannot encrypt");
+        EncryptedData encryptedMnemonic = keyCrypter.encrypt(getMnemonicAsBytes(), aesKey);
+        EncryptedData encryptedSeed = keyCrypter.encrypt(seed, aesKey);
+        return new DeterministicSeed(encryptedMnemonic, encryptedSeed, creationTimeSeconds);
+    }
+
+    private byte[] getMnemonicAsBytes() {
+        return Utils.join(mnemonicCode).getBytes(Charsets.UTF_8);
+    }
+
+    public DeterministicSeed decrypt(KeyCrypter crypter, String passphrase, KeyParameter aesKey) {
+        checkState(isEncrypted());
+        checkNotNull(encryptedMnemonicCode);
+        List<String> mnemonic = decodeMnemonicCode(crypter.decrypt(encryptedMnemonicCode, aesKey));
+        byte[] seed = encryptedSeed == null ? null : crypter.decrypt(encryptedSeed, aesKey);
+        return new DeterministicSeed(mnemonic, seed, passphrase, creationTimeSeconds);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return 
