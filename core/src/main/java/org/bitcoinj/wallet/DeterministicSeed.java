@@ -201,4 +201,45 @@ public class DeterministicSeed implements EncryptableItem {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return 
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DeterministicSeed other = (DeterministicSeed) o;
+        return creationTimeSeconds == other.creationTimeSeconds
+            && Objects.equal(encryptedMnemonicCode, other.encryptedMnemonicCode)
+            && Objects.equal(mnemonicCode, other.mnemonicCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(creationTimeSeconds, encryptedMnemonicCode, mnemonicCode);
+    }
+
+    /**
+     * Check if our mnemonic is a valid mnemonic phrase for our word list.
+     * Does nothing if we are encrypted.
+     *
+     * @throws org.bitcoinj.crypto.MnemonicException if check fails
+     */
+    public void check() throws MnemonicException {
+        if (mnemonicCode != null)
+            MnemonicCode.INSTANCE.check(mnemonicCode);
+    }
+
+    byte[] getEntropyBytes() throws MnemonicException {
+        return MnemonicCode.INSTANCE.toEntropy(mnemonicCode);
+    }
+
+    /** Get the mnemonic code, or null if unknown. */
+    @Nullable
+    public List<String> getMnemonicCode() {
+        return mnemonicCode;
+    }
+
+    private static List<String> decodeMnemonicCode(byte[] mnemonicCode) {
+        return decodeMnemonicCode(Utils.toString(mnemonicCode, "UTF-8"));
+    }
+
+    private static List<String> decodeMnemonicCode(String mnemonicCode) {
+        return Splitter.on(" ").splitToList(mnemonicCode);
+    }
+}
