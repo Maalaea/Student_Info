@@ -1,6 +1,6 @@
 /*
- * Copyright by the original author or authors.
- * 
+ * Copyright 2014 the bitcoinj authors.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,8 +16,14 @@
 
 package org.bitcoinj.wallet;
 
+import org.bitcoinj.core.*;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+
 /**
- * Indicates that an attempt was made to use HD wallet features on a wallet that was deserialized from an old,
- * pre-HD random wallet without calling upgradeToDeterministic() beforehand.
+ * A filtering coin selector delegates to another coin selector, but won't select outputs spent by the given transactions.
  */
-public class DeterministicUpgradeRequiredException extends RuntimeException {}
+public class FilteringCoinSelector implements CoinSelector {
+    p
