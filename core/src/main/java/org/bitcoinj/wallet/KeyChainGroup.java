@@ -37,4 +37,46 @@ import static com.google.common.base.Preconditions.*;
 /**
  * <p>A KeyChainGroup is used by the {@link org.bitcoinj.wallet.Wallet} and
  * manages: a {@link BasicKeyChain} object (which will normally be empty), and zero or more
- * {@link DeterministicKeyChain}s. A deterministic k
+ * {@link DeterministicKeyChain}s. A deterministic key chain will be created lazily/on demand
+ * when a fresh or current key is requested, possibly being initialized from the private key bytes of the earliest non
+ * rotating key in the basic key chain if one is available, or from a fresh random seed if not.</p>
+ *
+ * <p>If a key rotation time is set, it may be necessary to add a new DeterministicKeyChain with a fresh seed
+ * and also preserve the old one, so funds can be swept from the rotating keys. In this case, there may be
+ * more than one deterministic chain. The latest chain is called the active chain and is where new keys are served
+ * from.</p>
+ *
+ * <p>The wallet delegates most key management tasks to this class. It is <b>not</b> thread safe and requires external
+ * locking, i.e. by the wallet lock. The group then in turn delegates most operations to the key chain objects,
+ * combining their responses together when necessary.</p>
+ *
+ * <p>Deterministic key chains have a concept of a lookahead size and threshold. Please see the discussion in the
+ * class docs for {@link DeterministicKeyChain} for more information on this topic.</p>
+ */
+public class KeyChainGroup implements KeyBag {
+
+    static {
+        // Init proper random number generator, as some old Android installations have bugs that make it unsecure.
+        if (Utils.isAndroidRuntime())
+            new LinuxSecureRandom();
+    }
+
+    private static final Logger log = LoggerFactory.getLogger(KeyChainGroup.class);
+
+    private BasicKeyChain basic;
+    private NetworkParameters params;
+    protected final LinkedList<DeterministicKeyChain> chains;
+    // currentKeys is used for normal, non-multisig/married wallets. currentAddresses is used when we're handing out
+    // P2SH addresses. They're mutually exclusive.
+    private final EnumMap<KeyChain.KeyPurpose, DeterministicKey> currentKeys;
+    private final EnumMap<KeyChain.KeyPurpose, Address> currentAddresses;
+    @Nullable private KeyCrypter keyCrypter;
+    private int lookaheadSize = -1;
+    private int lookaheadThreshold = -1;
+
+    /** Creates a keychain group with no basic chain, and a single, lazily created HD chain. */
+    public KeyChainGroup(NetworkParameters params) {
+        this(params, null, new ArrayList<DeterministicKeyChain>(1), null, null);
+    }
+
+    /** Creates a keychain group with no basic chain, an
