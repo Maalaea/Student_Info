@@ -79,4 +79,48 @@ public class KeyChainGroup implements KeyBag {
         this(params, null, new ArrayList<DeterministicKeyChain>(1), null, null);
     }
 
-    /** Creates a keychain group with no basic chain, an
+    /** Creates a keychain group with no basic chain, and an HD chain initialized from the given seed. */
+    public KeyChainGroup(NetworkParameters params, DeterministicSeed seed) {
+        this(params, null, ImmutableList.of(new DeterministicKeyChain(seed)), null, null);
+    }
+
+    /**
+     * Creates a keychain group with no basic chain, and an HD chain that is watching the given watching key.
+     * This HAS to be an account key as returned by {@link DeterministicKeyChain#getWatchingKey()}.
+     */
+    public KeyChainGroup(NetworkParameters params, DeterministicKey watchKey) {
+        this(params, null, ImmutableList.of(DeterministicKeyChain.watch(watchKey)), null, null);
+    }
+
+    // Used for deserialization.
+    private KeyChainGroup(NetworkParameters params, @Nullable BasicKeyChain basicKeyChain, List<DeterministicKeyChain> chains,
+                          @Nullable EnumMap<KeyChain.KeyPurpose, DeterministicKey> currentKeys, @Nullable KeyCrypter crypter) {
+        this.params = params;
+        this.basic = basicKeyChain == null ? new BasicKeyChain() : basicKeyChain;
+        this.chains = new LinkedList<>(checkNotNull(chains));
+        this.keyCrypter = crypter;
+        this.currentKeys = currentKeys == null
+                ? new EnumMap<KeyChain.KeyPurpose, DeterministicKey>(KeyChain.KeyPurpose.class)
+                : currentKeys;
+        this.currentAddresses = new EnumMap<>(KeyChain.KeyPurpose.class);
+        maybeLookaheadScripts();
+
+        if (isMarried()) {
+            for (Map.Entry<KeyChain.KeyPurpose, DeterministicKey> entry : this.currentKeys.entrySet()) {
+                Address address = makeP2SHOutputScript(entry.getValue(), getActiveKeyChain()).getToAddress(params);
+                currentAddresses.put(entry.getKey(), address);
+            }
+        }
+    }
+
+    // This keeps married redeem data in sync with the number of keys issued
+    private void maybeLookaheadScripts() {
+        for (DeterministicKeyChain chain : chains) {
+            chain.maybeLookAheadScripts();
+        }
+    }
+
+    /** Adds a new HD chain to the chains list, and make it the default chain (from which keys are issued). */
+    public void createAndActivateNewHDChain() {
+        // We can't do auto upgrade here because we don't know the rotation time, if any.
+        final DeterministicKeyCha
