@@ -123,4 +123,49 @@ public class KeyChainGroup implements KeyBag {
     /** Adds a new HD chain to the chains list, and make it the default chain (from which keys are issued). */
     public void createAndActivateNewHDChain() {
         // We can't do auto upgrade here because we don't know the rotation time, if any.
-        final DeterministicKeyCha
+        final DeterministicKeyChain chain = new DeterministicKeyChain(new SecureRandom());
+        addAndActivateHDChain(chain);
+    }
+
+    /**
+     * Adds an HD chain to the chains list, and make it the default chain (from which keys are issued).
+     * Useful for adding a complex pre-configured keychain, such as a married wallet.
+     */
+    public void addAndActivateHDChain(DeterministicKeyChain chain) {
+        log.info("Creating and activating a new HD chain: {}", chain);
+        for (ListenerRegistration<KeyChainEventListener> registration : basic.getListeners())
+            chain.addEventListener(registration.listener, registration.executor);
+        if (lookaheadSize >= 0)
+            chain.setLookaheadSize(lookaheadSize);
+        if (lookaheadThreshold >= 0)
+            chain.setLookaheadThreshold(lookaheadThreshold);
+        chains.add(chain);
+    }
+
+    /**
+     * Returns a key that hasn't been seen in a transaction yet, and which is suitable for displaying in a wallet
+     * user interface as "a convenient key to receive funds on" when the purpose parameter is
+     * {@link KeyChain.KeyPurpose#RECEIVE_FUNDS}. The returned key is stable until
+     * it's actually seen in a pending or confirmed transaction, at which point this method will start returning
+     * a different key (for each purpose independently).
+     * <p>This method is not supposed to be used for married keychains and will throw UnsupportedOperationException if
+     * the active chain is married.
+     * For married keychains use {@link #currentAddress(KeyChain.KeyPurpose)}
+     * to get a proper P2SH address</p>
+     */
+    public DeterministicKey currentKey(KeyChain.KeyPurpose purpose) {
+        DeterministicKeyChain chain = getActiveKeyChain();
+        if (chain.isMarried()) {
+            throw new UnsupportedOperationException("Key is not suitable to receive coins for married keychains." +
+                                                    " Use freshAddress to get P2SH address instead");
+        }
+        DeterministicKey current = currentKeys.get(purpose);
+        if (current == null) {
+            current = freshKey(purpose);
+            currentKeys.put(purpose, current);
+        }
+        return current;
+    }
+
+    /**
+     * Returns address
