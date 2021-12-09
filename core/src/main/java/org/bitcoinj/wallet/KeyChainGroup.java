@@ -168,4 +168,45 @@ public class KeyChainGroup implements KeyBag {
     }
 
     /**
-     * Returns address
+     * Returns address for a {@link #currentKey(KeyChain.KeyPurpose)}
+     */
+    public Address currentAddress(KeyChain.KeyPurpose purpose) {
+        DeterministicKeyChain chain = getActiveKeyChain();
+        if (chain.isMarried()) {
+            Address current = currentAddresses.get(purpose);
+            if (current == null) {
+                current = freshAddress(purpose);
+                currentAddresses.put(purpose, current);
+            }
+            return current;
+        } else {
+            return currentKey(purpose).toAddress(params);
+        }
+    }
+
+    /**
+     * Returns a key that has not been returned by this method before (fresh). You can think of this as being
+     * a newly created key, although the notion of "create" is not really valid for a
+     * {@link DeterministicKeyChain}. When the parameter is
+     * {@link KeyChain.KeyPurpose#RECEIVE_FUNDS} the returned key is suitable for being put
+     * into a receive coins wizard type UI. You should use this when the user is definitely going to hand this key out
+     * to someone who wishes to send money.
+     * <p>This method is not supposed to be used for married keychains and will throw UnsupportedOperationException if
+     * the active chain is married.
+     * For married keychains use {@link #freshAddress(KeyChain.KeyPurpose)}
+     * to get a proper P2SH address</p>
+     */
+    public DeterministicKey freshKey(KeyChain.KeyPurpose purpose) {
+        return freshKeys(purpose, 1).get(0);
+    }
+
+    /**
+     * Returns a key/s that have not been returned by this method before (fresh). You can think of this as being
+     * newly created key/s, although the notion of "create" is not really valid for a
+     * {@link DeterministicKeyChain}. When the parameter is
+     * {@link KeyChain.KeyPurpose#RECEIVE_FUNDS} the returned key is suitable for being put
+     * into a receive coins wizard type UI. You should use this when the user is definitely going to hand this key out
+     * to someone who wishes to send money.
+     * <p>This method is not supposed to be used for married keychains and will throw UnsupportedOperationException if
+     * the active chain is married.
+     *
