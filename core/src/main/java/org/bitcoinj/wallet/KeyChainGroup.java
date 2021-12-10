@@ -209,4 +209,49 @@ public class KeyChainGroup implements KeyBag {
      * to someone who wishes to send money.
      * <p>This method is not supposed to be used for married keychains and will throw UnsupportedOperationException if
      * the active chain is married.
-     *
+     * For married keychains use {@link #freshAddress(KeyChain.KeyPurpose)}
+     * to get a proper P2SH address</p>
+     */
+    public List<DeterministicKey> freshKeys(KeyChain.KeyPurpose purpose, int numberOfKeys) {
+        DeterministicKeyChain chain = getActiveKeyChain();
+        if (chain.isMarried()) {
+            throw new UnsupportedOperationException("Key is not suitable to receive coins for married keychains." +
+                    " Use freshAddress to get P2SH address instead");
+        }
+        return chain.getKeys(purpose, numberOfKeys);   // Always returns the next key along the key chain.
+    }
+
+    /**
+     * Returns address for a {@link #freshKey(KeyChain.KeyPurpose)}
+     */
+    public Address freshAddress(KeyChain.KeyPurpose purpose) {
+        DeterministicKeyChain chain = getActiveKeyChain();
+        if (chain.isMarried()) {
+            Script outputScript = chain.freshOutputScript(purpose);
+            checkState(outputScript.isPayToScriptHash()); // Only handle P2SH for now
+            Address freshAddress = Address.fromP2SHScript(params, outputScript);
+            maybeLookaheadScripts();
+            currentAddresses.put(purpose, freshAddress);
+            return freshAddress;
+        } else {
+            return freshKey(purpose).toAddress(params);
+        }
+    }
+
+    /** Returns the key chain that's used for generation of fresh/current keys. This is always the newest HD chain. */
+    public final DeterministicKeyChain getActiveKeyChain() {
+        if (chains.isEmpty()) {
+            if (basic.numKeys() > 0) {
+                log.warn("No HD chain present but random keys are: you probably deserialized an old wallet.");
+                // If called from the wallet (most likely) it'll try to upgrade us, as it knows the rotation time
+                // but not the password.
+                throw new DeterministicUpgradeRequiredException();
+            }
+            // Otherwise we have no HD chains and no random keys: we are a new born! So a random seed is fine.
+            createAndActivateNewHDChain();
+        }
+        return chains.get(chains.size() - 1);
+    }
+
+    /**
+     * Sets the lookahead buffer size for A
