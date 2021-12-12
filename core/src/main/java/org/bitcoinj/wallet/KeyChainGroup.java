@@ -426,4 +426,61 @@ public class KeyChainGroup implements KeyBag {
 
     @Nullable
     @Override
-    public ECKey find
+    public ECKey findKeyFromPubKey(byte[] pubkey) {
+        ECKey result;
+        if ((result = basic.findKeyFromPubKey(pubkey)) != null)
+            return result;
+        for (DeterministicKeyChain chain : chains) {
+            if ((result = chain.findKeyFromPubKey(pubkey)) != null)
+                return result;
+        }
+        return null;
+    }
+
+    /**
+     * Mark the DeterministicKeys as used, if they match the pubkey
+     * See {@link DeterministicKeyChain#markKeyAsUsed(DeterministicKey)} for more info on this.
+     */
+    public void markPubKeyAsUsed(byte[] pubkey) {
+        for (DeterministicKeyChain chain : chains) {
+            DeterministicKey key;
+            if ((key = chain.markPubKeyAsUsed(pubkey)) != null) {
+                maybeMarkCurrentKeyAsUsed(key);
+                return;
+            }
+        }
+    }
+
+    /** Returns the number of keys managed by this group, including the lookahead buffers. */
+    public int numKeys() {
+        int result = basic.numKeys();
+        for (DeterministicKeyChain chain : chains)
+            result += chain.numKeys();
+        return result;
+    }
+
+    /**
+     * Removes a key that was imported into the basic key chain. You cannot remove deterministic keys.
+     * @throws java.lang.IllegalArgumentException if the key is deterministic.
+     */
+    public boolean removeImportedKey(ECKey key) {
+        checkNotNull(key);
+        checkArgument(!(key instanceof DeterministicKey));
+        return basic.removeKey(key);
+    }
+
+    /**
+     * Whether the active keychain is married.  A keychain is married when it vends P2SH addresses
+     * from multiple keychains in a multisig relationship.
+     * @see org.bitcoinj.wallet.MarriedKeyChain
+     */
+    public final boolean isMarried() {
+        return !chains.isEmpty() && getActiveKeyChain().isMarried();
+    }
+
+    /**
+     * Encrypt the keys in the group using the KeyCrypter and the AES key. A good default KeyCrypter to use is
+     * {@link org.bitcoinj.crypto.KeyCrypterScrypt}.
+     *
+     * @throws org.bitcoinj.crypto.KeyCrypterException Thrown if the wallet encryption fails for some reason,
+     *         leaving the group uncha
