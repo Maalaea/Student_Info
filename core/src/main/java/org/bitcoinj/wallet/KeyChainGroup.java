@@ -254,4 +254,66 @@ public class KeyChainGroup implements KeyBag {
     }
 
     /**
-     * Sets the lookahead buffer size for A
+     * Sets the lookahead buffer size for ALL deterministic key chains as well as for following key chains if any exist,
+     * see {@link DeterministicKeyChain#setLookaheadSize(int)}
+     * for more information.
+     */
+    public void setLookaheadSize(int lookaheadSize) {
+        this.lookaheadSize = lookaheadSize;
+        for (DeterministicKeyChain chain : chains) {
+            chain.setLookaheadSize(lookaheadSize);
+        }
+    }
+
+    /**
+     * Gets the current lookahead size being used for ALL deterministic key chains. See
+     * {@link DeterministicKeyChain#setLookaheadSize(int)}
+     * for more information.
+     */
+    public int getLookaheadSize() {
+        if (lookaheadSize == -1)
+            return getActiveKeyChain().getLookaheadSize();
+        else
+            return lookaheadSize;
+    }
+
+    /**
+     * Sets the lookahead buffer threshold for ALL deterministic key chains, see
+     * {@link DeterministicKeyChain#setLookaheadThreshold(int)}
+     * for more information.
+     */
+    public void setLookaheadThreshold(int num) {
+        for (DeterministicKeyChain chain : chains) {
+            chain.setLookaheadThreshold(num);
+        }
+    }
+
+    /**
+     * Gets the current lookahead threshold being used for ALL deterministic key chains. See
+     * {@link DeterministicKeyChain#setLookaheadThreshold(int)}
+     * for more information.
+     */
+    public int getLookaheadThreshold() {
+        if (lookaheadThreshold == -1)
+            return getActiveKeyChain().getLookaheadThreshold();
+        else
+            return lookaheadThreshold;
+    }
+
+    /** Imports the given keys into the basic chain, creating it if necessary. */
+    public int importKeys(List<ECKey> keys) {
+        return basic.importKeys(keys);
+    }
+
+    /** Imports the given keys into the basic chain, creating it if necessary. */
+    public int importKeys(ECKey... keys) {
+        return importKeys(ImmutableList.copyOf(keys));
+    }
+
+    public boolean checkPassword(CharSequence password) {
+        checkState(keyCrypter != null, "Not encrypted");
+        return checkAESKey(keyCrypter.deriveKey(password));
+    }
+
+    public boolean checkAESKey(KeyParameter aesKey) {
+        checkState(keyCryp
