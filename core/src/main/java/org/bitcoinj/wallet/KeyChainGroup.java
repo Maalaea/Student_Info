@@ -367,4 +367,63 @@ public class KeyChainGroup implements KeyBag {
     @Override
     public ECKey findKeyFromPubHash(byte[] pubkeyHash) {
         ECKey result;
-        if ((result = basic.findKeyFromPub
+        if ((result = basic.findKeyFromPubHash(pubkeyHash)) != null)
+            return result;
+        for (DeterministicKeyChain chain : chains) {
+            if ((result = chain.findKeyFromPubHash(pubkeyHash)) != null)
+                return result;
+        }
+        return null;
+    }
+
+    /**
+     * Mark the DeterministicKeys as used, if they match the pubkeyHash
+     * See {@link DeterministicKeyChain#markKeyAsUsed(DeterministicKey)} for more info on this.
+     */
+    public void markPubKeyHashAsUsed(byte[] pubkeyHash) {
+        for (DeterministicKeyChain chain : chains) {
+            DeterministicKey key;
+            if ((key = chain.markPubHashAsUsed(pubkeyHash)) != null) {
+                maybeMarkCurrentKeyAsUsed(key);
+                return;
+            }
+        }
+    }
+
+    /** If the given P2SH address is "current", advance it to a new one. */
+    private void maybeMarkCurrentAddressAsUsed(Address address) {
+        checkArgument(address.isP2SHAddress());
+        for (Map.Entry<KeyChain.KeyPurpose, Address> entry : currentAddresses.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().equals(address)) {
+                log.info("Marking P2SH address as used: {}", address);
+                currentAddresses.put(entry.getKey(), freshAddress(entry.getKey()));
+                return;
+            }
+        }
+    }
+
+    /** If the given key is "current", advance the current key to a new one. */
+    private void maybeMarkCurrentKeyAsUsed(DeterministicKey key) {
+        // It's OK for currentKeys to be empty here: it means we're a married wallet and the key may be a part of a
+        // rotating chain.
+        for (Map.Entry<KeyChain.KeyPurpose, DeterministicKey> entry : currentKeys.entrySet()) {
+            if (entry.getValue() != null && entry.getValue().equals(key)) {
+                log.info("Marking key as used: {}", key);
+                currentKeys.put(entry.getKey(), freshKey(entry.getKey()));
+                return;
+            }
+        }
+    }
+
+    public boolean hasKey(ECKey key) {
+        if (basic.hasKey(key))
+            return true;
+        for (DeterministicKeyChain chain : chains)
+            if (chain.hasKey(key))
+                return true;
+        return false;
+    }
+
+    @Nullable
+    @Override
+    public ECKey find
