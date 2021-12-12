@@ -316,4 +316,55 @@ public class KeyChainGroup implements KeyBag {
     }
 
     public boolean checkAESKey(KeyParameter aesKey) {
-        checkState(keyCryp
+        checkState(keyCrypter != null, "Not encrypted");
+        if (basic.numKeys() > 0)
+            return basic.checkAESKey(aesKey);
+        return getActiveKeyChain().checkAESKey(aesKey);
+    }
+
+    /** Imports the given unencrypted keys into the basic chain, encrypting them along the way with the given key. */
+    public int importKeysAndEncrypt(final List<ECKey> keys, KeyParameter aesKey) {
+        // TODO: Firstly check if the aes key can decrypt any of the existing keys successfully.
+        checkState(keyCrypter != null, "Not encrypted");
+        LinkedList<ECKey> encryptedKeys = Lists.newLinkedList();
+        for (ECKey key : keys) {
+            if (key.isEncrypted())
+                throw new IllegalArgumentException("Cannot provide already encrypted keys");
+            encryptedKeys.add(key.encrypt(keyCrypter, aesKey));
+        }
+        return importKeys(encryptedKeys);
+    }
+
+    @Override
+    @Nullable
+    public RedeemData findRedeemDataFromScriptHash(byte[] scriptHash) {
+        // Iterate in reverse order, since the active keychain is the one most likely to have the hit
+        for (Iterator<DeterministicKeyChain> iter = chains.descendingIterator() ; iter.hasNext() ; ) {
+            DeterministicKeyChain chain = iter.next();
+            RedeemData redeemData = chain.findRedeemDataByScriptHash(ByteString.copyFrom(scriptHash));
+            if (redeemData != null)
+                return redeemData;
+        }
+        return null;
+    }
+
+    public void markP2SHAddressAsUsed(Address address) {
+        checkArgument(address.isP2SHAddress());
+        RedeemData data = findRedeemDataFromScriptHash(address.getHash160());
+        if (data == null)
+            return;   // Not our P2SH address.
+        for (ECKey key : data.keys) {
+            for (DeterministicKeyChain chain : chains) {
+                DeterministicKey k = chain.findKeyFromPubKey(key.getPubKey());
+                if (k == null) continue;
+                chain.markKeyAsUsed(k);
+                maybeMarkCurrentAddressAsUsed(address);
+            }
+        }
+    }
+
+    @Nullable
+    @Override
+    public ECKey findKeyFromPubHash(byte[] pubkeyHash) {
+        ECKey result;
+        if ((result = basic.findKeyFromPub
