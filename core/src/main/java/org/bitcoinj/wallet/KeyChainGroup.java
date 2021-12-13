@@ -483,4 +483,57 @@ public class KeyChainGroup implements KeyBag {
      * {@link org.bitcoinj.crypto.KeyCrypterScrypt}.
      *
      * @throws org.bitcoinj.crypto.KeyCrypterException Thrown if the wallet encryption fails for some reason,
-     *         leaving the group uncha
+     *         leaving the group unchanged.
+     * @throws DeterministicUpgradeRequiredException Thrown if there are random keys but no HD chain.
+     */
+    public void encrypt(KeyCrypter keyCrypter, KeyParameter aesKey) {
+        checkNotNull(keyCrypter);
+        checkNotNull(aesKey);
+        // This code must be exception safe.
+        BasicKeyChain newBasic = basic.toEncrypted(keyCrypter, aesKey);
+        List<DeterministicKeyChain> newChains = new ArrayList<>(chains.size());
+        if (chains.isEmpty() && basic.numKeys() == 0) {
+            // No HD chains and no random keys: encrypting an entirely empty keychain group. But we can't do that, we
+            // must have something to encrypt: so instantiate a new HD chain here.
+            createAndActivateNewHDChain();
+        }
+        for (DeterministicKeyChain chain : chains)
+            newChains.add(chain.toEncrypted(keyCrypter, aesKey));
+        this.keyCrypter = keyCrypter;
+        basic = newBasic;
+        chains.clear();
+        chains.addAll(newChains);
+    }
+
+    /**
+     * Decrypt the keys in the group using the previously given key crypter and the AES key. A good default
+     * KeyCrypter to use is {@link org.bitcoinj.crypto.KeyCrypterScrypt}.
+     *
+     * @throws org.bitcoinj.crypto.KeyCrypterException Thrown if the wallet decryption fails for some reason, leaving the group unchanged.
+     */
+    public void decrypt(KeyParameter aesKey) {
+        // This code must be exception safe.
+        checkNotNull(aesKey);
+        BasicKeyChain newBasic = basic.toDecrypted(aesKey);
+        List<DeterministicKeyChain> newChains = new ArrayList<>(chains.size());
+        for (DeterministicKeyChain chain : chains)
+            newChains.add(chain.toDecrypted(aesKey));
+
+        this.keyCrypter = null;
+        basic = newBasic;
+        chains.clear();
+        chains.addAll(newChains);
+    }
+
+    /** Returns true if the group is encrypted. */
+    public boolean isEncrypted() {
+        return keyCrypter != null;
+    }
+
+    /**
+     * Returns whether this chain has only watching keys (unencrypted keys with no private part). Mixed chains are
+     * forbidden.
+     * 
+     * @throws IllegalStateException if there are no keys, or if there is a mix between watching and non-watching keys.
+     */
+    public boolean isW
