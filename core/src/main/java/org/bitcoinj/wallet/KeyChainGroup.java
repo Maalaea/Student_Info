@@ -536,4 +536,54 @@ public class KeyChainGroup implements KeyBag {
      * 
      * @throws IllegalStateException if there are no keys, or if there is a mix between watching and non-watching keys.
      */
-    public boolean isW
+    public boolean isWatching() {
+        BasicKeyChain.State basicState = basic.isWatching();
+        BasicKeyChain.State activeState = BasicKeyChain.State.EMPTY;
+        if (!chains.isEmpty()) {
+            if (getActiveKeyChain().isWatching())
+                activeState = BasicKeyChain.State.WATCHING;
+            else
+                activeState = BasicKeyChain.State.REGULAR;
+        }
+        if (basicState == BasicKeyChain.State.EMPTY) {
+            if (activeState == BasicKeyChain.State.EMPTY)
+                throw new IllegalStateException("Empty key chain group: cannot answer isWatching() query");
+            return activeState == BasicKeyChain.State.WATCHING;
+        } else if (activeState == BasicKeyChain.State.EMPTY)
+            return basicState == BasicKeyChain.State.WATCHING;
+        else {
+            if (activeState != basicState)
+                throw new IllegalStateException("Mix of watching and non-watching keys in wallet");
+            return activeState == BasicKeyChain.State.WATCHING;
+        }
+    }
+
+    /** Returns the key crypter or null if the group is not encrypted. */
+    @Nullable public KeyCrypter getKeyCrypter() { return keyCrypter; }
+
+    /**
+     * Returns a list of the non-deterministic keys that have been imported into the wallet, or the empty list if none.
+     */
+    public List<ECKey> getImportedKeys() {
+        return basic.getKeys();
+    }
+
+    public long getEarliestKeyCreationTime() {
+        long time = basic.getEarliestKeyCreationTime();   // Long.MAX_VALUE if empty.
+        for (DeterministicKeyChain chain : chains)
+            time = Math.min(time, chain.getEarliestKeyCreationTime());
+        return time;
+    }
+
+    public int getBloomFilterElementCount() {
+        int result = basic.numBloomFilterEntries();
+        for (DeterministicKeyChain chain : chains) {
+            result += chain.numBloomFilterEntries();
+        }
+        return result;
+    }
+
+    public BloomFilter getBloomFilter(int size, double falsePositiveRate, long nTweak) {
+        BloomFilter filter = new BloomFilter(size, falsePositiveRate, nTweak);
+        if (basic.numKeys() > 0)
+            filter.merge(basic.get
