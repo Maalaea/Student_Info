@@ -586,4 +586,61 @@ public class KeyChainGroup implements KeyBag {
     public BloomFilter getBloomFilter(int size, double falsePositiveRate, long nTweak) {
         BloomFilter filter = new BloomFilter(size, falsePositiveRate, nTweak);
         if (basic.numKeys() > 0)
-            filter.merge(basic.get
+            filter.merge(basic.getFilter(size, falsePositiveRate, nTweak));
+
+        for (DeterministicKeyChain chain : chains) {
+            filter.merge(chain.getFilter(size, falsePositiveRate, nTweak));
+        }
+        return filter;
+    }
+
+    /** {@inheritDoc} */
+    public boolean isRequiringUpdateAllBloomFilter() {
+        throw new UnsupportedOperationException();   // Unused.
+    }
+
+    private Script makeP2SHOutputScript(DeterministicKey followedKey, DeterministicKeyChain chain) {
+        return ScriptBuilder.createP2SHOutputScript(chain.getRedeemData(followedKey).redeemScript);
+    }
+
+    /** Adds a listener for events that are run when keys are added, on the user thread. */
+    public void addEventListener(KeyChainEventListener listener) {
+        addEventListener(listener, Threading.USER_THREAD);
+    }
+
+    /** Adds a listener for events that are run when keys are added, on the given executor. */
+    public void addEventListener(KeyChainEventListener listener, Executor executor) {
+        checkNotNull(listener);
+        checkNotNull(executor);
+        basic.addEventListener(listener, executor);
+        for (DeterministicKeyChain chain : chains)
+            chain.addEventListener(listener, executor);
+    }
+
+    /** Removes a listener for events that are run when keys are added. */
+    public boolean removeEventListener(KeyChainEventListener listener) {
+        checkNotNull(listener);
+        for (DeterministicKeyChain chain : chains)
+            chain.removeEventListener(listener);
+        return basic.removeEventListener(listener);
+    }
+
+    /** Returns a list of key protobufs obtained by merging the chains. */
+    public List<Protos.Key> serializeToProtobuf() {
+        List<Protos.Key> result;
+        if (basic != null)
+            result = basic.serializeToProtobuf();
+        else
+            result = Lists.newArrayList();
+        for (DeterministicKeyChain chain : chains) {
+            List<Protos.Key> protos = chain.serializeToProtobuf();
+            result.addAll(protos);
+        }
+        return result;
+    }
+
+    static KeyChainGroup fromProtobufUnencrypted(NetworkParameters params, List<Protos.Key> keys) throws UnreadableWalletException {
+        return fromProtobufUnencrypted(params, keys, new DefaultKeyChainFactory());
+    }
+
+    public stati
