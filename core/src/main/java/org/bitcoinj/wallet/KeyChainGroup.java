@@ -675,4 +675,32 @@ public class KeyChainGroup implements KeyBag {
      * @param keyRotationTimeSecs If non-zero, UNIX time for which keys created before this are assumed to be
      *                            compromised or weak, those keys will not be used for deterministic upgrade.
      * @param aesKey If non-null, the encryption key the keychain is encrypted under. If the keychain is encrypted
-     *               and this is not supplied, an exception is 
+     *               and this is not supplied, an exception is thrown letting you know you should ask the user for
+     *               their password, turn it into a key, and then try again.
+     * @throws java.lang.IllegalStateException if there is already a deterministic key chain present or if there are
+     *                                         no random keys (i.e. this is not an upgrade scenario), or if aesKey is
+     *                                         provided but the wallet is not encrypted.
+     * @throws java.lang.IllegalArgumentException if the rotation time specified excludes all keys.
+     * @throws DeterministicUpgradeRequiresPassword if the key chain group is encrypted
+     *         and you should provide the users encryption key.
+     * @return the DeterministicKeyChain that was created by the upgrade.
+     */
+    public DeterministicKeyChain upgradeToDeterministic(long keyRotationTimeSecs, @Nullable KeyParameter aesKey) throws DeterministicUpgradeRequiresPassword, AllRandomKeysRotating {
+        checkState(basic.numKeys() > 0);
+        checkArgument(keyRotationTimeSecs >= 0);
+        // Subtract one because the key rotation time might have been set to the creation time of the first known good
+        // key, in which case, that's the one we want to find.
+        ECKey keyToUse = basic.findOldestKeyAfter(keyRotationTimeSecs - 1);
+        if (keyToUse == null)
+            throw new AllRandomKeysRotating();
+
+        if (keyToUse.isEncrypted()) {
+            if (aesKey == null) {
+                // We can't auto upgrade because we don't know the users password at this point. We throw an
+                // exception so the calling code knows to abort the load and ask the user for their password, they can
+                // then try loading the wallet again passing in the AES key.
+                //
+                // There are a few different approaches we could have used here, but they all suck. The most obvious
+                // is to try and be as lazy as possible, running in the old random-wallet mode until the user enters
+                // their password for some other reason and doing the upgrade then. But this could result in strange
+                // and unexpected UI flows 
