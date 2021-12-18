@@ -643,4 +643,36 @@ public class KeyChainGroup implements KeyBag {
         return fromProtobufUnencrypted(params, keys, new DefaultKeyChainFactory());
     }
 
-    public stati
+    public static KeyChainGroup fromProtobufUnencrypted(NetworkParameters params, List<Protos.Key> keys, KeyChainFactory factory) throws UnreadableWalletException {
+        BasicKeyChain basicKeyChain = BasicKeyChain.fromProtobufUnencrypted(keys);
+        List<DeterministicKeyChain> chains = DeterministicKeyChain.fromProtobuf(keys, null, factory);
+        EnumMap<KeyChain.KeyPurpose, DeterministicKey> currentKeys = null;
+        if (!chains.isEmpty())
+            currentKeys = createCurrentKeysMap(chains);
+        extractFollowingKeychains(chains);
+        return new KeyChainGroup(params, basicKeyChain, chains, currentKeys, null);
+    }
+
+    static KeyChainGroup fromProtobufEncrypted(NetworkParameters params, List<Protos.Key> keys, KeyCrypter crypter) throws UnreadableWalletException {
+        return fromProtobufEncrypted(params, keys, crypter, new DefaultKeyChainFactory());
+    }
+
+    public static KeyChainGroup fromProtobufEncrypted(NetworkParameters params, List<Protos.Key> keys, KeyCrypter crypter, KeyChainFactory factory) throws UnreadableWalletException {
+        checkNotNull(crypter);
+        BasicKeyChain basicKeyChain = BasicKeyChain.fromProtobufEncrypted(keys, crypter);
+        List<DeterministicKeyChain> chains = DeterministicKeyChain.fromProtobuf(keys, crypter, factory);
+        EnumMap<KeyChain.KeyPurpose, DeterministicKey> currentKeys = null;
+        if (!chains.isEmpty())
+            currentKeys = createCurrentKeysMap(chains);
+        extractFollowingKeychains(chains);
+        return new KeyChainGroup(params, basicKeyChain, chains, currentKeys, crypter);
+    }
+
+    /**
+     * If the key chain contains only random keys and no deterministic key chains, this method will create a chain
+     * based on the oldest non-rotating private key (i.e. the seed is derived from the old wallet).
+     *
+     * @param keyRotationTimeSecs If non-zero, UNIX time for which keys created before this are assumed to be
+     *                            compromised or weak, those keys will not be used for deterministic upgrade.
+     * @param aesKey If non-null, the encryption key the keychain is encrypted under. If the keychain is encrypted
+     *               and this is not supplied, an exception is 
