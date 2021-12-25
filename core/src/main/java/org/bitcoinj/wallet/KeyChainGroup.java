@@ -703,4 +703,39 @@ public class KeyChainGroup implements KeyBag {
                 // There are a few different approaches we could have used here, but they all suck. The most obvious
                 // is to try and be as lazy as possible, running in the old random-wallet mode until the user enters
                 // their password for some other reason and doing the upgrade then. But this could result in strange
-                // and unexpected UI flows 
+                // and unexpected UI flows for the user, as well as complicating the job of wallet developers who then
+                // have to support both "old" and "new" UI modes simultaneously, switching them on the fly. Given that
+                // this is a one-off transition, it seems more reasonable to just ask the user for their password
+                // on startup, and then the wallet app can have all the widgets for accessing seed words etc active
+                // all the time.
+                throw new DeterministicUpgradeRequiresPassword();
+            }
+            keyToUse = keyToUse.decrypt(aesKey);
+        } else if (aesKey != null) {
+            throw new IllegalStateException("AES Key was provided but wallet is not encrypted.");
+        }
+
+        if (chains.isEmpty()) {
+            log.info("Auto-upgrading pre-HD wallet to HD!");
+        } else {
+            log.info("Wallet with existing HD chain is being re-upgraded due to change in key rotation time.");
+        }
+        log.info("Instantiating new HD chain using oldest non-rotating private key (address: {})", keyToUse.toAddress(params));
+        byte[] entropy = checkNotNull(keyToUse.getSecretBytes());
+        // Private keys should be at least 128 bits long.
+        checkState(entropy.length >= DeterministicSeed.DEFAULT_SEED_ENTROPY_BITS / 8);
+        // We reduce the entropy here to 128 bits because people like to write their seeds down on paper, and 128
+        // bits should be sufficient forever unless the laws of the universe change or ECC is broken; in either case
+        // we all have bigger problems.
+        entropy = Arrays.copyOfRange(entropy, 0, DeterministicSeed.DEFAULT_SEED_ENTROPY_BITS / 8);    // final argument is exclusive range.
+        checkState(entropy.length == DeterministicSeed.DEFAULT_SEED_ENTROPY_BITS / 8);
+        String passphrase = ""; // FIXME allow non-empty passphrase
+        DeterministicKeyChain chain = new DeterministicKeyChain(entropy, passphrase, keyToUse.getCreationTimeSeconds());
+        if (aesKey != null) {
+            chain = chain.toEncrypted(checkNotNull(basic.getKeyCrypter()), aesKey);
+        }
+        chains.add(chain);
+        return chain;
+    }
+
+    /** Returns true if the group contains random keys but no 
