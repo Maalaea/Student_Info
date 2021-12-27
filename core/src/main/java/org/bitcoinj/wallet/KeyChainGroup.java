@@ -738,4 +738,41 @@ public class KeyChainGroup implements KeyBag {
         return chain;
     }
 
-    /** Returns true if the group contains random keys but no 
+    /** Returns true if the group contains random keys but no HD chains. */
+    public boolean isDeterministicUpgradeRequired() {
+        return basic.numKeys() > 0 && chains.isEmpty();
+    }
+
+    private static EnumMap<KeyChain.KeyPurpose, DeterministicKey> createCurrentKeysMap(List<DeterministicKeyChain> chains) {
+        DeterministicKeyChain activeChain = chains.get(chains.size() - 1);
+
+        EnumMap<KeyChain.KeyPurpose, DeterministicKey> currentKeys = new EnumMap<>(KeyChain.KeyPurpose.class);
+
+        // assuming that only RECEIVE and CHANGE keys are being used at the moment, we will treat latest issued external key
+        // as current RECEIVE key and latest issued internal key as CHANGE key. This should be changed as soon as other
+        // kinds of KeyPurpose are introduced.
+        if (activeChain.getIssuedExternalKeys() > 0) {
+            DeterministicKey currentExternalKey = activeChain.getKeyByPath(
+                    HDUtils.append(
+                            HDUtils.concat(activeChain.getAccountPath(), DeterministicKeyChain.EXTERNAL_SUBPATH),
+                            new ChildNumber(activeChain.getIssuedExternalKeys() - 1)));
+            currentKeys.put(KeyChain.KeyPurpose.RECEIVE_FUNDS, currentExternalKey);
+        }
+
+        if (activeChain.getIssuedInternalKeys() > 0) {
+            DeterministicKey currentInternalKey = activeChain.getKeyByPath(
+                    HDUtils.append(
+                            HDUtils.concat(activeChain.getAccountPath(), DeterministicKeyChain.INTERNAL_SUBPATH),
+                            new ChildNumber(activeChain.getIssuedInternalKeys() - 1)));
+            currentKeys.put(KeyChain.KeyPurpose.CHANGE, currentInternalKey);
+        }
+        return currentKeys;
+    }
+
+    private static void extractFollowingKeychains(List<DeterministicKeyChain> chains) {
+        // look for following key chains and map them to the watch keys of followed keychains
+        List<DeterministicKeyChain> followingChains = Lists.newArrayList();
+        for (Iterator<DeterministicKeyChain> it = chains.iterator(); it.hasNext(); ) {
+            DeterministicKeyChain chain = it.next();
+            if (chain.isFollowing()) {
+                follow
