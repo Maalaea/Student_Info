@@ -775,4 +775,42 @@ public class KeyChainGroup implements KeyBag {
         for (Iterator<DeterministicKeyChain> it = chains.iterator(); it.hasNext(); ) {
             DeterministicKeyChain chain = it.next();
             if (chain.isFollowing()) {
-                follow
+                followingChains.add(chain);
+                it.remove();
+            } else if (!followingChains.isEmpty()) {
+                if (!(chain instanceof MarriedKeyChain))
+                    throw new IllegalStateException();
+                ((MarriedKeyChain)chain).setFollowingKeyChains(followingChains);
+                followingChains = Lists.newArrayList();
+            }
+        }
+    }
+
+    public String toString(boolean includePrivateKeys) {
+        final StringBuilder builder = new StringBuilder();
+        if (basic != null) {
+            List<ECKey> keys = basic.getKeys();
+            Collections.sort(keys, ECKey.AGE_COMPARATOR);
+            for (ECKey key : keys)
+                key.formatKeyWithAddress(includePrivateKeys, builder, params);
+        }
+        for (DeterministicKeyChain chain : chains)
+            builder.append(chain.toString(includePrivateKeys, params)).append('\n');
+        return builder.toString();
+    }
+
+    /** Returns a copy of the current list of chains. */
+    public List<DeterministicKeyChain> getDeterministicKeyChains() {
+        return new ArrayList<>(chains);
+    }
+    /**
+     * Returns a counter that increases (by an arbitrary amount) each time new keys have been calculated due to
+     * lookahead and thus the Bloom filter that was previously calculated has become stale.
+     */
+    public int getCombinedKeyLookaheadEpochs() {
+        int epoch = 0;
+        for (DeterministicKeyChain chain : chains)
+            epoch += chain.getKeyLookaheadEpoch();
+        return epoch;
+    }
+}
