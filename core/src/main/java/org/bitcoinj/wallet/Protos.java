@@ -2661,3 +2661,2153 @@ public final class Protos {
         implements com.google.protobuf.ProtocolMessageEnum {
       /**
        * <code>ORIGINAL = 1;</code>
+       *
+       * <pre>
+       ** Unencrypted - Original bitcoin secp256k1 curve 
+       * </pre>
+       */
+      ORIGINAL(0, 1),
+      /**
+       * <code>ENCRYPTED_SCRYPT_AES = 2;</code>
+       *
+       * <pre>
+       ** Encrypted with Scrypt and AES - Original bitcoin secp256k1 curve 
+       * </pre>
+       */
+      ENCRYPTED_SCRYPT_AES(1, 2),
+      /**
+       * <code>DETERMINISTIC_MNEMONIC = 3;</code>
+       *
+       * <pre>
+       **
+       * Not really a key, but rather contains the mnemonic phrase for a deterministic key hierarchy in the private_key field.
+       * The label and public_key fields are missing. Creation timestamp will exist.
+       * </pre>
+       */
+      DETERMINISTIC_MNEMONIC(2, 3),
+      /**
+       * <code>DETERMINISTIC_KEY = 4;</code>
+       *
+       * <pre>
+       **
+       * A key that was derived deterministically. Note that the root seed that created it may NOT be present in the
+       * wallet, for the case of watching wallets. A deterministic key may or may not have the private key bytes present.
+       * However the public key bytes and the deterministic_key field are guaranteed to exist. In a wallet where there
+       * is a path from this key up to a key that has (possibly encrypted) private bytes, it's expected that the private
+       * key can be rederived on the fly.
+       * </pre>
+       */
+      DETERMINISTIC_KEY(3, 4),
+      ;
+
+      /**
+       * <code>ORIGINAL = 1;</code>
+       *
+       * <pre>
+       ** Unencrypted - Original bitcoin secp256k1 curve 
+       * </pre>
+       */
+      public static final int ORIGINAL_VALUE = 1;
+      /**
+       * <code>ENCRYPTED_SCRYPT_AES = 2;</code>
+       *
+       * <pre>
+       ** Encrypted with Scrypt and AES - Original bitcoin secp256k1 curve 
+       * </pre>
+       */
+      public static final int ENCRYPTED_SCRYPT_AES_VALUE = 2;
+      /**
+       * <code>DETERMINISTIC_MNEMONIC = 3;</code>
+       *
+       * <pre>
+       **
+       * Not really a key, but rather contains the mnemonic phrase for a deterministic key hierarchy in the private_key field.
+       * The label and public_key fields are missing. Creation timestamp will exist.
+       * </pre>
+       */
+      public static final int DETERMINISTIC_MNEMONIC_VALUE = 3;
+      /**
+       * <code>DETERMINISTIC_KEY = 4;</code>
+       *
+       * <pre>
+       **
+       * A key that was derived deterministically. Note that the root seed that created it may NOT be present in the
+       * wallet, for the case of watching wallets. A deterministic key may or may not have the private key bytes present.
+       * However the public key bytes and the deterministic_key field are guaranteed to exist. In a wallet where there
+       * is a path from this key up to a key that has (possibly encrypted) private bytes, it's expected that the private
+       * key can be rederived on the fly.
+       * </pre>
+       */
+      public static final int DETERMINISTIC_KEY_VALUE = 4;
+
+
+      public final int getNumber() { return value; }
+
+      public static Type valueOf(int value) {
+        switch (value) {
+          case 1: return ORIGINAL;
+          case 2: return ENCRYPTED_SCRYPT_AES;
+          case 3: return DETERMINISTIC_MNEMONIC;
+          case 4: return DETERMINISTIC_KEY;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<Type>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<Type>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<Type>() {
+              public Type findValueByNumber(int number) {
+                return Type.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return org.bitcoinj.wallet.Protos.Key.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final Type[] VALUES = values();
+
+      public static Type valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private Type(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:wallet.Key.Type)
+    }
+
+    private int bitField0_;
+    public static final int TYPE_FIELD_NUMBER = 1;
+    private org.bitcoinj.wallet.Protos.Key.Type type_;
+    /**
+     * <code>required .wallet.Key.Type type = 1;</code>
+     */
+    public boolean hasType() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required .wallet.Key.Type type = 1;</code>
+     */
+    public org.bitcoinj.wallet.Protos.Key.Type getType() {
+      return type_;
+    }
+
+    public static final int SECRET_BYTES_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString secretBytes_;
+    /**
+     * <code>optional bytes secret_bytes = 2;</code>
+     *
+     * <pre>
+     * Either the private EC key bytes (without any ASN.1 wrapping), or the deterministic root seed.
+     * If the secret is encrypted, or this is a "watching entry" then this is missing.
+     * </pre>
+     */
+    public boolean hasSecretBytes() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bytes secret_bytes = 2;</code>
+     *
+     * <pre>
+     * Either the private EC key bytes (without any ASN.1 wrapping), or the deterministic root seed.
+     * If the secret is encrypted, or this is a "watching entry" then this is missing.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getSecretBytes() {
+      return secretBytes_;
+    }
+
+    public static final int ENCRYPTED_DATA_FIELD_NUMBER = 6;
+    private org.bitcoinj.wallet.Protos.EncryptedData encryptedData_;
+    /**
+     * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+     *
+     * <pre>
+     * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+     * </pre>
+     */
+    public boolean hasEncryptedData() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+     *
+     * <pre>
+     * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+     * </pre>
+     */
+    public org.bitcoinj.wallet.Protos.EncryptedData getEncryptedData() {
+      return encryptedData_;
+    }
+    /**
+     * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+     *
+     * <pre>
+     * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+     * </pre>
+     */
+    public org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder getEncryptedDataOrBuilder() {
+      return encryptedData_;
+    }
+
+    public static final int PUBLIC_KEY_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString publicKey_;
+    /**
+     * <code>optional bytes public_key = 3;</code>
+     *
+     * <pre>
+     * The public EC key derived from the private key. We allow both to be stored to avoid mobile clients having to
+     * do lots of slow EC math on startup. For DETERMINISTIC_MNEMONIC entries this is missing.
+     * </pre>
+     */
+    public boolean hasPublicKey() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional bytes public_key = 3;</code>
+     *
+     * <pre>
+     * The public EC key derived from the private key. We allow both to be stored to avoid mobile clients having to
+     * do lots of slow EC math on startup. For DETERMINISTIC_MNEMONIC entries this is missing.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getPublicKey() {
+      return publicKey_;
+    }
+
+    public static final int LABEL_FIELD_NUMBER = 4;
+    private java.lang.Object label_;
+    /**
+     * <code>optional string label = 4;</code>
+     *
+     * <pre>
+     * User-provided label associated with the key.
+     * </pre>
+     */
+    public boolean hasLabel() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string label = 4;</code>
+     *
+     * <pre>
+     * User-provided label associated with the key.
+     * </pre>
+     */
+    public java.lang.String getLabel() {
+      java.lang.Object ref = label_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          label_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string label = 4;</code>
+     *
+     * <pre>
+     * User-provided label associated with the key.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getLabelBytes() {
+      java.lang.Object ref = label_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        label_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int CREATION_TIMESTAMP_FIELD_NUMBER = 5;
+    private long creationTimestamp_;
+    /**
+     * <code>optional int64 creation_timestamp = 5;</code>
+     *
+     * <pre>
+     * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point. The reason it's
+     * optional is that keys derived from a parent don't have this data.
+     * </pre>
+     */
+    public boolean hasCreationTimestamp() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional int64 creation_timestamp = 5;</code>
+     *
+     * <pre>
+     * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point. The reason it's
+     * optional is that keys derived from a parent don't have this data.
+     * </pre>
+     */
+    public long getCreationTimestamp() {
+      return creationTimestamp_;
+    }
+
+    public static final int DETERMINISTIC_KEY_FIELD_NUMBER = 7;
+    private org.bitcoinj.wallet.Protos.DeterministicKey deterministicKey_;
+    /**
+     * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+     */
+    public boolean hasDeterministicKey() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+     */
+    public org.bitcoinj.wallet.Protos.DeterministicKey getDeterministicKey() {
+      return deterministicKey_;
+    }
+    /**
+     * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+     */
+    public org.bitcoinj.wallet.Protos.DeterministicKeyOrBuilder getDeterministicKeyOrBuilder() {
+      return deterministicKey_;
+    }
+
+    public static final int DETERMINISTIC_SEED_FIELD_NUMBER = 8;
+    private com.google.protobuf.ByteString deterministicSeed_;
+    /**
+     * <code>optional bytes deterministic_seed = 8;</code>
+     *
+     * <pre>
+     * The seed for a deterministic key hierarchy.  Derived from the mnemonic,
+     * but cached here for quick startup.  Only applicable to a DETERMINISTIC_MNEMONIC key entry.
+     * </pre>
+     */
+    public boolean hasDeterministicSeed() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional bytes deterministic_seed = 8;</code>
+     *
+     * <pre>
+     * The seed for a deterministic key hierarchy.  Derived from the mnemonic,
+     * but cached here for quick startup.  Only applicable to a DETERMINISTIC_MNEMONIC key entry.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString getDeterministicSeed() {
+      return deterministicSeed_;
+    }
+
+    public static final int ENCRYPTED_DETERMINISTIC_SEED_FIELD_NUMBER = 9;
+    private org.bitcoinj.wallet.Protos.EncryptedData encryptedDeterministicSeed_;
+    /**
+     * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+     *
+     * <pre>
+     * Encrypted version of the seed
+     * </pre>
+     */
+    public boolean hasEncryptedDeterministicSeed() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+     *
+     * <pre>
+     * Encrypted version of the seed
+     * </pre>
+     */
+    public org.bitcoinj.wallet.Protos.EncryptedData getEncryptedDeterministicSeed() {
+      return encryptedDeterministicSeed_;
+    }
+    /**
+     * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+     *
+     * <pre>
+     * Encrypted version of the seed
+     * </pre>
+     */
+    public org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder getEncryptedDeterministicSeedOrBuilder() {
+      return encryptedDeterministicSeed_;
+    }
+
+    private void initFields() {
+      type_ = org.bitcoinj.wallet.Protos.Key.Type.ORIGINAL;
+      secretBytes_ = com.google.protobuf.ByteString.EMPTY;
+      encryptedData_ = org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance();
+      publicKey_ = com.google.protobuf.ByteString.EMPTY;
+      label_ = "";
+      creationTimestamp_ = 0L;
+      deterministicKey_ = org.bitcoinj.wallet.Protos.DeterministicKey.getDefaultInstance();
+      deterministicSeed_ = com.google.protobuf.ByteString.EMPTY;
+      encryptedDeterministicSeed_ = org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasType()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (hasEncryptedData()) {
+        if (!getEncryptedData().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasDeterministicKey()) {
+        if (!getDeterministicKey().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      if (hasEncryptedDeterministicSeed()) {
+        if (!getEncryptedDeterministicSeed().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, type_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, secretBytes_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(3, publicKey_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(4, getLabelBytes());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt64(5, creationTimestamp_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(6, encryptedData_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeMessage(7, deterministicKey_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(8, deterministicSeed_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeMessage(9, encryptedDeterministicSeed_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, type_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, secretBytes_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, publicKey_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getLabelBytes());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(5, creationTimestamp_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(6, encryptedData_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(7, deterministicKey_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(8, deterministicSeed_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(9, encryptedDeterministicSeed_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoinj.wallet.Protos.Key parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.Key parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoinj.wallet.Protos.Key prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code wallet.Key}
+     *
+     * <pre>
+     **
+     * A key used to control Bitcoin spending.
+     * Either the private key, the public key or both may be present.  It is recommended that
+     * if the private key is provided that the public key is provided too because deriving it is slow.
+     * If only the public key is provided, the key can only be used to watch the blockchain and verify
+     * transactions, and not for spending.
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:wallet.Key)
+        org.bitcoinj.wallet.Protos.KeyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_Key_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_Key_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoinj.wallet.Protos.Key.class, org.bitcoinj.wallet.Protos.Key.Builder.class);
+      }
+
+      // Construct using org.bitcoinj.wallet.Protos.Key.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getEncryptedDataFieldBuilder();
+          getDeterministicKeyFieldBuilder();
+          getEncryptedDeterministicSeedFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        type_ = org.bitcoinj.wallet.Protos.Key.Type.ORIGINAL;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        secretBytes_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (encryptedDataBuilder_ == null) {
+          encryptedData_ = org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance();
+        } else {
+          encryptedDataBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        publicKey_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        label_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        creationTimestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        if (deterministicKeyBuilder_ == null) {
+          deterministicKey_ = org.bitcoinj.wallet.Protos.DeterministicKey.getDefaultInstance();
+        } else {
+          deterministicKeyBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000040);
+        deterministicSeed_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        if (encryptedDeterministicSeedBuilder_ == null) {
+          encryptedDeterministicSeed_ = org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance();
+        } else {
+          encryptedDeterministicSeedBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_Key_descriptor;
+      }
+
+      public org.bitcoinj.wallet.Protos.Key getDefaultInstanceForType() {
+        return org.bitcoinj.wallet.Protos.Key.getDefaultInstance();
+      }
+
+      public org.bitcoinj.wallet.Protos.Key build() {
+        org.bitcoinj.wallet.Protos.Key result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoinj.wallet.Protos.Key buildPartial() {
+        org.bitcoinj.wallet.Protos.Key result = new org.bitcoinj.wallet.Protos.Key(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.type_ = type_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.secretBytes_ = secretBytes_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (encryptedDataBuilder_ == null) {
+          result.encryptedData_ = encryptedData_;
+        } else {
+          result.encryptedData_ = encryptedDataBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.publicKey_ = publicKey_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.label_ = label_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.creationTimestamp_ = creationTimestamp_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        if (deterministicKeyBuilder_ == null) {
+          result.deterministicKey_ = deterministicKey_;
+        } else {
+          result.deterministicKey_ = deterministicKeyBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.deterministicSeed_ = deterministicSeed_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        if (encryptedDeterministicSeedBuilder_ == null) {
+          result.encryptedDeterministicSeed_ = encryptedDeterministicSeed_;
+        } else {
+          result.encryptedDeterministicSeed_ = encryptedDeterministicSeedBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoinj.wallet.Protos.Key) {
+          return mergeFrom((org.bitcoinj.wallet.Protos.Key)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoinj.wallet.Protos.Key other) {
+        if (other == org.bitcoinj.wallet.Protos.Key.getDefaultInstance()) return this;
+        if (other.hasType()) {
+          setType(other.getType());
+        }
+        if (other.hasSecretBytes()) {
+          setSecretBytes(other.getSecretBytes());
+        }
+        if (other.hasEncryptedData()) {
+          mergeEncryptedData(other.getEncryptedData());
+        }
+        if (other.hasPublicKey()) {
+          setPublicKey(other.getPublicKey());
+        }
+        if (other.hasLabel()) {
+          bitField0_ |= 0x00000010;
+          label_ = other.label_;
+          onChanged();
+        }
+        if (other.hasCreationTimestamp()) {
+          setCreationTimestamp(other.getCreationTimestamp());
+        }
+        if (other.hasDeterministicKey()) {
+          mergeDeterministicKey(other.getDeterministicKey());
+        }
+        if (other.hasDeterministicSeed()) {
+          setDeterministicSeed(other.getDeterministicSeed());
+        }
+        if (other.hasEncryptedDeterministicSeed()) {
+          mergeEncryptedDeterministicSeed(other.getEncryptedDeterministicSeed());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasType()) {
+          
+          return false;
+        }
+        if (hasEncryptedData()) {
+          if (!getEncryptedData().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasDeterministicKey()) {
+          if (!getDeterministicKey().isInitialized()) {
+            
+            return false;
+          }
+        }
+        if (hasEncryptedDeterministicSeed()) {
+          if (!getEncryptedDeterministicSeed().isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoinj.wallet.Protos.Key parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoinj.wallet.Protos.Key) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private org.bitcoinj.wallet.Protos.Key.Type type_ = org.bitcoinj.wallet.Protos.Key.Type.ORIGINAL;
+      /**
+       * <code>required .wallet.Key.Type type = 1;</code>
+       */
+      public boolean hasType() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .wallet.Key.Type type = 1;</code>
+       */
+      public org.bitcoinj.wallet.Protos.Key.Type getType() {
+        return type_;
+      }
+      /**
+       * <code>required .wallet.Key.Type type = 1;</code>
+       */
+      public Builder setType(org.bitcoinj.wallet.Protos.Key.Type value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required .wallet.Key.Type type = 1;</code>
+       */
+      public Builder clearType() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        type_ = org.bitcoinj.wallet.Protos.Key.Type.ORIGINAL;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString secretBytes_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes secret_bytes = 2;</code>
+       *
+       * <pre>
+       * Either the private EC key bytes (without any ASN.1 wrapping), or the deterministic root seed.
+       * If the secret is encrypted, or this is a "watching entry" then this is missing.
+       * </pre>
+       */
+      public boolean hasSecretBytes() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional bytes secret_bytes = 2;</code>
+       *
+       * <pre>
+       * Either the private EC key bytes (without any ASN.1 wrapping), or the deterministic root seed.
+       * If the secret is encrypted, or this is a "watching entry" then this is missing.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getSecretBytes() {
+        return secretBytes_;
+      }
+      /**
+       * <code>optional bytes secret_bytes = 2;</code>
+       *
+       * <pre>
+       * Either the private EC key bytes (without any ASN.1 wrapping), or the deterministic root seed.
+       * If the secret is encrypted, or this is a "watching entry" then this is missing.
+       * </pre>
+       */
+      public Builder setSecretBytes(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        secretBytes_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes secret_bytes = 2;</code>
+       *
+       * <pre>
+       * Either the private EC key bytes (without any ASN.1 wrapping), or the deterministic root seed.
+       * If the secret is encrypted, or this is a "watching entry" then this is missing.
+       * </pre>
+       */
+      public Builder clearSecretBytes() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        secretBytes_ = getDefaultInstance().getSecretBytes();
+        onChanged();
+        return this;
+      }
+
+      private org.bitcoinj.wallet.Protos.EncryptedData encryptedData_ = org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoinj.wallet.Protos.EncryptedData, org.bitcoinj.wallet.Protos.EncryptedData.Builder, org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder> encryptedDataBuilder_;
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      public boolean hasEncryptedData() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      public org.bitcoinj.wallet.Protos.EncryptedData getEncryptedData() {
+        if (encryptedDataBuilder_ == null) {
+          return encryptedData_;
+        } else {
+          return encryptedDataBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      public Builder setEncryptedData(org.bitcoinj.wallet.Protos.EncryptedData value) {
+        if (encryptedDataBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          encryptedData_ = value;
+          onChanged();
+        } else {
+          encryptedDataBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      public Builder setEncryptedData(
+          org.bitcoinj.wallet.Protos.EncryptedData.Builder builderForValue) {
+        if (encryptedDataBuilder_ == null) {
+          encryptedData_ = builderForValue.build();
+          onChanged();
+        } else {
+          encryptedDataBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      public Builder mergeEncryptedData(org.bitcoinj.wallet.Protos.EncryptedData value) {
+        if (encryptedDataBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              encryptedData_ != org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance()) {
+            encryptedData_ =
+              org.bitcoinj.wallet.Protos.EncryptedData.newBuilder(encryptedData_).mergeFrom(value).buildPartial();
+          } else {
+            encryptedData_ = value;
+          }
+          onChanged();
+        } else {
+          encryptedDataBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      public Builder clearEncryptedData() {
+        if (encryptedDataBuilder_ == null) {
+          encryptedData_ = org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance();
+          onChanged();
+        } else {
+          encryptedDataBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      public org.bitcoinj.wallet.Protos.EncryptedData.Builder getEncryptedDataBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getEncryptedDataFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      public org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder getEncryptedDataOrBuilder() {
+        if (encryptedDataBuilder_ != null) {
+          return encryptedDataBuilder_.getMessageOrBuilder();
+        } else {
+          return encryptedData_;
+        }
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_data = 6;</code>
+       *
+       * <pre>
+       * If the secret data is encrypted, then secret_bytes is missing and this field is set.
+       * </pre>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoinj.wallet.Protos.EncryptedData, org.bitcoinj.wallet.Protos.EncryptedData.Builder, org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder> 
+          getEncryptedDataFieldBuilder() {
+        if (encryptedDataBuilder_ == null) {
+          encryptedDataBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoinj.wallet.Protos.EncryptedData, org.bitcoinj.wallet.Protos.EncryptedData.Builder, org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder>(
+                  getEncryptedData(),
+                  getParentForChildren(),
+                  isClean());
+          encryptedData_ = null;
+        }
+        return encryptedDataBuilder_;
+      }
+
+      private com.google.protobuf.ByteString publicKey_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes public_key = 3;</code>
+       *
+       * <pre>
+       * The public EC key derived from the private key. We allow both to be stored to avoid mobile clients having to
+       * do lots of slow EC math on startup. For DETERMINISTIC_MNEMONIC entries this is missing.
+       * </pre>
+       */
+      public boolean hasPublicKey() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional bytes public_key = 3;</code>
+       *
+       * <pre>
+       * The public EC key derived from the private key. We allow both to be stored to avoid mobile clients having to
+       * do lots of slow EC math on startup. For DETERMINISTIC_MNEMONIC entries this is missing.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getPublicKey() {
+        return publicKey_;
+      }
+      /**
+       * <code>optional bytes public_key = 3;</code>
+       *
+       * <pre>
+       * The public EC key derived from the private key. We allow both to be stored to avoid mobile clients having to
+       * do lots of slow EC math on startup. For DETERMINISTIC_MNEMONIC entries this is missing.
+       * </pre>
+       */
+      public Builder setPublicKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        publicKey_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes public_key = 3;</code>
+       *
+       * <pre>
+       * The public EC key derived from the private key. We allow both to be stored to avoid mobile clients having to
+       * do lots of slow EC math on startup. For DETERMINISTIC_MNEMONIC entries this is missing.
+       * </pre>
+       */
+      public Builder clearPublicKey() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        publicKey_ = getDefaultInstance().getPublicKey();
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object label_ = "";
+      /**
+       * <code>optional string label = 4;</code>
+       *
+       * <pre>
+       * User-provided label associated with the key.
+       * </pre>
+       */
+      public boolean hasLabel() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string label = 4;</code>
+       *
+       * <pre>
+       * User-provided label associated with the key.
+       * </pre>
+       */
+      public java.lang.String getLabel() {
+        java.lang.Object ref = label_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            label_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string label = 4;</code>
+       *
+       * <pre>
+       * User-provided label associated with the key.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getLabelBytes() {
+        java.lang.Object ref = label_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          label_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string label = 4;</code>
+       *
+       * <pre>
+       * User-provided label associated with the key.
+       * </pre>
+       */
+      public Builder setLabel(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        label_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string label = 4;</code>
+       *
+       * <pre>
+       * User-provided label associated with the key.
+       * </pre>
+       */
+      public Builder clearLabel() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        label_ = getDefaultInstance().getLabel();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string label = 4;</code>
+       *
+       * <pre>
+       * User-provided label associated with the key.
+       * </pre>
+       */
+      public Builder setLabelBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        label_ = value;
+        onChanged();
+        return this;
+      }
+
+      private long creationTimestamp_ ;
+      /**
+       * <code>optional int64 creation_timestamp = 5;</code>
+       *
+       * <pre>
+       * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point. The reason it's
+       * optional is that keys derived from a parent don't have this data.
+       * </pre>
+       */
+      public boolean hasCreationTimestamp() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional int64 creation_timestamp = 5;</code>
+       *
+       * <pre>
+       * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point. The reason it's
+       * optional is that keys derived from a parent don't have this data.
+       * </pre>
+       */
+      public long getCreationTimestamp() {
+        return creationTimestamp_;
+      }
+      /**
+       * <code>optional int64 creation_timestamp = 5;</code>
+       *
+       * <pre>
+       * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point. The reason it's
+       * optional is that keys derived from a parent don't have this data.
+       * </pre>
+       */
+      public Builder setCreationTimestamp(long value) {
+        bitField0_ |= 0x00000020;
+        creationTimestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 creation_timestamp = 5;</code>
+       *
+       * <pre>
+       * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point. The reason it's
+       * optional is that keys derived from a parent don't have this data.
+       * </pre>
+       */
+      public Builder clearCreationTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        creationTimestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private org.bitcoinj.wallet.Protos.DeterministicKey deterministicKey_ = org.bitcoinj.wallet.Protos.DeterministicKey.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoinj.wallet.Protos.DeterministicKey, org.bitcoinj.wallet.Protos.DeterministicKey.Builder, org.bitcoinj.wallet.Protos.DeterministicKeyOrBuilder> deterministicKeyBuilder_;
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      public boolean hasDeterministicKey() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      public org.bitcoinj.wallet.Protos.DeterministicKey getDeterministicKey() {
+        if (deterministicKeyBuilder_ == null) {
+          return deterministicKey_;
+        } else {
+          return deterministicKeyBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      public Builder setDeterministicKey(org.bitcoinj.wallet.Protos.DeterministicKey value) {
+        if (deterministicKeyBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          deterministicKey_ = value;
+          onChanged();
+        } else {
+          deterministicKeyBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      public Builder setDeterministicKey(
+          org.bitcoinj.wallet.Protos.DeterministicKey.Builder builderForValue) {
+        if (deterministicKeyBuilder_ == null) {
+          deterministicKey_ = builderForValue.build();
+          onChanged();
+        } else {
+          deterministicKeyBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      public Builder mergeDeterministicKey(org.bitcoinj.wallet.Protos.DeterministicKey value) {
+        if (deterministicKeyBuilder_ == null) {
+          if (((bitField0_ & 0x00000040) == 0x00000040) &&
+              deterministicKey_ != org.bitcoinj.wallet.Protos.DeterministicKey.getDefaultInstance()) {
+            deterministicKey_ =
+              org.bitcoinj.wallet.Protos.DeterministicKey.newBuilder(deterministicKey_).mergeFrom(value).buildPartial();
+          } else {
+            deterministicKey_ = value;
+          }
+          onChanged();
+        } else {
+          deterministicKeyBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000040;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      public Builder clearDeterministicKey() {
+        if (deterministicKeyBuilder_ == null) {
+          deterministicKey_ = org.bitcoinj.wallet.Protos.DeterministicKey.getDefaultInstance();
+          onChanged();
+        } else {
+          deterministicKeyBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000040);
+        return this;
+      }
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      public org.bitcoinj.wallet.Protos.DeterministicKey.Builder getDeterministicKeyBuilder() {
+        bitField0_ |= 0x00000040;
+        onChanged();
+        return getDeterministicKeyFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      public org.bitcoinj.wallet.Protos.DeterministicKeyOrBuilder getDeterministicKeyOrBuilder() {
+        if (deterministicKeyBuilder_ != null) {
+          return deterministicKeyBuilder_.getMessageOrBuilder();
+        } else {
+          return deterministicKey_;
+        }
+      }
+      /**
+       * <code>optional .wallet.DeterministicKey deterministic_key = 7;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoinj.wallet.Protos.DeterministicKey, org.bitcoinj.wallet.Protos.DeterministicKey.Builder, org.bitcoinj.wallet.Protos.DeterministicKeyOrBuilder> 
+          getDeterministicKeyFieldBuilder() {
+        if (deterministicKeyBuilder_ == null) {
+          deterministicKeyBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoinj.wallet.Protos.DeterministicKey, org.bitcoinj.wallet.Protos.DeterministicKey.Builder, org.bitcoinj.wallet.Protos.DeterministicKeyOrBuilder>(
+                  getDeterministicKey(),
+                  getParentForChildren(),
+                  isClean());
+          deterministicKey_ = null;
+        }
+        return deterministicKeyBuilder_;
+      }
+
+      private com.google.protobuf.ByteString deterministicSeed_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes deterministic_seed = 8;</code>
+       *
+       * <pre>
+       * The seed for a deterministic key hierarchy.  Derived from the mnemonic,
+       * but cached here for quick startup.  Only applicable to a DETERMINISTIC_MNEMONIC key entry.
+       * </pre>
+       */
+      public boolean hasDeterministicSeed() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional bytes deterministic_seed = 8;</code>
+       *
+       * <pre>
+       * The seed for a deterministic key hierarchy.  Derived from the mnemonic,
+       * but cached here for quick startup.  Only applicable to a DETERMINISTIC_MNEMONIC key entry.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString getDeterministicSeed() {
+        return deterministicSeed_;
+      }
+      /**
+       * <code>optional bytes deterministic_seed = 8;</code>
+       *
+       * <pre>
+       * The seed for a deterministic key hierarchy.  Derived from the mnemonic,
+       * but cached here for quick startup.  Only applicable to a DETERMINISTIC_MNEMONIC key entry.
+       * </pre>
+       */
+      public Builder setDeterministicSeed(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000080;
+        deterministicSeed_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes deterministic_seed = 8;</code>
+       *
+       * <pre>
+       * The seed for a deterministic key hierarchy.  Derived from the mnemonic,
+       * but cached here for quick startup.  Only applicable to a DETERMINISTIC_MNEMONIC key entry.
+       * </pre>
+       */
+      public Builder clearDeterministicSeed() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        deterministicSeed_ = getDefaultInstance().getDeterministicSeed();
+        onChanged();
+        return this;
+      }
+
+      private org.bitcoinj.wallet.Protos.EncryptedData encryptedDeterministicSeed_ = org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoinj.wallet.Protos.EncryptedData, org.bitcoinj.wallet.Protos.EncryptedData.Builder, org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder> encryptedDeterministicSeedBuilder_;
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      public boolean hasEncryptedDeterministicSeed() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      public org.bitcoinj.wallet.Protos.EncryptedData getEncryptedDeterministicSeed() {
+        if (encryptedDeterministicSeedBuilder_ == null) {
+          return encryptedDeterministicSeed_;
+        } else {
+          return encryptedDeterministicSeedBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      public Builder setEncryptedDeterministicSeed(org.bitcoinj.wallet.Protos.EncryptedData value) {
+        if (encryptedDeterministicSeedBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          encryptedDeterministicSeed_ = value;
+          onChanged();
+        } else {
+          encryptedDeterministicSeedBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      public Builder setEncryptedDeterministicSeed(
+          org.bitcoinj.wallet.Protos.EncryptedData.Builder builderForValue) {
+        if (encryptedDeterministicSeedBuilder_ == null) {
+          encryptedDeterministicSeed_ = builderForValue.build();
+          onChanged();
+        } else {
+          encryptedDeterministicSeedBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      public Builder mergeEncryptedDeterministicSeed(org.bitcoinj.wallet.Protos.EncryptedData value) {
+        if (encryptedDeterministicSeedBuilder_ == null) {
+          if (((bitField0_ & 0x00000100) == 0x00000100) &&
+              encryptedDeterministicSeed_ != org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance()) {
+            encryptedDeterministicSeed_ =
+              org.bitcoinj.wallet.Protos.EncryptedData.newBuilder(encryptedDeterministicSeed_).mergeFrom(value).buildPartial();
+          } else {
+            encryptedDeterministicSeed_ = value;
+          }
+          onChanged();
+        } else {
+          encryptedDeterministicSeedBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000100;
+        return this;
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      public Builder clearEncryptedDeterministicSeed() {
+        if (encryptedDeterministicSeedBuilder_ == null) {
+          encryptedDeterministicSeed_ = org.bitcoinj.wallet.Protos.EncryptedData.getDefaultInstance();
+          onChanged();
+        } else {
+          encryptedDeterministicSeedBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000100);
+        return this;
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      public org.bitcoinj.wallet.Protos.EncryptedData.Builder getEncryptedDeterministicSeedBuilder() {
+        bitField0_ |= 0x00000100;
+        onChanged();
+        return getEncryptedDeterministicSeedFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      public org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder getEncryptedDeterministicSeedOrBuilder() {
+        if (encryptedDeterministicSeedBuilder_ != null) {
+          return encryptedDeterministicSeedBuilder_.getMessageOrBuilder();
+        } else {
+          return encryptedDeterministicSeed_;
+        }
+      }
+      /**
+       * <code>optional .wallet.EncryptedData encrypted_deterministic_seed = 9;</code>
+       *
+       * <pre>
+       * Encrypted version of the seed
+       * </pre>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.bitcoinj.wallet.Protos.EncryptedData, org.bitcoinj.wallet.Protos.EncryptedData.Builder, org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder> 
+          getEncryptedDeterministicSeedFieldBuilder() {
+        if (encryptedDeterministicSeedBuilder_ == null) {
+          encryptedDeterministicSeedBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.bitcoinj.wallet.Protos.EncryptedData, org.bitcoinj.wallet.Protos.EncryptedData.Builder, org.bitcoinj.wallet.Protos.EncryptedDataOrBuilder>(
+                  getEncryptedDeterministicSeed(),
+                  getParentForChildren(),
+                  isClean());
+          encryptedDeterministicSeed_ = null;
+        }
+        return encryptedDeterministicSeedBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:wallet.Key)
+    }
+
+    static {
+      defaultInstance = new Key(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:wallet.Key)
+  }
+
+  public interface ScriptOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:wallet.Script)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes program = 1;</code>
+     */
+    boolean hasProgram();
+    /**
+     * <code>required bytes program = 1;</code>
+     */
+    com.google.protobuf.ByteString getProgram();
+
+    /**
+     * <code>required int64 creation_timestamp = 2;</code>
+     *
+     * <pre>
+     * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+     * when watching for scripts on the blockchain.
+     * </pre>
+     */
+    boolean hasCreationTimestamp();
+    /**
+     * <code>required int64 creation_timestamp = 2;</code>
+     *
+     * <pre>
+     * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+     * when watching for scripts on the blockchain.
+     * </pre>
+     */
+    long getCreationTimestamp();
+  }
+  /**
+   * Protobuf type {@code wallet.Script}
+   */
+  public static final class Script extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:wallet.Script)
+      ScriptOrBuilder {
+    // Use Script.newBuilder() to construct.
+    private Script(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private Script(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Script defaultInstance;
+    public static Script getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public Script getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Script(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              program_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              creationTimestamp_ = input.readInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoinj.wallet.Protos.internal_static_wallet_Script_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoinj.wallet.Protos.internal_static_wallet_Script_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoinj.wallet.Protos.Script.class, org.bitcoinj.wallet.Protos.Script.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<Script> PARSER =
+        new com.google.protobuf.AbstractParser<Script>() {
+      public Script parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Script(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Script> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int PROGRAM_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString program_;
+    /**
+     * <code>required bytes program = 1;</code>
+     */
+    public boolean hasProgram() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes program = 1;</code>
+     */
+    public com.google.protobuf.ByteString getProgram() {
+      return program_;
+    }
+
+    public static final int CREATION_TIMESTAMP_FIELD_NUMBER = 2;
+    private long creationTimestamp_;
+    /**
+     * <code>required int64 creation_timestamp = 2;</code>
+     *
+     * <pre>
+     * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+     * when watching for scripts on the blockchain.
+     * </pre>
+     */
+    public boolean hasCreationTimestamp() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required int64 creation_timestamp = 2;</code>
+     *
+     * <pre>
+     * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+     * when watching for scripts on the blockchain.
+     * </pre>
+     */
+    public long getCreationTimestamp() {
+      return creationTimestamp_;
+    }
+
+    private void initFields() {
+      program_ = com.google.protobuf.ByteString.EMPTY;
+      creationTimestamp_ = 0L;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasProgram()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasCreationTimestamp()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, program_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt64(2, creationTimestamp_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, program_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, creationTimestamp_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoinj.wallet.Protos.Script parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.Script parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoinj.wallet.Protos.Script prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code wallet.Script}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:wallet.Script)
+        org.bitcoinj.wallet.Protos.ScriptOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_Script_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_Script_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoinj.wallet.Protos.Script.class, org.bitcoinj.wallet.Protos.Script.Builder.class);
+      }
+
+      // Construct using org.bitcoinj.wallet.Protos.Script.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        program_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        creationTimestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_Script_descriptor;
+      }
+
+      public org.bitcoinj.wallet.Protos.Script getDefaultInstanceForType() {
+        return org.bitcoinj.wallet.Protos.Script.getDefaultInstance();
+      }
+
+      public org.bitcoinj.wallet.Protos.Script build() {
+        org.bitcoinj.wallet.Protos.Script result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoinj.wallet.Protos.Script buildPartial() {
+        org.bitcoinj.wallet.Protos.Script result = new org.bitcoinj.wallet.Protos.Script(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.program_ = program_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.creationTimestamp_ = creationTimestamp_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoinj.wallet.Protos.Script) {
+          return mergeFrom((org.bitcoinj.wallet.Protos.Script)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoinj.wallet.Protos.Script other) {
+        if (other == org.bitcoinj.wallet.Protos.Script.getDefaultInstance()) return this;
+        if (other.hasProgram()) {
+          setProgram(other.getProgram());
+        }
+        if (other.hasCreationTimestamp()) {
+          setCreationTimestamp(other.getCreationTimestamp());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasProgram()) {
+          
+          return false;
+        }
+        if (!hasCreationTimestamp()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoinj.wallet.Protos.Script parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoinj.wallet.Protos.Script) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString program_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes program = 1;</code>
+       */
+      public boolean hasProgram() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes program = 1;</code>
+       */
+      public com.google.protobuf.ByteString getProgram() {
+        return program_;
+      }
+      /**
+       * <code>required bytes program = 1;</code>
+       */
+      public Builder setProgram(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        program_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes program = 1;</code>
+       */
+      public Builder clearProgram() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        program_ = getDefaultInstance().getProgram();
+        onChanged();
+        return this;
+      }
+
+      private long creationTimestamp_ ;
+      /**
+       * <code>required int64 creation_timestamp = 2;</code>
+       *
+       * <pre>
+       * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+       * when watching for scripts on the blockchain.
+       * </pre>
+       */
+      public boolean hasCreationTimestamp() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required int64 creation_timestamp = 2;</code>
+       *
+       * <pre>
+       * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+       * when watching for scripts on the blockchain.
+       * </pre>
+       */
+      public long getCreationTimestamp() {
+        return creationTimestamp_;
+      }
+      /**
+       * <code>required int64 creation_timestamp = 2;</code>
+       *
+       * <pre>
+       * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+       * when watching for scripts on the blockchain.
+       * </pre>
+       */
+      public Builder setCreationTimestamp(long value) {
+        bitField0_ |= 0x00000002;
+        creationTimestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int64 creation_timestamp = 2;</code>
+       *
+       * <pre>
+       * Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+       * when watching for scripts on the blockchain.
+       * </pre>
+       */
+      public Builder clearCreationTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        creationTimestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:wallet.Script)
