@@ -18204,3 +18204,982 @@ public final class Protos {
    * Protobuf type {@code wallet.ExchangeRate}
    *
    * <pre>
+   ** An exchange rate between Bitcoin and some fiat currency. 
+   * </pre>
+   */
+  public static final class ExchangeRate extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:wallet.ExchangeRate)
+      ExchangeRateOrBuilder {
+    // Use ExchangeRate.newBuilder() to construct.
+    private ExchangeRate(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private ExchangeRate(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final ExchangeRate defaultInstance;
+    public static ExchangeRate getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public ExchangeRate getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private ExchangeRate(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              coinValue_ = input.readInt64();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              fiatValue_ = input.readInt64();
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000004;
+              fiatCurrencyCode_ = bs;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.bitcoinj.wallet.Protos.internal_static_wallet_ExchangeRate_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.bitcoinj.wallet.Protos.internal_static_wallet_ExchangeRate_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.bitcoinj.wallet.Protos.ExchangeRate.class, org.bitcoinj.wallet.Protos.ExchangeRate.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<ExchangeRate> PARSER =
+        new com.google.protobuf.AbstractParser<ExchangeRate>() {
+      public ExchangeRate parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ExchangeRate(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ExchangeRate> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int COIN_VALUE_FIELD_NUMBER = 1;
+    private long coinValue_;
+    /**
+     * <code>required int64 coin_value = 1;</code>
+     *
+     * <pre>
+     * This much of satoshis (1E-8 fractions)…
+     * </pre>
+     */
+    public boolean hasCoinValue() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required int64 coin_value = 1;</code>
+     *
+     * <pre>
+     * This much of satoshis (1E-8 fractions)…
+     * </pre>
+     */
+    public long getCoinValue() {
+      return coinValue_;
+    }
+
+    public static final int FIAT_VALUE_FIELD_NUMBER = 2;
+    private long fiatValue_;
+    /**
+     * <code>required int64 fiat_value = 2;</code>
+     *
+     * <pre>
+     * …is worth this much of fiat (1E-4 fractions).
+     * </pre>
+     */
+    public boolean hasFiatValue() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required int64 fiat_value = 2;</code>
+     *
+     * <pre>
+     * …is worth this much of fiat (1E-4 fractions).
+     * </pre>
+     */
+    public long getFiatValue() {
+      return fiatValue_;
+    }
+
+    public static final int FIAT_CURRENCY_CODE_FIELD_NUMBER = 3;
+    private java.lang.Object fiatCurrencyCode_;
+    /**
+     * <code>required string fiat_currency_code = 3;</code>
+     *
+     * <pre>
+     * ISO 4217 currency code (if available) of the fiat currency.
+     * </pre>
+     */
+    public boolean hasFiatCurrencyCode() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required string fiat_currency_code = 3;</code>
+     *
+     * <pre>
+     * ISO 4217 currency code (if available) of the fiat currency.
+     * </pre>
+     */
+    public java.lang.String getFiatCurrencyCode() {
+      java.lang.Object ref = fiatCurrencyCode_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          fiatCurrencyCode_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string fiat_currency_code = 3;</code>
+     *
+     * <pre>
+     * ISO 4217 currency code (if available) of the fiat currency.
+     * </pre>
+     */
+    public com.google.protobuf.ByteString
+        getFiatCurrencyCodeBytes() {
+      java.lang.Object ref = fiatCurrencyCode_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        fiatCurrencyCode_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      coinValue_ = 0L;
+      fiatValue_ = 0L;
+      fiatCurrencyCode_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasCoinValue()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasFiatValue()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasFiatCurrencyCode()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt64(1, coinValue_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt64(2, fiatValue_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getFiatCurrencyCodeBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, coinValue_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, fiatValue_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getFiatCurrencyCodeBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.bitcoinj.wallet.Protos.ExchangeRate parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.bitcoinj.wallet.Protos.ExchangeRate prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code wallet.ExchangeRate}
+     *
+     * <pre>
+     ** An exchange rate between Bitcoin and some fiat currency. 
+     * </pre>
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:wallet.ExchangeRate)
+        org.bitcoinj.wallet.Protos.ExchangeRateOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_ExchangeRate_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_ExchangeRate_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.bitcoinj.wallet.Protos.ExchangeRate.class, org.bitcoinj.wallet.Protos.ExchangeRate.Builder.class);
+      }
+
+      // Construct using org.bitcoinj.wallet.Protos.ExchangeRate.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        coinValue_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        fiatValue_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        fiatCurrencyCode_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.bitcoinj.wallet.Protos.internal_static_wallet_ExchangeRate_descriptor;
+      }
+
+      public org.bitcoinj.wallet.Protos.ExchangeRate getDefaultInstanceForType() {
+        return org.bitcoinj.wallet.Protos.ExchangeRate.getDefaultInstance();
+      }
+
+      public org.bitcoinj.wallet.Protos.ExchangeRate build() {
+        org.bitcoinj.wallet.Protos.ExchangeRate result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.bitcoinj.wallet.Protos.ExchangeRate buildPartial() {
+        org.bitcoinj.wallet.Protos.ExchangeRate result = new org.bitcoinj.wallet.Protos.ExchangeRate(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.coinValue_ = coinValue_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.fiatValue_ = fiatValue_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.fiatCurrencyCode_ = fiatCurrencyCode_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.bitcoinj.wallet.Protos.ExchangeRate) {
+          return mergeFrom((org.bitcoinj.wallet.Protos.ExchangeRate)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.bitcoinj.wallet.Protos.ExchangeRate other) {
+        if (other == org.bitcoinj.wallet.Protos.ExchangeRate.getDefaultInstance()) return this;
+        if (other.hasCoinValue()) {
+          setCoinValue(other.getCoinValue());
+        }
+        if (other.hasFiatValue()) {
+          setFiatValue(other.getFiatValue());
+        }
+        if (other.hasFiatCurrencyCode()) {
+          bitField0_ |= 0x00000004;
+          fiatCurrencyCode_ = other.fiatCurrencyCode_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasCoinValue()) {
+          
+          return false;
+        }
+        if (!hasFiatValue()) {
+          
+          return false;
+        }
+        if (!hasFiatCurrencyCode()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.bitcoinj.wallet.Protos.ExchangeRate parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.bitcoinj.wallet.Protos.ExchangeRate) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private long coinValue_ ;
+      /**
+       * <code>required int64 coin_value = 1;</code>
+       *
+       * <pre>
+       * This much of satoshis (1E-8 fractions)…
+       * </pre>
+       */
+      public boolean hasCoinValue() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int64 coin_value = 1;</code>
+       *
+       * <pre>
+       * This much of satoshis (1E-8 fractions)…
+       * </pre>
+       */
+      public long getCoinValue() {
+        return coinValue_;
+      }
+      /**
+       * <code>required int64 coin_value = 1;</code>
+       *
+       * <pre>
+       * This much of satoshis (1E-8 fractions)…
+       * </pre>
+       */
+      public Builder setCoinValue(long value) {
+        bitField0_ |= 0x00000001;
+        coinValue_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int64 coin_value = 1;</code>
+       *
+       * <pre>
+       * This much of satoshis (1E-8 fractions)…
+       * </pre>
+       */
+      public Builder clearCoinValue() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        coinValue_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long fiatValue_ ;
+      /**
+       * <code>required int64 fiat_value = 2;</code>
+       *
+       * <pre>
+       * …is worth this much of fiat (1E-4 fractions).
+       * </pre>
+       */
+      public boolean hasFiatValue() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required int64 fiat_value = 2;</code>
+       *
+       * <pre>
+       * …is worth this much of fiat (1E-4 fractions).
+       * </pre>
+       */
+      public long getFiatValue() {
+        return fiatValue_;
+      }
+      /**
+       * <code>required int64 fiat_value = 2;</code>
+       *
+       * <pre>
+       * …is worth this much of fiat (1E-4 fractions).
+       * </pre>
+       */
+      public Builder setFiatValue(long value) {
+        bitField0_ |= 0x00000002;
+        fiatValue_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int64 fiat_value = 2;</code>
+       *
+       * <pre>
+       * …is worth this much of fiat (1E-4 fractions).
+       * </pre>
+       */
+      public Builder clearFiatValue() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        fiatValue_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object fiatCurrencyCode_ = "";
+      /**
+       * <code>required string fiat_currency_code = 3;</code>
+       *
+       * <pre>
+       * ISO 4217 currency code (if available) of the fiat currency.
+       * </pre>
+       */
+      public boolean hasFiatCurrencyCode() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required string fiat_currency_code = 3;</code>
+       *
+       * <pre>
+       * ISO 4217 currency code (if available) of the fiat currency.
+       * </pre>
+       */
+      public java.lang.String getFiatCurrencyCode() {
+        java.lang.Object ref = fiatCurrencyCode_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            fiatCurrencyCode_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string fiat_currency_code = 3;</code>
+       *
+       * <pre>
+       * ISO 4217 currency code (if available) of the fiat currency.
+       * </pre>
+       */
+      public com.google.protobuf.ByteString
+          getFiatCurrencyCodeBytes() {
+        java.lang.Object ref = fiatCurrencyCode_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          fiatCurrencyCode_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string fiat_currency_code = 3;</code>
+       *
+       * <pre>
+       * ISO 4217 currency code (if available) of the fiat currency.
+       * </pre>
+       */
+      public Builder setFiatCurrencyCode(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        fiatCurrencyCode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string fiat_currency_code = 3;</code>
+       *
+       * <pre>
+       * ISO 4217 currency code (if available) of the fiat currency.
+       * </pre>
+       */
+      public Builder clearFiatCurrencyCode() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        fiatCurrencyCode_ = getDefaultInstance().getFiatCurrencyCode();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string fiat_currency_code = 3;</code>
+       *
+       * <pre>
+       * ISO 4217 currency code (if available) of the fiat currency.
+       * </pre>
+       */
+      public Builder setFiatCurrencyCodeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        fiatCurrencyCode_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:wallet.ExchangeRate)
+    }
+
+    static {
+      defaultInstance = new ExchangeRate(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:wallet.ExchangeRate)
+  }
+
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_PeerAddress_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_PeerAddress_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_EncryptedData_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_EncryptedData_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_DeterministicKey_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_DeterministicKey_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_Key_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_Key_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_Script_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_Script_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_TransactionInput_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_TransactionInput_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_TransactionOutput_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_TransactionOutput_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_TransactionConfidence_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_TransactionConfidence_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_Transaction_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_Transaction_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_ScryptParameters_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_ScryptParameters_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_Extension_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_Extension_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_Tag_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_Tag_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_TransactionSigner_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_TransactionSigner_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_Wallet_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_Wallet_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_wallet_ExchangeRate_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_wallet_ExchangeRate_fieldAccessorTable;
+
+  public static com.google.protobuf.Descriptors.FileDescriptor
+      getDescriptor() {
+    return descriptor;
+  }
+  private static com.google.protobuf.Descriptors.FileDescriptor
+      descriptor;
+  static {
+    java.lang.String[] descriptorData = {
+      "\n\014wallet.proto\022\006wallet\"A\n\013PeerAddress\022\022\n" +
+      "\nip_address\030\001 \002(\014\022\014\n\004port\030\002 \002(\r\022\020\n\010servi" +
+      "ces\030\003 \002(\004\"M\n\rEncryptedData\022\035\n\025initialisa" +
+      "tion_vector\030\001 \002(\014\022\035\n\025encrypted_private_k" +
+      "ey\030\002 \002(\014\"\231\001\n\020DeterministicKey\022\022\n\nchain_c" +
+      "ode\030\001 \002(\014\022\014\n\004path\030\002 \003(\r\022\026\n\016issued_subkey" +
+      "s\030\003 \001(\r\022\026\n\016lookahead_size\030\004 \001(\r\022\023\n\013isFol" +
+      "lowing\030\005 \001(\010\022\036\n\023sigsRequiredToSpend\030\006 \001(" +
+      "\r:\0011\"\232\003\n\003Key\022\036\n\004type\030\001 \002(\0162\020.wallet.Key." +
+      "Type\022\024\n\014secret_bytes\030\002 \001(\014\022-\n\016encrypted_",
+      "data\030\006 \001(\0132\025.wallet.EncryptedData\022\022\n\npub" +
+      "lic_key\030\003 \001(\014\022\r\n\005label\030\004 \001(\t\022\032\n\022creation" +
+      "_timestamp\030\005 \001(\003\0223\n\021deterministic_key\030\007 " +
+      "\001(\0132\030.wallet.DeterministicKey\022\032\n\022determi" +
+      "nistic_seed\030\010 \001(\014\022;\n\034encrypted_determini" +
+      "stic_seed\030\t \001(\0132\025.wallet.EncryptedData\"a" +
+      "\n\004Type\022\014\n\010ORIGINAL\020\001\022\030\n\024ENCRYPTED_SCRYPT" +
+      "_AES\020\002\022\032\n\026DETERMINISTIC_MNEMONIC\020\003\022\025\n\021DE" +
+      "TERMINISTIC_KEY\020\004\"5\n\006Script\022\017\n\007program\030\001" +
+      " \002(\014\022\032\n\022creation_timestamp\030\002 \002(\003\"\222\001\n\020Tra",
+      "nsactionInput\022\"\n\032transaction_out_point_h" +
+      "ash\030\001 \002(\014\022#\n\033transaction_out_point_index" +
+      "\030\002 \002(\r\022\024\n\014script_bytes\030\003 \002(\014\022\020\n\010sequence" +
+      "\030\004 \001(\r\022\r\n\005value\030\005 \001(\003\"\177\n\021TransactionOutp" +
+      "ut\022\r\n\005value\030\001 \002(\003\022\024\n\014script_bytes\030\002 \002(\014\022" +
+      "!\n\031spent_by_transaction_hash\030\003 \001(\014\022\"\n\032sp" +
+      "ent_by_transaction_index\030\004 \001(\005\"\267\003\n\025Trans" +
+      "actionConfidence\0220\n\004type\030\001 \001(\0162\".wallet." +
+      "TransactionConfidence.Type\022\032\n\022appeared_a" +
+      "t_height\030\002 \001(\005\022\036\n\026overriding_transaction",
+      "\030\003 \001(\014\022\r\n\005depth\030\004 \001(\005\022)\n\014broadcast_by\030\006 " +
+      "\003(\0132\023.wallet.PeerAddress\022\033\n\023last_broadca" +
+      "sted_at\030\010 \001(\003\0224\n\006source\030\007 \001(\0162$.wallet.T" +
+      "ransactionConfidence.Source\"`\n\004Type\022\013\n\007U" +
+      "NKNOWN\020\000\022\014\n\010BUILDING\020\001\022\013\n\007PENDING\020\002\022\025\n\021N" +
+      "OT_IN_BEST_CHAIN\020\003\022\010\n\004DEAD\020\004\022\017\n\013IN_CONFL" +
+      "ICT\020\005\"A\n\006Source\022\022\n\016SOURCE_UNKNOWN\020\000\022\022\n\016S" +
+      "OURCE_NETWORK\020\001\022\017\n\013SOURCE_SELF\020\002\"\303\005\n\013Tra" +
+      "nsaction\022\017\n\007version\030\001 \002(\005\022\014\n\004hash\030\002 \002(\014\022" +
+      "&\n\004pool\030\003 \001(\0162\030.wallet.Transaction.Pool\022",
+      "\021\n\tlock_time\030\004 \001(\r\022\022\n\nupdated_at\030\005 \001(\003\0223" +
+      "\n\021transaction_input\030\006 \003(\0132\030.wallet.Trans" +
+      "actionInput\0225\n\022transaction_output\030\007 \003(\0132" +
+      "\031.wallet.TransactionOutput\022\022\n\nblock_hash" +
+      "\030\010 \003(\014\022 \n\030block_relativity_offsets\030\013 \003(\005" +
+      "\0221\n\nconfidence\030\t \001(\0132\035.wallet.Transactio" +
+      "nConfidence\0225\n\007purpose\030\n \001(\0162\033.wallet.Tr" +
+      "ansaction.Purpose:\007UNKNOWN\022+\n\rexchange_r" +
+      "ate\030\014 \001(\0132\024.wallet.ExchangeRate\022\014\n\004memo\030" +
+      "\r \001(\t\"Y\n\004Pool\022\013\n\007UNSPENT\020\004\022\t\n\005SPENT\020\005\022\014\n",
+      "\010INACTIVE\020\002\022\010\n\004DEAD\020\n\022\013\n\007PENDING\020\020\022\024\n\020PE" +
+      "NDING_INACTIVE\020\022\"\243\001\n\007Purpose\022\013\n\007UNKNOWN\020" +
+      "\000\022\020\n\014USER_PAYMENT\020\001\022\020\n\014KEY_ROTATION\020\002\022\034\n" +
+      "\030ASSURANCE_CONTRACT_CLAIM\020\003\022\035\n\031ASSURANCE" +
+      "_CONTRACT_PLEDGE\020\004\022\033\n\027ASSURANCE_CONTRACT" +
+      "_STUB\020\005\022\r\n\tRAISE_FEE\020\006\"N\n\020ScryptParamete" +
+      "rs\022\014\n\004salt\030\001 \002(\014\022\020\n\001n\030\002 \001(\003:\00516384\022\014\n\001r\030" +
+      "\003 \001(\005:\0018\022\014\n\001p\030\004 \001(\005:\0011\"8\n\tExtension\022\n\n\002i" +
+      "d\030\001 \002(\t\022\014\n\004data\030\002 \002(\014\022\021\n\tmandatory\030\003 \002(\010" +
+      "\" \n\003Tag\022\013\n\003tag\030\001 \002(\t\022\014\n\004data\030\002 \002(\014\"5\n\021Tr",
+      "ansactionSigner\022\022\n\nclass_name\030\001 \002(\t\022\014\n\004d" +
+      "ata\030\002 \001(\014\"\351\004\n\006Wallet\022\032\n\022network_identifi" +
+      "er\030\001 \002(\t\022\034\n\024last_seen_block_hash\030\002 \001(\014\022\036" +
+      "\n\026last_seen_block_height\030\014 \001(\r\022!\n\031last_s" +
+      "een_block_time_secs\030\016 \001(\003\022\030\n\003key\030\003 \003(\0132\013" +
+      ".wallet.Key\022(\n\013transaction\030\004 \003(\0132\023.walle" +
+      "t.Transaction\022&\n\016watched_script\030\017 \003(\0132\016." +
+      "wallet.Script\022C\n\017encryption_type\030\005 \001(\0162\035" +
+      ".wallet.Wallet.EncryptionType:\013UNENCRYPT" +
+      "ED\0227\n\025encryption_parameters\030\006 \001(\0132\030.wall",
+      "et.ScryptParameters\022\022\n\007version\030\007 \001(\005:\0011\022" +
+      "$\n\textension\030\n \003(\0132\021.wallet.Extension\022\023\n" +
+      "\013description\030\013 \001(\t\022\031\n\021key_rotation_time\030" +
+      "\r \001(\004\022\031\n\004tags\030\020 \003(\0132\013.wallet.Tag\0226\n\023tran" +
+      "saction_signers\030\021 \003(\0132\031.wallet.Transacti" +
+      "onSigner\";\n\016EncryptionType\022\017\n\013UNENCRYPTE" +
+      "D\020\001\022\030\n\024ENCRYPTED_SCRYPT_AES\020\002\"R\n\014Exchang" +
+      "eRate\022\022\n\ncoin_value\030\001 \002(\003\022\022\n\nfiat_value\030" +
+      "\002 \002(\003\022\032\n\022fiat_currency_code\030\003 \002(\tB\035\n\023org" +
+      ".bitcoinj.walletB\006Protos"
+    };
+    com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
+    com.google.protobuf.Descriptors.FileDescriptor
+      .internalBuildGeneratedFileFrom(descriptorData,
+        new com.google.protobuf.Descriptors.FileDescriptor[] {
+        }, assigner);
+    internal_static_wallet_PeerAddress_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_wallet_PeerAddress_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_PeerAddress_descriptor,
+        new java.lang.String[] { "IpAddress", "Port", "Services", });
+    internal_static_wallet_EncryptedData_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_wallet_EncryptedData_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_EncryptedData_descriptor,
+        new java.lang.String[] { "InitialisationVector", "EncryptedPrivateKey", });
+    internal_static_wallet_DeterministicKey_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_wallet_DeterministicKey_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_DeterministicKey_descriptor,
+        new java.lang.String[] { "ChainCode", "Path", "IssuedSubkeys", "LookaheadSize", "IsFollowing", "SigsRequiredToSpend", });
+    internal_static_wallet_Key_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_wallet_Key_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_Key_descriptor,
+        new java.lang.String[] { "Type", "SecretBytes", "EncryptedData", "PublicKey", "Label", "CreationTimestamp", "DeterministicKey", "DeterministicSeed", "EncryptedDeterministicSeed", });
+    internal_static_wallet_Script_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_wallet_Script_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_Script_descriptor,
+        new java.lang.String[] { "Program", "CreationTimestamp", });
+    internal_static_wallet_TransactionInput_descriptor =
+      getDescriptor().getMessageTypes().get(5);
+    internal_static_wallet_TransactionInput_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_TransactionInput_descriptor,
+        new java.lang.String[] { "TransactionOutPointHash", "TransactionOutPointIndex", "ScriptBytes", "Sequence", "Value", });
+    internal_static_wallet_TransactionOutput_descriptor =
+      getDescriptor().getMessageTypes().get(6);
+    internal_static_wallet_TransactionOutput_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_TransactionOutput_descriptor,
+        new java.lang.String[] { "Value", "ScriptBytes", "SpentByTransactionHash", "SpentByTransactionIndex", });
+    internal_static_wallet_TransactionConfidence_descriptor =
+      getDescriptor().getMessageTypes().get(7);
+    internal_static_wallet_TransactionConfidence_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_TransactionConfidence_descriptor,
+        new java.lang.String[] { "Type", "AppearedAtHeight", "OverridingTransaction", "Depth", "BroadcastBy", "LastBroadcastedAt", "Source", });
+    internal_static_wallet_Transaction_descriptor =
+      getDescriptor().getMessageTypes().get(8);
+    internal_static_wallet_Transaction_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_Transaction_descriptor,
+        new java.lang.String[] { "Version", "Hash", "Pool", "LockTime", "UpdatedAt", "TransactionInput", "TransactionOutput", "BlockHash", "BlockRelativityOffsets", "Confidence", "Purpose", "ExchangeRate", "Memo", });
+    internal_static_wallet_ScryptParameters_descriptor =
+      getDescriptor().getMessageTypes().get(9);
+    internal_static_wallet_ScryptParameters_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_ScryptParameters_descriptor,
+        new java.lang.String[] { "Salt", "N", "R", "P", });
+    internal_static_wallet_Extension_descriptor =
+      getDescriptor().getMessageTypes().get(10);
+    internal_static_wallet_Extension_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_Extension_descriptor,
+        new java.lang.String[] { "Id", "Data", "Mandatory", });
+    internal_static_wallet_Tag_descriptor =
+      getDescriptor().getMessageTypes().get(11);
+    internal_static_wallet_Tag_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_Tag_descriptor,
+        new java.lang.String[] { "Tag", "Data", });
+    internal_static_wallet_TransactionSigner_descriptor =
+      getDescriptor().getMessageTypes().get(12);
+    internal_static_wallet_TransactionSigner_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_TransactionSigner_descriptor,
+        new java.lang.String[] { "ClassName", "Data", });
+    internal_static_wallet_Wallet_descriptor =
+      getDescriptor().getMessageTypes().get(13);
+    internal_static_wallet_Wallet_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_Wallet_descriptor,
+        new java.lang.String[] { "NetworkIdentifier", "LastSeenBlockHash", "LastSeenBlockHeight", "LastSeenBlockTimeSecs", "Key", "Transaction", "WatchedScript", "EncryptionType", "EncryptionParameters", "Version", "Extension", "Description", "KeyRotationTime", "Tags", "TransactionSigners", });
+    internal_static_wallet_ExchangeRate_descriptor =
+      getDescriptor().getMessageTypes().get(14);
+    internal_static_wallet_ExchangeRate_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_wallet_ExchangeRate_descriptor,
+        new java.lang.String[] { "CoinValue", "FiatValue", "FiatCurrencyCode", });
+  }
+
+  // @@protoc_insertion_point(outer_class_scope)
+}
