@@ -119,4 +119,50 @@ public class WalletProtobufSerializer {
     }
 
     /**
-     * If this property is
+     * If this property is set to true, the wallet will fail to load if  any found extensions are unknown..
+     */
+    public void setRequireAllExtensionsKnown(boolean value) {
+        requireAllExtensionsKnown = value;
+    }
+
+    /**
+     * Change buffer size for writing wallet to output stream. Default is {@link com.google.protobuf.CodedOutputStream.DEFAULT_BUFFER_SIZE}
+     * @param walletWriteBufferSize - buffer size in bytes
+     */
+    public void setWalletWriteBufferSize(int walletWriteBufferSize) {
+        this.walletWriteBufferSize = walletWriteBufferSize;
+    }
+
+    /**
+     * Formats the given wallet (transactions and keys) to the given output stream in protocol buffer format.<p>
+     *
+     * Equivalent to <tt>walletToProto(wallet).writeTo(output);</tt>
+     */
+    public void writeWallet(Wallet wallet, OutputStream output) throws IOException {
+        Protos.Wallet walletProto = walletToProto(wallet);
+        final CodedOutputStream codedOutput = CodedOutputStream.newInstance(output, this.walletWriteBufferSize);
+        walletProto.writeTo(codedOutput);
+        codedOutput.flush();
+    }
+
+    /**
+     * Returns the given wallet formatted as text. The text format is that used by protocol buffers and although it
+     * can also be parsed using {@link TextFormat#merge(CharSequence, com.google.protobuf.Message.Builder)},
+     * it is designed more for debugging than storage. It is not well specified and wallets are largely binary data
+     * structures anyway, consisting as they do of keys (large random numbers) and {@link Transaction}s which also
+     * mostly contain keys and hashes.
+     */
+    public String walletToText(Wallet wallet) {
+        Protos.Wallet walletProto = walletToProto(wallet);
+        return TextFormat.printToString(walletProto);
+    }
+
+    /**
+     * Converts the given wallet to the object representation of the protocol buffers. This can be modified, or
+     * additional data fields set, before serialization takes place.
+     */
+    public Protos.Wallet walletToProto(Wallet wallet) {
+        Protos.Wallet.Builder walletBuilder = Protos.Wallet.newBuilder();
+        walletBuilder.setNetworkIdentifier(wallet.getNetworkParameters().getId());
+        if (wallet.getDescription() != null) {
+            walletBuilder.setDescription(wallet.getDescription
