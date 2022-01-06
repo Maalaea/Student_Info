@@ -63,4 +63,60 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * {@link java.io.ByteArrayOutputStream} if you'd like byte arrays instead. The protocol buffer can also be manipulated
  * in its object form if you'd like to modify the flattened data structure before serialization to binary.<p>
  *
- * You can extend the wallet format with additional fields sp
+ * You can extend the wallet format with additional fields specific to your application if you want, but make sure
+ * to either put the extra data in the provided extension areas, or select tag numbers that are unlikely to be used
+ * by anyone else.<p>
+ *
+ * @author Miron Cuperman
+ * @author Andreas Schildbach
+ */
+public class WalletProtobufSerializer {
+    private static final Logger log = LoggerFactory.getLogger(WalletProtobufSerializer.class);
+    /** Current version used for serializing wallets. A version higher than this is considered from the future. */
+    public static final int CURRENT_WALLET_VERSION = Protos.Wallet.getDefaultInstance().getVersion();
+    // 512 MB
+    private static final int WALLET_SIZE_LIMIT = 512 * 1024 * 1024;
+    // Used for de-serialization
+    protected Map<ByteString, Transaction> txMap;
+
+    private boolean requireMandatoryExtensions = true;
+    private boolean requireAllExtensionsKnown = false;
+    private int walletWriteBufferSize = CodedOutputStream.DEFAULT_BUFFER_SIZE;
+
+    public interface WalletFactory {
+        Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup);
+    }
+
+    private final WalletFactory factory;
+    private KeyChainFactory keyChainFactory;
+
+    public WalletProtobufSerializer() {
+        this(new WalletFactory() {
+            @Override
+            public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup) {
+                return new Wallet(params, keyChainGroup);
+            }
+        });
+    }
+
+    public WalletProtobufSerializer(WalletFactory factory) {
+        txMap = new HashMap<>();
+        this.factory = factory;
+        this.keyChainFactory = new DefaultKeyChainFactory();
+    }
+
+    public void setKeyChainFactory(KeyChainFactory keyChainFactory) {
+        this.keyChainFactory = keyChainFactory;
+    }
+
+    /**
+     * If this property is set to false, then unknown mandatory extensions will be ignored instead of causing load
+     * errors. You should only use this if you know exactly what you are doing, as the extension data will NOT be
+     * round-tripped, possibly resulting in a corrupted wallet if you save it back out again.
+     */
+    public void setRequireMandatoryExtensions(boolean value) {
+        requireMandatoryExtensions = value;
+    }
+
+    /**
+     * If this property is
