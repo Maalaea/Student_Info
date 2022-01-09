@@ -298,4 +298,49 @@ public class WalletProtobufSerializer {
         if (appearsInHashes != null) {
             for (Map.Entry<Sha256Hash, Integer> entry : appearsInHashes.entrySet()) {
                 txBuilder.addBlockHash(hashToByteString(entry.getKey()));
-                txBuilder.addBlockRelativityOffsets(entry.getValue(
+                txBuilder.addBlockRelativityOffsets(entry.getValue());
+            }
+        }
+
+        if (tx.hasConfidence()) {
+            TransactionConfidence confidence = tx.getConfidence();
+            Protos.TransactionConfidence.Builder confidenceBuilder = Protos.TransactionConfidence.newBuilder();
+            writeConfidence(txBuilder, confidence, confidenceBuilder);
+        }
+
+        Protos.Transaction.Purpose purpose;
+        switch (tx.getPurpose()) {
+            case UNKNOWN: purpose = Protos.Transaction.Purpose.UNKNOWN; break;
+            case USER_PAYMENT: purpose = Protos.Transaction.Purpose.USER_PAYMENT; break;
+            case KEY_ROTATION: purpose = Protos.Transaction.Purpose.KEY_ROTATION; break;
+            case ASSURANCE_CONTRACT_CLAIM: purpose = Protos.Transaction.Purpose.ASSURANCE_CONTRACT_CLAIM; break;
+            case ASSURANCE_CONTRACT_PLEDGE: purpose = Protos.Transaction.Purpose.ASSURANCE_CONTRACT_PLEDGE; break;
+            case ASSURANCE_CONTRACT_STUB: purpose = Protos.Transaction.Purpose.ASSURANCE_CONTRACT_STUB; break;
+            case RAISE_FEE: purpose = Protos.Transaction.Purpose.RAISE_FEE; break;
+            default:
+                throw new RuntimeException("New tx purpose serialization not implemented.");
+        }
+        txBuilder.setPurpose(purpose);
+
+        ExchangeRate exchangeRate = tx.getExchangeRate();
+        if (exchangeRate != null) {
+            Protos.ExchangeRate.Builder exchangeRateBuilder = Protos.ExchangeRate.newBuilder()
+                    .setCoinValue(exchangeRate.coin.value).setFiatValue(exchangeRate.fiat.value)
+                    .setFiatCurrencyCode(exchangeRate.fiat.currencyCode);
+            txBuilder.setExchangeRate(exchangeRateBuilder);
+        }
+
+        if (tx.getMemo() != null)
+            txBuilder.setMemo(tx.getMemo());
+
+        return txBuilder.build();
+    }
+
+    private static Protos.Transaction.Pool getProtoPool(WalletTransaction wtx) {
+        switch (wtx.getPool()) {
+            case UNSPENT: return Protos.Transaction.Pool.UNSPENT;
+            case SPENT: return Protos.Transaction.Pool.SPENT;
+            case DEAD: return Protos.Transaction.Pool.DEAD;
+            case PENDING: return Protos.Transaction.Pool.PENDING;
+            default:
+             
