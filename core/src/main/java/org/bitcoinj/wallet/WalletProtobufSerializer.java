@@ -207,4 +207,54 @@ public class WalletProtobufSerializer {
                 walletBuilder.setEncryptionParameters(keyCrypterScrypt.getScryptParameters());
             } else {
                 // Some other form of encryption has been specified that we do not know how to persist.
-                throw new RuntimeException("The wallet has encryption of type '" + keyCrypter.getUnderstoodEncryptionType() + "' but this WalletProtobufS
+                throw new RuntimeException("The wallet has encryption of type '" + keyCrypter.getUnderstoodEncryptionType() + "' but this WalletProtobufSerializer does not know how to persist this.");
+            }
+        }
+
+        if (wallet.getKeyRotationTime() != null) {
+            long timeSecs = wallet.getKeyRotationTime().getTime() / 1000;
+            walletBuilder.setKeyRotationTime(timeSecs);
+        }
+
+        populateExtensions(wallet, walletBuilder);
+
+        for (Map.Entry<String, ByteString> entry : wallet.getTags().entrySet()) {
+            Protos.Tag.Builder tag = Protos.Tag.newBuilder().setTag(entry.getKey()).setData(entry.getValue());
+            walletBuilder.addTags(tag);
+        }
+
+        for (TransactionSigner signer : wallet.getTransactionSigners()) {
+            // do not serialize LocalTransactionSigner as it's being added implicitly
+            if (signer instanceof LocalTransactionSigner)
+                continue;
+            Protos.TransactionSigner.Builder protoSigner = Protos.TransactionSigner.newBuilder();
+            protoSigner.setClassName(signer.getClass().getName());
+            protoSigner.setData(ByteString.copyFrom(signer.serialize()));
+            walletBuilder.addTransactionSigners(protoSigner);
+        }
+
+        // Populate the wallet version.
+        walletBuilder.setVersion(wallet.getVersion());
+
+        return walletBuilder.build();
+    }
+
+    private static void populateExtensions(Wallet wallet, Protos.Wallet.Builder walletBuilder) {
+        for (WalletExtension extension : wallet.getExtensions().values()) {
+            Protos.Extension.Builder proto = Protos.Extension.newBuilder();
+            proto.setId(extension.getWalletExtensionID());
+            proto.setMandatory(extension.isWalletExtensionMandatory());
+            proto.setData(ByteString.copyFrom(extension.serializeWalletExtension()));
+            walletBuilder.addExtension(proto);
+        }
+    }
+
+    private static Protos.Transaction makeTxProto(WalletTransaction wtx) {
+        Transaction tx = wtx.getTransaction();
+        Protos.Transaction.Builder txBuilder = Protos.Transaction.newBuilder();
+
+        txBuilder.setPool(getProtoPool(wtx))
+                 .setHash(hashToByteString(tx.getHash()))
+                 .setVersion((int) tx.getVersion());
+
+        i
