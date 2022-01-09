@@ -257,4 +257,45 @@ public class WalletProtobufSerializer {
                  .setHash(hashToByteString(tx.getHash()))
                  .setVersion((int) tx.getVersion());
 
-        i
+        if (tx.getUpdateTime() != null) {
+            txBuilder.setUpdatedAt(tx.getUpdateTime().getTime());
+        }
+
+        if (tx.getLockTime() > 0) {
+            txBuilder.setLockTime((int)tx.getLockTime());
+        }
+
+        // Handle inputs.
+        for (TransactionInput input : tx.getInputs()) {
+            Protos.TransactionInput.Builder inputBuilder = Protos.TransactionInput.newBuilder()
+                .setScriptBytes(ByteString.copyFrom(input.getScriptBytes()))
+                .setTransactionOutPointHash(hashToByteString(input.getOutpoint().getHash()))
+                .setTransactionOutPointIndex((int) input.getOutpoint().getIndex());
+            if (input.hasSequence())
+                inputBuilder.setSequence((int) input.getSequenceNumber());
+            if (input.getValue() != null)
+                inputBuilder.setValue(input.getValue().value);
+            txBuilder.addTransactionInput(inputBuilder);
+        }
+
+        // Handle outputs.
+        for (TransactionOutput output : tx.getOutputs()) {
+            Protos.TransactionOutput.Builder outputBuilder = Protos.TransactionOutput.newBuilder()
+                .setScriptBytes(ByteString.copyFrom(output.getScriptBytes()))
+                .setValue(output.getValue().value);
+            final TransactionInput spentBy = output.getSpentBy();
+            if (spentBy != null) {
+                Sha256Hash spendingHash = spentBy.getParentTransaction().getHash();
+                int spentByTransactionIndex = spentBy.getParentTransaction().getInputs().indexOf(spentBy);
+                outputBuilder.setSpentByTransactionHash(hashToByteString(spendingHash))
+                             .setSpentByTransactionIndex(spentByTransactionIndex);
+            }
+            txBuilder.addTransactionOutput(outputBuilder);
+        }
+
+        // Handle which blocks tx was seen in.
+        final Map<Sha256Hash, Integer> appearsInHashes = tx.getAppearsInHashes();
+        if (appearsInHashes != null) {
+            for (Map.Entry<Sha256Hash, Integer> entry : appearsInHashes.entrySet()) {
+                txBuilder.addBlockHash(hashToByteString(entry.getKey()));
+                txBuilder.addBlockRelativityOffsets(entry.getValue(
