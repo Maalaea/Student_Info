@@ -165,4 +165,46 @@ public class WalletProtobufSerializer {
         Protos.Wallet.Builder walletBuilder = Protos.Wallet.newBuilder();
         walletBuilder.setNetworkIdentifier(wallet.getNetworkParameters().getId());
         if (wallet.getDescription() != null) {
-            walletBuilder.setDescription(wallet.getDescription
+            walletBuilder.setDescription(wallet.getDescription());
+        }
+
+        for (WalletTransaction wtx : wallet.getWalletTransactions()) {
+            Protos.Transaction txProto = makeTxProto(wtx);
+            walletBuilder.addTransaction(txProto);
+        }
+
+        walletBuilder.addAllKey(wallet.serializeKeyChainGroupToProtobuf());
+
+        for (Script script : wallet.getWatchedScripts()) {
+            Protos.Script protoScript =
+                    Protos.Script.newBuilder()
+                            .setProgram(ByteString.copyFrom(script.getProgram()))
+                            .setCreationTimestamp(script.getCreationTimeSeconds() * 1000)
+                            .build();
+
+            walletBuilder.addWatchedScript(protoScript);
+        }
+
+        // Populate the lastSeenBlockHash field.
+        Sha256Hash lastSeenBlockHash = wallet.getLastBlockSeenHash();
+        if (lastSeenBlockHash != null) {
+            walletBuilder.setLastSeenBlockHash(hashToByteString(lastSeenBlockHash));
+            walletBuilder.setLastSeenBlockHeight(wallet.getLastBlockSeenHeight());
+        }
+        if (wallet.getLastBlockSeenTimeSecs() > 0)
+            walletBuilder.setLastSeenBlockTimeSecs(wallet.getLastBlockSeenTimeSecs());
+
+        // Populate the scrypt parameters.
+        KeyCrypter keyCrypter = wallet.getKeyCrypter();
+        if (keyCrypter == null) {
+            // The wallet is unencrypted.
+            walletBuilder.setEncryptionType(EncryptionType.UNENCRYPTED);
+        } else {
+            // The wallet is encrypted.
+            walletBuilder.setEncryptionType(keyCrypter.getUnderstoodEncryptionType());
+            if (keyCrypter instanceof KeyCrypterScrypt) {
+                KeyCrypterScrypt keyCrypterScrypt = (KeyCrypterScrypt) keyCrypter;
+                walletBuilder.setEncryptionParameters(keyCrypterScrypt.getScryptParameters());
+            } else {
+                // Some other form of encryption has been specified that we do not know how to persist.
+                throw new RuntimeException("The wallet has encryption of type '" + keyCrypter.getUnderstoodEncryptionType() + "' but this WalletProtobufS
