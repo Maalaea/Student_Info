@@ -381,4 +381,43 @@ public class WalletProtobufSerializer {
                     .setPort(address.getPort())
                     .setServices(address.getServices().longValue())
                     .build();
- 
+            confidenceBuilder.addBroadcastBy(proto);
+        }
+        Date lastBroadcastedAt = confidence.getLastBroadcastedAt();
+        if (lastBroadcastedAt != null)
+            confidenceBuilder.setLastBroadcastedAt(lastBroadcastedAt.getTime());
+        txBuilder.setConfidence(confidenceBuilder);
+    }
+
+    public static ByteString hashToByteString(Sha256Hash hash) {
+        return ByteString.copyFrom(hash.getBytes());
+    }
+
+    public static Sha256Hash byteStringToHash(ByteString bs) {
+        return Sha256Hash.wrap(bs.toByteArray());
+    }
+
+    /**
+     * <p>Loads wallet data from the given protocol buffer and inserts it into the given Wallet object. This is primarily
+     * useful when you wish to pre-register extension objects. Note that if loading fails the provided Wallet object
+     * may be in an indeterminate state and should be thrown away.</p>
+     *
+     * <p>A wallet can be unreadable for various reasons, such as inability to open the file, corrupt data, internally
+     * inconsistent data, a wallet extension marked as mandatory that cannot be handled and so on. You should always
+     * handle {@link UnreadableWalletException} and communicate failure to the user in an appropriate manner.</p>
+     *
+     * @throws UnreadableWalletException thrown in various error conditions (see description).
+     */
+    public Wallet readWallet(InputStream input, @Nullable WalletExtension... walletExtensions) throws UnreadableWalletException {
+        return readWallet(input, false, walletExtensions);
+    }
+
+    /**
+     * <p>Loads wallet data from the given protocol buffer and inserts it into the given Wallet object. This is primarily
+     * useful when you wish to pre-register extension objects. Note that if loading fails the provided Wallet object
+     * may be in an indeterminate state and should be thrown away. Do not simply call this method again on the same
+     * Wallet object with {@code forceReset} set {@code true}. It won't work.</p>
+     *
+     * <p>If {@code forceReset} is {@code true}, then no transactions are loaded from the wallet, and it is configured
+     * to replay transactions from the blockchain (as if the wallet had been loaded and {@link Wallet.reset}
+     * had been called immed
