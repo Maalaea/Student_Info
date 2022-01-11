@@ -420,4 +420,38 @@ public class WalletProtobufSerializer {
      *
      * <p>If {@code forceReset} is {@code true}, then no transactions are loaded from the wallet, and it is configured
      * to replay transactions from the blockchain (as if the wallet had been loaded and {@link Wallet.reset}
-     * had been called immed
+     * had been called immediately thereafter).
+     *
+     * <p>A wallet can be unreadable for various reasons, such as inability to open the file, corrupt data, internally
+     * inconsistent data, a wallet extension marked as mandatory that cannot be handled and so on. You should always
+     * handle {@link UnreadableWalletException} and communicate failure to the user in an appropriate manner.</p>
+     *
+     * @throws UnreadableWalletException thrown in various error conditions (see description).
+     */
+    public Wallet readWallet(InputStream input, boolean forceReset, @Nullable WalletExtension[] extensions) throws UnreadableWalletException {
+        try {
+            Protos.Wallet walletProto = parseToProto(input);
+            final String paramsID = walletProto.getNetworkIdentifier();
+            NetworkParameters params = NetworkParameters.fromID(paramsID);
+            if (params == null)
+                throw new UnreadableWalletException("Unknown network parameters ID " + paramsID);
+            return readWallet(params, extensions, walletProto, forceReset);
+        } catch (IOException e) {
+            throw new UnreadableWalletException("Could not parse input stream to protobuf", e);
+        } catch (IllegalStateException e) {
+            throw new UnreadableWalletException("Could not parse input stream to protobuf", e);
+        } catch (IllegalArgumentException e) {
+            throw new UnreadableWalletException("Could not parse input stream to protobuf", e);
+        }
+    }
+
+    /**
+     * <p>Loads wallet data from the given protocol buffer and inserts it into the given Wallet object. This is primarily
+     * useful when you wish to pre-register extension objects. Note that if loading fails the provided Wallet object
+     * may be in an indeterminate state and should be thrown away.</p>
+     *
+     * <p>A wallet can be unreadable for various reasons, such as inability to open the file, corrupt data, internally
+     * inconsistent data, a wallet extension marked as mandatory that cannot be handled and so on. You should always
+     * handle {@link UnreadableWalletException} and communicate failure to the user in an appropriate manner.</p>
+     *
+     * @throws UnreadableWalletException throw
