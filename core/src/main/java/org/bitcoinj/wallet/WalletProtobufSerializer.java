@@ -343,4 +343,42 @@ public class WalletProtobufSerializer {
             case DEAD: return Protos.Transaction.Pool.DEAD;
             case PENDING: return Protos.Transaction.Pool.PENDING;
             default:
-             
+                throw new RuntimeException("Unreachable");
+        }
+    }
+
+    private static void writeConfidence(Protos.Transaction.Builder txBuilder,
+                                        TransactionConfidence confidence,
+                                        Protos.TransactionConfidence.Builder confidenceBuilder) {
+        synchronized (confidence) {
+            confidenceBuilder.setType(Protos.TransactionConfidence.Type.valueOf(confidence.getConfidenceType().getValue()));
+            if (confidence.getConfidenceType() == ConfidenceType.BUILDING) {
+                confidenceBuilder.setAppearedAtHeight(confidence.getAppearedAtChainHeight());
+                confidenceBuilder.setDepth(confidence.getDepthInBlocks());
+            }
+            if (confidence.getConfidenceType() == ConfidenceType.DEAD) {
+                // Copy in the overriding transaction, if available.
+                // (A dead coinbase transaction has no overriding transaction).
+                if (confidence.getOverridingTransaction() != null) {
+                    Sha256Hash overridingHash = confidence.getOverridingTransaction().getHash();
+                    confidenceBuilder.setOverridingTransaction(hashToByteString(overridingHash));
+                }
+            }
+            TransactionConfidence.Source source = confidence.getSource();
+            switch (source) {
+                case SELF: confidenceBuilder.setSource(Protos.TransactionConfidence.Source.SOURCE_SELF); break;
+                case NETWORK: confidenceBuilder.setSource(Protos.TransactionConfidence.Source.SOURCE_NETWORK); break;
+                case UNKNOWN:
+                    // Fall through.
+                default:
+                    confidenceBuilder.setSource(Protos.TransactionConfidence.Source.SOURCE_UNKNOWN); break;
+            }
+        }
+
+        for (PeerAddress address : confidence.getBroadcastBy()) {
+            Protos.PeerAddress proto = Protos.PeerAddress.newBuilder()
+                    .setIpAddress(ByteString.copyFrom(address.getAddr().getAddress()))
+                    .setPort(address.getPort())
+                    .setServices(address.getServices().longValue())
+                    .build();
+ 
