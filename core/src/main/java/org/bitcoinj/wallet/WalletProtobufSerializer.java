@@ -454,4 +454,37 @@ public class WalletProtobufSerializer {
      * inconsistent data, a wallet extension marked as mandatory that cannot be handled and so on. You should always
      * handle {@link UnreadableWalletException} and communicate failure to the user in an appropriate manner.</p>
      *
-     * @throws UnreadableWalletException throw
+     * @throws UnreadableWalletException thrown in various error conditions (see description).
+     */
+    public Wallet readWallet(NetworkParameters params, @Nullable WalletExtension[] extensions,
+                             Protos.Wallet walletProto) throws UnreadableWalletException {
+        return readWallet(params, extensions, walletProto, false);
+    }
+
+    /**
+     * <p>Loads wallet data from the given protocol buffer and inserts it into the given Wallet object. This is primarily
+     * useful when you wish to pre-register extension objects. Note that if loading fails the provided Wallet object
+     * may be in an indeterminate state and should be thrown away. Do not simply call this method again on the same
+     * Wallet object with {@code forceReset} set {@code true}. It won't work.</p>
+     *
+     * <p>If {@code forceReset} is {@code true}, then no transactions are loaded from the wallet, and it is configured
+     * to replay transactions from the blockchain (as if the wallet had been loaded and {@link Wallet.reset}
+     * had been called immediately thereafter).
+     *
+     * <p>A wallet can be unreadable for various reasons, such as inability to open the file, corrupt data, internally
+     * inconsistent data, a wallet extension marked as mandatory that cannot be handled and so on. You should always
+     * handle {@link UnreadableWalletException} and communicate failure to the user in an appropriate manner.</p>
+     *
+     * @throws UnreadableWalletException thrown in various error conditions (see description).
+     */
+    public Wallet readWallet(NetworkParameters params, @Nullable WalletExtension[] extensions,
+                             Protos.Wallet walletProto, boolean forceReset) throws UnreadableWalletException {
+        if (walletProto.getVersion() > CURRENT_WALLET_VERSION)
+            throw new UnreadableWalletException.FutureVersion();
+        if (!walletProto.getNetworkIdentifier().equals(params.getId()))
+            throw new UnreadableWalletException.WrongNetwork();
+
+        // Read the scrypt parameters that specify how encryption and decryption is performed.
+        KeyChainGroup keyChainGroup;
+        if (walletProto.hasEncryptionParameters()) {
+            Protos.ScryptParame
