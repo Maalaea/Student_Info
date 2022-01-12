@@ -487,4 +487,53 @@ public class WalletProtobufSerializer {
         // Read the scrypt parameters that specify how encryption and decryption is performed.
         KeyChainGroup keyChainGroup;
         if (walletProto.hasEncryptionParameters()) {
-            Protos.ScryptParame
+            Protos.ScryptParameters encryptionParameters = walletProto.getEncryptionParameters();
+            final KeyCrypterScrypt keyCrypter = new KeyCrypterScrypt(encryptionParameters);
+            keyChainGroup = KeyChainGroup.fromProtobufEncrypted(params, walletProto.getKeyList(), keyCrypter, keyChainFactory);
+        } else {
+            keyChainGroup = KeyChainGroup.fromProtobufUnencrypted(params, walletProto.getKeyList(), keyChainFactory);
+        }
+        Wallet wallet = factory.create(params, keyChainGroup);
+
+        List<Script> scripts = Lists.newArrayList();
+        for (Protos.Script protoScript : walletProto.getWatchedScriptList()) {
+            try {
+                Script script =
+                        new Script(protoScript.getProgram().toByteArray(),
+                                protoScript.getCreationTimestamp() / 1000);
+                scripts.add(script);
+            } catch (ScriptException e) {
+                throw new UnreadableWalletException("Unparseable script in wallet");
+            }
+        }
+
+        wallet.addWatchedScripts(scripts);
+
+        if (walletProto.hasDescription()) {
+            wallet.setDescription(walletProto.getDescription());
+        }
+
+        if (forceReset) {
+            // Should mirror Wallet.reset()
+            wallet.setLastBlockSeenHash(null);
+            wallet.setLastBlockSeenHeight(-1);
+            wallet.setLastBlockSeenTimeSecs(0);
+        } else {
+            // Read all transactions and insert into the txMap.
+            for (Protos.Transaction txProto : walletProto.getTransactionList()) {
+                readTransaction(txProto, wallet.getParams());
+            }
+
+            // Update transaction outputs to point to inputs that spend them
+            for (Protos.Transaction txProto : walletProto.getTransactionList()) {
+                WalletTransaction wtx = connectTransactionOutputs(params, txProto);
+                wallet.addWalletTransaction(wtx);
+            }
+
+            // Update the lastBlockSeenHash.
+            if (!walletProto.hasLastSeenBlockHash()) {
+                wallet.setLastBlockSeenHash(null);
+            } else {
+                wallet.setLastBlockSeenHash(byteStringToHash(walletProto.getLastSeenBlockHash()));
+            }
+   
