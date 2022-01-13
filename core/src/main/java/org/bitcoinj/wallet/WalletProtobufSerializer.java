@@ -536,4 +536,51 @@ public class WalletProtobufSerializer {
             } else {
                 wallet.setLastBlockSeenHash(byteStringToHash(walletProto.getLastSeenBlockHash()));
             }
-   
+            if (!walletProto.hasLastSeenBlockHeight()) {
+                wallet.setLastBlockSeenHeight(-1);
+            } else {
+                wallet.setLastBlockSeenHeight(walletProto.getLastSeenBlockHeight());
+            }
+            // Will default to zero if not present.
+            wallet.setLastBlockSeenTimeSecs(walletProto.getLastSeenBlockTimeSecs());
+
+            if (walletProto.hasKeyRotationTime()) {
+                wallet.setKeyRotationTime(new Date(walletProto.getKeyRotationTime() * 1000));
+            }
+        }
+
+        loadExtensions(wallet, extensions != null ? extensions : new WalletExtension[0], walletProto);
+
+        for (Protos.Tag tag : walletProto.getTagsList()) {
+            wallet.setTag(tag.getTag(), tag.getData());
+        }
+
+        for (Protos.TransactionSigner signerProto : walletProto.getTransactionSignersList()) {
+            try {
+                Class signerClass = Class.forName(signerProto.getClassName());
+                TransactionSigner signer = (TransactionSigner)signerClass.newInstance();
+                signer.deserialize(signerProto.getData().toByteArray());
+                wallet.addTransactionSigner(signer);
+            } catch (Exception e) {
+                throw new UnreadableWalletException("Unable to deserialize TransactionSigner instance: " +
+                        signerProto.getClassName(), e);
+            }
+        }
+
+        if (walletProto.hasVersion()) {
+            wallet.setVersion(walletProto.getVersion());
+        }
+
+        // Make sure the object can be re-used to read another wallet without corruption.
+        txMap.clear();
+
+        return wallet;
+    }
+
+    private void loadExtensions(Wallet wallet, WalletExtension[] extensionsList, Protos.Wallet walletProto) throws UnreadableWalletException {
+        final Map<String, WalletExtension> extensions = new HashMap<>();
+        for (WalletExtension e : extensionsList)
+            extensions.put(e.getWalletExtensionID(), e);
+        // The Wallet object, if subclassed, might have added some extensions to itself already. In that case, don't
+        // expect them to be passed in, just fetch them here and don't re-add.
+        extensions.putAll(walle
