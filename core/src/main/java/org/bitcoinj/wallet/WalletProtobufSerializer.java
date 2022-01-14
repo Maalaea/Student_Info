@@ -621,4 +621,51 @@ public class WalletProtobufSerializer {
      * work involving the wallet file format itself.
      */
     public static Protos.Wallet parseToProto(InputStream input) throws IOException {
-        CodedInputStream codedInput = CodedI
+        CodedInputStream codedInput = CodedInputStream.newInstance(input);
+        codedInput.setSizeLimit(WALLET_SIZE_LIMIT);
+        return Protos.Wallet.parseFrom(codedInput);
+    }
+
+    private void readTransaction(Protos.Transaction txProto, NetworkParameters params) throws UnreadableWalletException {
+        Transaction tx = new Transaction(params);
+
+        tx.setVersion(txProto.getVersion());
+
+        if (txProto.hasUpdatedAt()) {
+            tx.setUpdateTime(new Date(txProto.getUpdatedAt()));
+        }
+
+        for (Protos.TransactionOutput outputProto : txProto.getTransactionOutputList()) {
+            Coin value = Coin.valueOf(outputProto.getValue());
+            byte[] scriptBytes = outputProto.getScriptBytes().toByteArray();
+            TransactionOutput output = new TransactionOutput(params, tx, value, scriptBytes);
+            tx.addOutput(output);
+        }
+
+        for (Protos.TransactionInput inputProto : txProto.getTransactionInputList()) {
+            byte[] scriptBytes = inputProto.getScriptBytes().toByteArray();
+            TransactionOutPoint outpoint = new TransactionOutPoint(params,
+                    inputProto.getTransactionOutPointIndex() & 0xFFFFFFFFL,
+                    byteStringToHash(inputProto.getTransactionOutPointHash())
+            );
+            Coin value = inputProto.hasValue() ? Coin.valueOf(inputProto.getValue()) : null;
+            TransactionInput input = new TransactionInput(params, tx, scriptBytes, outpoint, value);
+            if (inputProto.hasSequence())
+                input.setSequenceNumber(0xffffffffL & inputProto.getSequence());
+            tx.addInput(input);
+        }
+
+        for (int i = 0; i < txProto.getBlockHashCount(); i++) {
+            ByteString blockHash = txProto.getBlockHash(i);
+            int relativityOffset = 0;
+            if (txProto.getBlockRelativityOffsetsCount() > 0)
+                relativityOffset = txProto.getBlockRelativityOffsets(i);
+            tx.addBlockAppearance(byteStringToHash(blockHash), relativityOffset);
+        }
+
+        if (txProto.hasLockTime()) {
+            tx.setLockTime(0xffffffffL & txProto.getLockTime());
+        }
+
+        if (txProto.hasPurpose()) {
+            switch (txProto.getP
