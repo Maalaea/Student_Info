@@ -583,4 +583,42 @@ public class WalletProtobufSerializer {
             extensions.put(e.getWalletExtensionID(), e);
         // The Wallet object, if subclassed, might have added some extensions to itself already. In that case, don't
         // expect them to be passed in, just fetch them here and don't re-add.
-        extensions.putAll(walle
+        extensions.putAll(wallet.getExtensions());
+        for (Protos.Extension extProto : walletProto.getExtensionList()) {
+            String id = extProto.getId();
+            WalletExtension extension = extensions.get(id);
+            if (extension == null) {
+                if (extProto.getMandatory()) {
+                    if (requireMandatoryExtensions)
+                        throw new UnreadableWalletException("Unknown mandatory extension in wallet: " + id);
+                    else
+                        log.error("Unknown extension in wallet {}, ignoring", id);
+                } else if (requireAllExtensionsKnown) {
+                    throw new UnreadableWalletException("Unknown extension in wallet: " + id);
+                }
+            } else {
+                log.info("Loading wallet extension {}", id);
+                try {
+                    wallet.deserializeExtension(extension, extProto.getData().toByteArray());
+                } catch (Exception e) {
+                    if (extProto.getMandatory() && requireMandatoryExtensions) {
+                        log.error("Error whilst reading mandatory extension {}, failing to read wallet", id);
+                        throw new UnreadableWalletException("Could not parse mandatory extension in wallet: " + id);
+                    } else if (requireAllExtensionsKnown) {
+                        log.error("Error whilst reading extension {}, failing to read wallet", id);
+                        throw new UnreadableWalletException("Could not parse extension in wallet: " + id);
+                    } else {
+                        log.warn("Error whilst reading extension {}, ignoring extension", id, e);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the loaded protocol buffer from the given byte stream. You normally want
+     * {@link Wallet#loadFromFile(java.io.File, WalletExtension...)} instead - this method is designed for low level
+     * work involving the wallet file format itself.
+     */
+    public static Protos.Wallet parseToProto(InputStream input) throws IOException {
+        CodedInputStream codedInput = CodedI
