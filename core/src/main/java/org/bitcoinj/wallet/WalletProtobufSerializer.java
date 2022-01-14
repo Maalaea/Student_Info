@@ -668,4 +668,39 @@ public class WalletProtobufSerializer {
         }
 
         if (txProto.hasPurpose()) {
-            switch (txProto.getP
+            switch (txProto.getPurpose()) {
+                case UNKNOWN: tx.setPurpose(Transaction.Purpose.UNKNOWN); break;
+                case USER_PAYMENT: tx.setPurpose(Transaction.Purpose.USER_PAYMENT); break;
+                case KEY_ROTATION: tx.setPurpose(Transaction.Purpose.KEY_ROTATION); break;
+                case ASSURANCE_CONTRACT_CLAIM: tx.setPurpose(Transaction.Purpose.ASSURANCE_CONTRACT_CLAIM); break;
+                case ASSURANCE_CONTRACT_PLEDGE: tx.setPurpose(Transaction.Purpose.ASSURANCE_CONTRACT_PLEDGE); break;
+                case ASSURANCE_CONTRACT_STUB: tx.setPurpose(Transaction.Purpose.ASSURANCE_CONTRACT_STUB); break;
+                case RAISE_FEE: tx.setPurpose(Transaction.Purpose.RAISE_FEE); break;
+                default: throw new RuntimeException("New purpose serialization not implemented");
+            }
+        } else {
+            // Old wallet: assume a user payment as that's the only reason a new tx would have been created back then.
+            tx.setPurpose(Transaction.Purpose.USER_PAYMENT);
+        }
+
+        if (txProto.hasExchangeRate()) {
+            Protos.ExchangeRate exchangeRateProto = txProto.getExchangeRate();
+            tx.setExchangeRate(new ExchangeRate(Coin.valueOf(exchangeRateProto.getCoinValue()), Fiat.valueOf(
+                    exchangeRateProto.getFiatCurrencyCode(), exchangeRateProto.getFiatValue())));
+        }
+
+        if (txProto.hasMemo())
+            tx.setMemo(txProto.getMemo());
+
+        // Transaction should now be complete.
+        Sha256Hash protoHash = byteStringToHash(txProto.getHash());
+        if (!tx.getHash().equals(protoHash))
+            throw new UnreadableWalletException(String.format(Locale.US, "Transaction did not deserialize completely: %s vs %s", tx.getHash(), protoHash));
+        if (txMap.containsKey(txProto.getHash()))
+            throw new UnreadableWalletException("Wallet contained duplicate transaction " + byteStringToHash(txProto.getHash()));
+        txMap.put(txProto.getHash(), tx);
+    }
+
+    private WalletTransaction connectTransactionOutputs(final NetworkParameters params,
+                                                        final org.bitcoinj.wallet.Protos.Transaction txProto) throws UnreadableWalletException {
+        
