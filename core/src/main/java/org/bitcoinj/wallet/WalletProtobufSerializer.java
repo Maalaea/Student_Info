@@ -740,4 +740,47 @@ public class WalletProtobufSerializer {
         if (txProto.hasConfidence()) {
             Protos.TransactionConfidence confidenceProto = txProto.getConfidence();
             TransactionConfidence confidence = tx.getConfidence();
-            readConfidence(par
+            readConfidence(params, tx, confidenceProto, confidence);
+        }
+
+        return new WalletTransaction(pool, tx);
+    }
+
+    private void readConfidence(final NetworkParameters params, final Transaction tx,
+                                final Protos.TransactionConfidence confidenceProto,
+                                final TransactionConfidence confidence) throws UnreadableWalletException {
+        // We are lenient here because tx confidence is not an essential part of the wallet.
+        // If the tx has an unknown type of confidence, ignore.
+        if (!confidenceProto.hasType()) {
+            log.warn("Unknown confidence type for tx {}", tx.getHashAsString());
+            return;
+        }
+        ConfidenceType confidenceType;
+        switch (confidenceProto.getType()) {
+            case BUILDING: confidenceType = ConfidenceType.BUILDING; break;
+            case DEAD: confidenceType = ConfidenceType.DEAD; break;
+            // These two are equivalent (must be able to read old wallets).
+            case NOT_IN_BEST_CHAIN: confidenceType = ConfidenceType.PENDING; break;
+            case PENDING: confidenceType = ConfidenceType.PENDING; break;
+            case IN_CONFLICT: confidenceType = ConfidenceType.IN_CONFLICT; break;
+            case UNKNOWN:
+                // Fall through.
+            default:
+                confidenceType = ConfidenceType.UNKNOWN; break;
+        }
+        confidence.setConfidenceType(confidenceType);
+        if (confidenceProto.hasAppearedAtHeight()) {
+            if (confidence.getConfidenceType() != ConfidenceType.BUILDING) {
+                log.warn("Have appearedAtHeight but not BUILDING for tx {}", tx.getHashAsString());
+                return;
+            }
+            confidence.setAppearedAtChainHeight(confidenceProto.getAppearedAtHeight());
+        }
+        if (confidenceProto.hasDepth()) {
+            if (confidence.getConfidenceType() != ConfidenceType.BUILDING) {
+                log.warn("Have depth but not BUILDING for tx {}", tx.getHashAsString());
+                return;
+            }
+            confidence.setDepthInBlocks(confidenceProto.getDepth());
+        }
+        if (confidencePr
