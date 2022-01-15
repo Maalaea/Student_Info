@@ -703,4 +703,41 @@ public class WalletProtobufSerializer {
 
     private WalletTransaction connectTransactionOutputs(final NetworkParameters params,
                                                         final org.bitcoinj.wallet.Protos.Transaction txProto) throws UnreadableWalletException {
-        
+        Transaction tx = txMap.get(txProto.getHash());
+        final WalletTransaction.Pool pool;
+        switch (txProto.getPool()) {
+            case DEAD: pool = WalletTransaction.Pool.DEAD; break;
+            case PENDING: pool = WalletTransaction.Pool.PENDING; break;
+            case SPENT: pool = WalletTransaction.Pool.SPENT; break;
+            case UNSPENT: pool = WalletTransaction.Pool.UNSPENT; break;
+            // Upgrade old wallets: inactive pool has been merged with the pending pool.
+            // Remove this some time after 0.9 is old and everyone has upgraded.
+            // There should not be any spent outputs in this tx as old wallets would not allow them to be spent
+            // in this state.
+            case INACTIVE:
+            case PENDING_INACTIVE:
+                pool = WalletTransaction.Pool.PENDING;
+                break;
+            default:
+                throw new UnreadableWalletException("Unknown transaction pool: " + txProto.getPool());
+        }
+        for (int i = 0 ; i < tx.getOutputs().size() ; i++) {
+            TransactionOutput output = tx.getOutputs().get(i);
+            final Protos.TransactionOutput transactionOutput = txProto.getTransactionOutput(i);
+            if (transactionOutput.hasSpentByTransactionHash()) {
+                final ByteString spentByTransactionHash = transactionOutput.getSpentByTransactionHash();
+                Transaction spendingTx = txMap.get(spentByTransactionHash);
+                if (spendingTx == null) {
+                    throw new UnreadableWalletException(String.format(Locale.US, "Could not connect %s to %s",
+                            tx.getHashAsString(), byteStringToHash(spentByTransactionHash)));
+                }
+                final int spendingIndex = transactionOutput.getSpentByTransactionIndex();
+                TransactionInput input = checkNotNull(spendingTx.getInput(spendingIndex));
+                input.connect(output);
+            }
+        }
+
+        if (txProto.hasConfidence()) {
+            Protos.TransactionConfidence confidenceProto = txProto.getConfidence();
+            TransactionConfidence confidence = tx.getConfidence();
+            readConfidence(par
