@@ -783,4 +783,48 @@ public class WalletProtobufSerializer {
             }
             confidence.setDepthInBlocks(confidenceProto.getDepth());
         }
-        if (confidencePr
+        if (confidenceProto.hasOverridingTransaction()) {
+            if (confidence.getConfidenceType() != ConfidenceType.DEAD) {
+                log.warn("Have overridingTransaction but not OVERRIDDEN for tx {}", tx.getHashAsString());
+                return;
+            }
+            Transaction overridingTransaction =
+                txMap.get(confidenceProto.getOverridingTransaction());
+            if (overridingTransaction == null) {
+                log.warn("Have overridingTransaction that is not in wallet for tx {}", tx.getHashAsString());
+                return;
+            }
+            confidence.setOverridingTransaction(overridingTransaction);
+        }
+        for (Protos.PeerAddress proto : confidenceProto.getBroadcastByList()) {
+            InetAddress ip;
+            try {
+                ip = InetAddress.getByAddress(proto.getIpAddress().toByteArray());
+            } catch (UnknownHostException e) {
+                throw new UnreadableWalletException("Peer IP address does not have the right length", e);
+            }
+            int port = proto.getPort();
+            int protocolVersion = params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.CURRENT);
+            BigInteger services = BigInteger.valueOf(proto.getServices());
+            PeerAddress address = new PeerAddress(params, ip, port, protocolVersion, services);
+            confidence.markBroadcastBy(address);
+        }
+        if (confidenceProto.hasLastBroadcastedAt())
+            confidence.setLastBroadcastedAt(new Date(confidenceProto.getLastBroadcastedAt()));
+        switch (confidenceProto.getSource()) {
+            case SOURCE_SELF: confidence.setSource(TransactionConfidence.Source.SELF); break;
+            case SOURCE_NETWORK: confidence.setSource(TransactionConfidence.Source.NETWORK); break;
+            case SOURCE_UNKNOWN:
+                // Fall through.
+            default: confidence.setSource(TransactionConfidence.Source.UNKNOWN); break;
+        }
+    }
+
+    /**
+     * Cheap test to see if input stream is a wallet. This checks for a magic value at the beginning of the stream.
+     *
+     * @param is
+     *            input stream to test
+     * @return true if input stream is a wallet
+     */
+    public static boolean isWa
