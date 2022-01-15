@@ -827,4 +827,17 @@ public class WalletProtobufSerializer {
      *            input stream to test
      * @return true if input stream is a wallet
      */
-    public static boolean isWa
+    public static boolean isWallet(InputStream is) {
+        try {
+            final CodedInputStream cis = CodedInputStream.newInstance(is);
+            final int tag = cis.readTag();
+            final int field = WireFormat.getTagFieldNumber(tag);
+            if (field != 1) // network_identifier
+                return false;
+            final String network = cis.readString();
+            return NetworkParameters.fromID(network) != null;
+        } catch (IOException x) {
+            return false;
+        }
+    }
+}
