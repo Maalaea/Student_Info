@@ -16,20 +16,20 @@
 
 package org.bitcoinj.wallet.listeners;
 
-import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.Wallet;
-
-import java.util.List;
 
 /**
  * <p>Implementors are called when the contents of the wallet changes, for instance due to receiving/sending money
  * or a block chain re-organize. It may be convenient to derive from {@link AbstractWalletEventListener} instead.</p>
  */
-public interface ScriptsChangeEventListener {
+public interface WalletChangeEventListener {
     /**
-     * Called whenever a new watched script is added to the wallet.
+     * <p>Designed for GUI applications to refresh their transaction lists. This callback is invoked in the following
+     * situations:</p>
      *
-     * @param isAddingScripts will be true if added scripts, false if removed scripts.
-     */
-    void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts);
-}
+     * <ol>
+     *     <li>A new block is received (and thus building transactions got more confidence)</li>
+     *     <li>A pending transaction is received</li>
+     *     <li>A pending transaction changes confidence due to some non-new-block related event, such as being
+     *     announced by more peers or by  a double-spend conflict being observed.</li>
+    
