@@ -41,4 +41,43 @@ message TwoWayChannelMessage {
         // Note that there are no optional fields set for CHANNEL_OPEN, it is sent from the
         // secondary to the primary to indicate that the provided contract was received,
         // verified, and broadcast successfully and the primary can now provide UPDATE messages
-        // at will to begin paying secondary. If the channel is interru
+        // at will to begin paying secondary. If the channel is interrupted after the
+        // CHANNEL_OPEN message (ie closed without an explicit CLOSE or ERROR) the primary may
+        // reopen the channel by setting the contract transaction hash in its CLIENT_VERSION
+        // message.
+        CHANNEL_OPEN = 7;
+        UPDATE_PAYMENT = 8;
+        // Sent by the server to the client after an UPDATE_PAYMENT message is successfully processed.
+        PAYMENT_ACK = 11;
+        // Either side can send this message. If the client sends it to the server, then the server
+        // takes the most recent signature it received in an UPDATE_PAYMENT and uses it to create a
+        // valid transaction, which it then broadcasts on the network.
+        //
+        // Once broadcast is complete, it sends back another CLOSE message with the settlement field set, containing
+        // the final state of the contract.
+        //
+        // The server is allowed to initiate settlement whenever it wants, in which case the client will
+        // asynchronously receive a CLOSE message with the settlement field set. The server is also allowed
+        // to send a CLOSE to mark the end of a connection without any settlement taking place, in which
+        // case this is just an equivalent to a TCP FIN packet. An explicit end-of-protocol markers can be
+        // useful when this protocol is embedded inside another.
+        CLOSE = 9;
+
+        // Used to indicate an error condition.
+        // Both parties should make an effort to send either an ERROR or a CLOSE immediately
+        // before closing the socket (unless they just received an ERROR or a CLOSE). This is important
+        // because the protocol may not run over TCP.
+        ERROR = 10;
+    };
+
+    // This is required so if a new message type is added in future, old software aborts trying
+    // to read the message as early as possible. If the message doesn't parse, the socket should
+    // be closed.
+    required MessageType type = 1;
+
+    // Now one optional field for each message. Only the field specified by type should be read.
+    optional ClientVersion client_version = 2;
+    optional ServerVersion server_version = 3;
+    optional Initiate initiate = 4;
+    optional ProvideRefund provide_refund = 5;
+    optional ReturnRefund 
