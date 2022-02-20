@@ -80,4 +80,49 @@ message TwoWayChannelMessage {
     optional ServerVersion server_version = 3;
     optional Initiate initiate = 4;
     optional ProvideRefund provide_refund = 5;
-    optional ReturnRefund 
+    optional ReturnRefund return_refund = 6;
+    optional ProvideContract provide_contract = 7;
+    optional UpdatePayment update_payment = 8;
+    optional PaymentAck payment_ack = 11;
+    optional Settlement settlement = 9;
+
+    optional Error error = 10;
+}
+
+// Sent by primary to secondary on opening the connection. If anything is received before this is
+// sent, the socket is closed.
+message ClientVersion {
+    required int32 major = 1;
+    optional int32 minor = 2 [default = 0];
+
+    // The hash of the multisig contract of a previous channel. This indicates that the primary
+    // wishes to reopen the given channel. If the server is willing to reopen it, it simply
+    // responds with a SERVER_VERSION and then immediately sends a CHANNEL_OPEN, it otherwise
+    // follows SERVER_VERSION with an Initiate representing a new channel
+    optional bytes previous_channel_contract_hash = 3;
+
+    // How many seconds should the channel be open, only used when a new channel is created.
+    // Defaults to 24 h minus 60 seconds, 24*60*60 - 60
+    optional uint64 time_window_secs = 4 [default = 86340];
+}
+
+// Send by secondary to primary upon receiving the ClientVersion message. If it is willing to
+// speak the given major version, it sends back the same major version and the minor version it
+// speaks. If it is not, it may send back a lower major version representing the highest version
+// it is willing to speak, or sends a NO_ACCEPTABLE_VERSION Error. If the secondary sends back a
+// lower major version, the secondary should either expect to continue with that version, or
+// should immediately close the connection with a NO_ACCEPTABLE_VERSION Error. Backwards
+// incompatible changes to the protocol bump the major version. Extensions bump the minor version
+message ServerVersion {
+    required int32 major = 1;
+    optional int32 minor = 2 [default = 0];
+}
+
+// Sent from server to client once version nego is done.
+message Initiate {
+    // This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+    // are accepted. It is used only in the creation of the multisig contract, as outputs are
+    // created entirely by the secondary
+    required bytes multisig_key = 1;
+
+    // Once a channel is exhau
