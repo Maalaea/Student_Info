@@ -159,4 +159,43 @@ message ProvideRefund {
     // * It must have exactly one input which spends the multisig output (see ProvideContract for
     //   details of exactly what that output must look like). This output must have a sequence
     //   number of 0.
-    // * It must have the l
+    // * It must have the lock time set to a time after the min_time_window_secs (from the
+    //   Initiate message).
+    // * It must have exactly one output which goes back to the primary.  This output's
+    //   scriptPubKey will be reused to create payment transactions.
+    required bytes tx = 2;
+}
+
+// Sent from secondary to primary after it has done initial verification of the refund
+// transaction. Contains the primary's signature which is required to spend the multisig contract
+// to the refund transaction. Must be signed using SIGHASH_NONE|SIGHASH_ANYONECANPAY (and include
+// the postfix type byte) to allow the client to add any outputs/inputs it wants as long as the
+// input's sequence and transaction's nLockTime remain set.
+message ReturnRefund {
+    required bytes signature = 1;
+}
+
+// Sent from the primary to the secondary to complete initialization.
+message ProvideContract {
+    // The serialized bytes of the transaction in Satoshi format.
+    // For version 1:
+    // * It must be signed and completely valid and ready for broadcast (ie it includes the
+    //   necessary fees) TODO: tell the client how much fee it needs
+    // * Its first output must be a 2-of-2 multisig output with the first pubkey being the
+    //   primary's and the second being the secondary's (ie the script must be exactly "OP_2
+    //   ProvideRefund.multisig_key Initiate.multisig_key OP_2 OP_CHECKMULTISIG")
+    // For version 2:
+    // * It must be signed and completely valid and ready for broadcast (ie it includes the
+    //   necessary fees) TODO: tell the client how much fee it needs
+    // * Its first output must be a CHECKLOCKTIMEVERIFY output with the first pubkey being the
+    //   primary's and the second being the secondary's.
+    required bytes tx = 1;
+
+    // To open the channel, an initial payment of the server-specified dust limit value must be
+    // provided. This ensures that the channel is never in an un-settleable state due to either
+    // no payment tx having been provided at all, or a payment that is smaller than the dust
+    // limit being provided.
+    required UpdatePayment initial_payment = 2;
+
+    // This field is added in protocol version 2 to send the client public key to the server.
+    // In version 1 it isn't use
