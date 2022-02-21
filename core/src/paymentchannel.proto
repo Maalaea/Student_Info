@@ -125,4 +125,38 @@ message Initiate {
     // created entirely by the secondary
     required bytes multisig_key = 1;
 
-    // Once a channel is exhau
+    // Once a channel is exhausted a new one must be set up. So secondary indicates the minimum
+    // size it's willing to accept here. This can be lower to trade off resources against
+    // security but shouldn't be so low the transactions get rejected by the network as spam.
+    // Zero isn't a sensible value to have here, so we make the field required.
+    required uint64 min_accepted_channel_size = 2;
+
+    // Rough UNIX time for when the channel expires. This is determined by the block header
+    // timestamps which can be very inaccurate when miners use the obsolete RollNTime hack.
+    // Channels could also be specified in terms of block heights but then how do you know the
+    // current chain height if you don't have internet access? Trust the server? Probably opens up
+    // attack vectors. We can assume the client has an independent clock, however. If the client
+    // considers this value too far off (eg more than a day), it may send an ERROR and close the
+    // channel.
+    required uint64 expire_time_secs = 3;
+
+    // The amount of money the server requires for the initial payment. The act of opening a channel
+    // always transfers some quantity of money to the server: it's impossible to have a channel with
+    // zero value transferred. This rule ensures that you can't get a channel that can't be settled
+    // due to having paid under the dust limit. Because the dust limit will float in future, the
+    // server tells the client what it thinks it is, and the client is supposed to sanity check this
+    // value.
+    required uint64 min_payment = 4;
+}
+
+// Sent from primary to secondary after Initiate to begin the refund transaction signing.
+message ProvideRefund {
+    // This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+    // are accepted.  It is only used in the creation of the multisig contract.
+    required bytes multisig_key = 1;
+
+    // The serialized bytes of the return transaction in Satoshi format.
+    // * It must have exactly one input which spends the multisig output (see ProvideContract for
+    //   details of exactly what that output must look like). This output must have a sequence
+    //   number of 0.
+    // * It must have the l
