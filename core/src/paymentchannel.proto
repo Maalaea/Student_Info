@@ -198,4 +198,46 @@ message ProvideContract {
     required UpdatePayment initial_payment = 2;
 
     // This field is added in protocol version 2 to send the client public key to the server.
-    // In version 1 it isn't use
+    // In version 1 it isn't used.
+    // This must be a raw pubkey in regular ECDSA form. Both compressed and non-compressed forms
+    // are accepted.  It is only used in the creation of the multisig contract.
+    optional bytes client_key = 3;
+}
+
+// This message can only be used by the primary after it has received a CHANNEL_OPEN message. It
+// creates a new payment transaction. Note that we don't resubmit the entire TX, this is to avoid
+// (re)parsing bugs and overhead. The payment transaction is created by the primary by:
+// * Adding an input which spends the multisig contract
+// * Setting this input's scriptSig to the given signature and a new signature created by the
+//   primary (the primary should ensure the signature provided correctly spends the multisig
+//   contract)
+// * Adding an output who's scriptPubKey is the same as the refund output (the only output) in
+//   the refund transaction
+// * Setting this output's value to client_change_value (which must be lower than the most recent
+//   client_change_value and lower than the multisig contract's output value)
+// * Adding any number of additional outputs as desired (leaving sufficient fee, if necessary)
+// * Adding any number of additional inputs as desired (eg to add more fee)
+message UpdatePayment {
+    // The value which is sent back to the primary.  The rest of the multisig output is left for
+    // the secondary to do with as they wish.
+    required uint64 client_change_value = 1;
+    // A SIGHASH_SINGLE|SIGHASH_ANYONECANPAY signature (including the postfix type byte) which
+    // spends the primary's part of the multisig contract's output.  This signature only covers
+    // the primary's refund output and thus the secondary is free to do what they wish with their
+    // part of the multisig output.
+    required bytes signature = 2;
+    // Information about this update. Used to extend this protocol.
+    optional bytes info =  3;
+
+}
+
+// This message is sent as an acknowledgement of an UpdatePayment message
+message PaymentAck {
+    // Information about this update. Used to extend this protocol
+    optional bytes info = 1;
+}
+
+message Settlement {
+    // A copy of the fully signed final contract that settles the channel. The client can verify
+    // the transaction is correct and then commit it to their wallet.
+    required bytes tx = 
