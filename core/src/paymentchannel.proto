@@ -240,4 +240,32 @@ message PaymentAck {
 message Settlement {
     // A copy of the fully signed final contract that settles the channel. The client can verify
     // the transaction is correct and then commit it to their wallet.
-    required bytes tx = 
+    required bytes tx = 3;
+}
+
+// An Error can be sent by either party at any time
+// Both parties should make an effort to send either an ERROR or a CLOSE immediately before
+// closing the socket (unless they just received an ERROR or a CLOSE)
+message Error {
+    enum ErrorCode {
+        TIMEOUT = 1;                   // Protocol timeout occurred (one party hung).
+        SYNTAX_ERROR = 2;              // Generic error indicating some message was not properly
+                                       // formatted or was out of order.
+        NO_ACCEPTABLE_VERSION = 3;     // We don't speak the version the other side asked for.
+        BAD_TRANSACTION = 4;           // A provided transaction was not in the proper structure
+                                       // (wrong inputs/outputs, sequence, lock time, signature,
+                                       // etc)
+        TIME_WINDOW_UNACCEPTABLE = 5;  // The expire time specified by the secondary was unacceptable
+                                       // for the primary
+        CHANNEL_VALUE_TOO_LARGE = 6;   // The minimum channel value specified by the secondary was
+                                       // too large for the primary
+        MIN_PAYMENT_TOO_LARGE = 7;     // The min "dust limit" specified by the server was too large for the client.
+
+        OTHER = 8;
+    };
+    optional ErrorCode code = 1 [default=OTHER];
+    optional string explanation = 2;   // NOT SAFE FOR HTML WITHOUT ESCAPING
+
+    // Can be set by the client when erroring to the server if a value was out of range. Can help with debugging.
+    optional uint64 expected_value = 3;
+}
