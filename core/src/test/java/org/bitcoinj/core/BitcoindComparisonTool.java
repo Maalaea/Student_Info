@@ -68,4 +68,33 @@ public class BitcoindComparisonTool {
         try {
             H2FullPrunedBlockStore store = new H2FullPrunedBlockStore(params, args.length > 0 ? args[0] : "BitcoindComparisonTool", blockList.maximumReorgBlockCount);
             store.resetStore();
-            //store = new MemoryFullPrunedBlockStore(pa
+            //store = new MemoryFullPrunedBlockStore(params, blockList.maximumReorgBlockCount);
+            chain = new FullPrunedBlockChain(params, store);
+        } catch (BlockStoreException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        VersionMessage ver = new VersionMessage(params, 42);
+        ver.appendToSubVer("BlockAcceptanceComparisonTool", "1.1", null);
+        ver.localServices = VersionMessage.NODE_NETWORK;
+        final Peer bitcoind = new Peer(params, ver, new BlockChain(params, new MemoryBlockStore(params)), new PeerAddress(params, InetAddress.getLocalHost()));
+        Preconditions.checkState(bitcoind.getVersionMessage().hasBlockChain());
+
+        final BlockWrapper currentBlock = new BlockWrapper();
+
+        final Set<Sha256Hash> blocksRequested = Collections.synchronizedSet(new HashSet<Sha256Hash>());
+        final Set<Sha256Hash> blocksPendingSend = Collections.synchronizedSet(new HashSet<Sha256Hash>());
+        final AtomicInteger unexpectedInvs = new AtomicInteger(0);
+        final SettableFuture<Void> connectedFuture = SettableFuture.create();
+        bitcoind.addConnectedEventListener(Threading.SAME_THREAD, new PeerConnectedEventListener() {
+            @Override
+            public void onPeerConnected(Peer peer, int peerCount) {
+                if (!peer.getPeerVersionMessage().subVer.contains("Satoshi")) {
+                    System.out.println();
+                    System.out.println("************************************************************************************************************************\n" +
+                                       "WARNING: You appear to be using this to test an alternative implementation with full validation rules. You should go\n" +
+                                       "think hard about what you're doing. Seriously, no one has gotten even close to correctly reimplementing Bitcoin\n" +
+                                       "consensus rules, despite serious investment in trying. It is a huge task and the slightest difference is a huge bug.\n" +
+                                       "Instead, go work on making Bitcoin Core consensus rules a shared library and use that. Seriously, you wont get it right,\n" +
+  
