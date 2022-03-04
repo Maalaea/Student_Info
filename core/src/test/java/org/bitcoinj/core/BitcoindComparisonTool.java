@@ -172,4 +172,49 @@ public class BitcoindComparisonTool {
                                         break;
                                 } else if (b.getHash().equals(hash)) {
                                     log.info("Found header " + b.getHashAsString());
- 
+                                    found = true;
+                                }
+                            }
+                            if (found)
+                                break;
+                        }
+                        if (!found)
+                            sendHeaders = headers;
+                        bitcoind.sendMessage(new HeadersMessage(params, sendHeaders));
+                        InventoryMessage i = new InventoryMessage(params);
+                        for (Block b : sendHeaders)
+                            i.addBlock(b);
+                        bitcoind.sendMessage(i);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    return null;
+                } else if (m instanceof InventoryMessage) {
+                    if (mostRecentInv != null) {
+                        log.error("Got an inv when we weren't expecting one");
+                        unexpectedInvs.incrementAndGet();
+                    }
+                    mostRecentInv = (InventoryMessage) m;
+                }
+                return m;
+            }
+        });
+        
+        bitcoindChainHead = params.getGenesisBlock().getHash();
+        
+        // bitcoind MUST be on localhost or we will get banned as a DoSer
+        new NioClient(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), args.length > 2 ? Integer.parseInt(args[2]) : params.getPort()), bitcoind, 1000);
+
+        connectedFuture.get();
+
+        ArrayList<Sha256Hash> locator = new ArrayList<>(1);
+        locator.add(params.getGenesisBlock().getHash());
+        Sha256Hash hashTo = Sha256Hash.wrap("0000000000000000000000000000000000000000000000000000000000000000");
+                
+        int rulesSinceFirstFail = 0;
+        for (Rule rule : blockList.list) {
+            if (rule instanceof FullBlockTestGenerator.BlockAndValidity) {
+                FullBlockTestGenerator.BlockAndValidity block = (FullBlockTestGenerator.BlockAndValidity) rule;
+                boolean threw = false;
+                Block nextBlock = preloadedBlocks.get(((FullBlockTestGenerator.BlockAndValidity) rule).blockHash);
+                // Often load at least one block because sometimes we have duplicates with the same hash 
