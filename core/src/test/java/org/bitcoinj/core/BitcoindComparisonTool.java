@@ -97,4 +97,42 @@ public class BitcoindComparisonTool {
                                        "think hard about what you're doing. Seriously, no one has gotten even close to correctly reimplementing Bitcoin\n" +
                                        "consensus rules, despite serious investment in trying. It is a huge task and the slightest difference is a huge bug.\n" +
                                        "Instead, go work on making Bitcoin Core consensus rules a shared library and use that. Seriously, you wont get it right,\n" +
-  
+                                       "and starting with this tester as a way to try to do so will simply end in pain and lost coins.\n" +
+                                       "************************************************************************************************************************");
+                    System.out.println();
+                }
+                log.info("bitcoind connected");
+                // Make sure bitcoind has no blocks
+                bitcoind.setDownloadParameters(0, false);
+                bitcoind.startBlockChainDownload();
+                connectedFuture.set(null);
+            }
+        });
+
+        bitcoind.addDisconnectedEventListener(Threading.SAME_THREAD, new PeerDisconnectedEventListener() {
+            @Override
+            public void onPeerDisconnected(Peer peer, int peerCount) {
+                log.error("bitcoind node disconnected!");
+                System.exit(1);
+            }
+        });
+
+        bitcoind.addPreMessageReceivedEventListener(Threading.SAME_THREAD, new PreMessageReceivedEventListener() {
+            @Override
+            public Message onPreMessageReceived(Peer peer, Message m) {
+                if (m instanceof HeadersMessage) {
+                    if (!((HeadersMessage) m).getBlockHeaders().isEmpty()) {
+                        Block b = Iterables.getLast(((HeadersMessage) m).getBlockHeaders());
+                        log.info("Got header from bitcoind " + b.getHashAsString());
+                        bitcoindChainHead = b.getHash();
+                    } else
+                        log.info("Got empty header message from bitcoind");
+                    return null;
+                } else if (m instanceof Block) {
+                    log.error("bitcoind sent us a block it already had, make sure bitcoind has no blocks!");
+                    System.exit(1);
+                } else if (m instanceof GetDataMessage) {
+                    for (InventoryItem item : ((GetDataMessage) m).items)
+                        if (item.type == InventoryItem.Type.Block) {
+                            log.info("Requested " + item.hash);
+                            if (currentBlock
