@@ -135,4 +135,41 @@ public class BitcoindComparisonTool {
                     for (InventoryItem item : ((GetDataMessage) m).items)
                         if (item.type == InventoryItem.Type.Block) {
                             log.info("Requested " + item.hash);
-                            if (currentBlock
+                            if (currentBlock.block.getHash().equals(item.hash))
+                                bitcoind.sendMessage(currentBlock.block);
+                            else {
+                                Block nextBlock = preloadedBlocks.get(item.hash);
+                                if (nextBlock != null)
+                                    bitcoind.sendMessage(nextBlock);
+                                else {
+                                    blocksPendingSend.add(item.hash);
+                                    log.info("...which we will not provide yet");
+                                }
+                            }
+                            blocksRequested.add(item.hash);
+                        }
+                    return null;
+                } else if (m instanceof GetHeadersMessage) {
+                    try {
+                        if (currentBlock.block == null) {
+                            log.info("Got a request for a header before we had even begun processing blocks!");
+                            return null;
+                        }
+                        LinkedList<Block> headers = new LinkedList<>();
+                        Block it = blockList.hashHeaderMap.get(currentBlock.block.getHash());
+                        while (it != null) {
+                            headers.addFirst(it);
+                            it = blockList.hashHeaderMap.get(it.getPrevBlockHash());
+                        }
+                        LinkedList<Block> sendHeaders = new LinkedList<>();
+                        boolean found = false;
+                        for (Sha256Hash hash : ((GetHeadersMessage) m).getLocator()) {
+                            for (Block b : headers) {
+                                if (found) {
+                                    sendHeaders.addLast(b);
+                                    log.info("Sending header (" + b.getPrevBlockHash() + ") -> " + b.getHash());
+                                    if (b.getHash().equals(((GetHeadersMessage) m).getStopHash()))
+                                        break;
+                                } else if (b.getHash().equals(hash)) {
+                                    log.info("Found header " + b.getHashAsString());
+ 
