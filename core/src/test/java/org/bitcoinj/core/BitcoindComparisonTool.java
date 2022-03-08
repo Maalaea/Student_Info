@@ -255,4 +255,41 @@ public class BitcoindComparisonTool {
                     log.error("ERROR: Block didn't match throws flag on block \"" + block.ruleName + "\"");
                     rulesSinceFirstFail++;
                 } else if (!chain.getChainHead().getHeader().getHash().equals(block.hashChainTipAfterBlock)) {
-                    log.error("ERROR: New block head didn't match the correct value after block \"" + b
+                    log.error("ERROR: New block head didn't match the correct value after block \"" + block.ruleName + "\"");
+                    rulesSinceFirstFail++;
+                } else if (chain.getChainHead().getHeight() != block.heightAfterBlock) {
+                    log.error("ERROR: New block head didn't match the correct height after block " + block.ruleName);
+                    rulesSinceFirstFail++;
+                }
+
+                // Shouldnt double-request
+                boolean shouldntRequest = blocksRequested.contains(nextBlock.getHash());
+                if (shouldntRequest)
+                    blocksRequested.remove(nextBlock.getHash());
+                InventoryMessage message = new InventoryMessage(params);
+                message.addBlock(nextBlock);
+                bitcoind.sendMessage(message);
+                log.info("Sent inv with block " + nextBlock.getHashAsString());
+                if (blocksPendingSend.contains(nextBlock.getHash())) {
+                    bitcoind.sendMessage(nextBlock);
+                    log.info("Sent full block " + nextBlock.getHashAsString());
+                }
+                // bitcoind doesn't request blocks inline so we can't rely on a ping for synchronization
+                for (int i = 0; !shouldntRequest && !blocksRequested.contains(nextBlock.getHash()); i++) {
+                    int SLEEP_TIME = 1;
+                    if (i % 1000/SLEEP_TIME == 1000/SLEEP_TIME - 1)
+                        log.error("bitcoind still hasn't requested block " + block.ruleName + " with hash " + nextBlock.getHash());
+                    Thread.sleep(SLEEP_TIME);
+                    if (i > 60000/SLEEP_TIME) {
+                        log.error("bitcoind failed to request block " + block.ruleName);
+                        System.exit(1);
+                    }
+                }
+                if (shouldntRequest) {
+                    Thread.sleep(100);
+                    if (blocksRequested.contains(nextBlock.getHash())) {
+                        log.error("ERROR: bitcoind re-requested block " + block.ruleName + " with hash " + nextBlock.getHash());
+                        rulesSinceFirstFail++;
+                    }
+                }
+                // If the block throws, we may want
