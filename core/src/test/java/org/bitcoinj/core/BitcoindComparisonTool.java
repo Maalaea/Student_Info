@@ -326,4 +326,40 @@ public class BitcoindComparisonTool {
                     if (matches)
                         continue;
                     log.error("bitcoind's mempool didn't match what we were expecting on rule " + rule.ruleName);
- 
+                    log.info("  bitcoind's mempool was: ");
+                    for (InventoryItem item : mostRecentInv.items)
+                        log.info("    " + item.hash);
+                    log.info("  The expected mempool was: ");
+                    for (InventoryItem item : originalRuleSet)
+                        log.info("    " + item.hash);
+                    rulesSinceFirstFail++;
+                }
+                mostRecentInv = null;
+            } else if (rule instanceof UTXORule) {
+                if (bitcoind.getPeerVersionMessage().isGetUTXOsSupported()) {
+                    UTXORule r = (UTXORule) rule;
+                    UTXOsMessage result = bitcoind.getUTXOs(r.query).get();
+                    if (!result.equals(r.result)) {
+                        log.error("utxo result was not what we expected.");
+                        log.error("Wanted  {}", r.result);
+                        log.error("but got {}", result);
+                        rulesSinceFirstFail++;
+                    } else {
+                        log.info("Successful utxo query {}: {}", r.ruleName, result);
+                    }
+                }
+            } else {
+                throw new RuntimeException("Unknown rule");
+            }
+            if (rulesSinceFirstFail > 0)
+                rulesSinceFirstFail++;
+            if (rulesSinceFirstFail > 6)
+                System.exit(1);
+        }
+
+        if (unexpectedInvs.get() > 0)
+            log.error("ERROR: Got " + unexpectedInvs.get() + " unexpected invs from bitcoind");
+        log.info("Done testing.");
+        System.exit(rulesSinceFirstFail > 0 || unexpectedInvs.get() > 0 ? 1 : 0);
+    }
+}
