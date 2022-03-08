@@ -292,4 +292,38 @@ public class BitcoindComparisonTool {
                         rulesSinceFirstFail++;
                     }
                 }
-                // If the block throws, we may want
+                // If the block throws, we may want to get bitcoind to request the same block again
+                if (block.throwsException)
+                    blocksRequested.remove(nextBlock.getHash());
+                //bitcoind.sendMessage(nextBlock);
+                locator.clear();
+                locator.add(bitcoindChainHead);
+                bitcoind.sendMessage(new GetHeadersMessage(params, locator, hashTo));
+                bitcoind.ping().get();
+                if (!chain.getChainHead().getHeader().getHash().equals(bitcoindChainHead)) {
+                    rulesSinceFirstFail++;
+                    log.error("ERROR: bitcoind and bitcoinj acceptance differs on block \"" + block.ruleName + "\"");
+                }
+                if (block.sendOnce)
+                    preloadedBlocks.remove(nextBlock.getHash());
+                log.info("Block \"" + block.ruleName + "\" completed processing");
+            } else if (rule instanceof MemoryPoolState) {
+                MemoryPoolMessage message = new MemoryPoolMessage();
+                bitcoind.sendMessage(message);
+                bitcoind.ping().get();
+                if (mostRecentInv == null && !((MemoryPoolState) rule).mempool.isEmpty()) {
+                    log.error("ERROR: bitcoind had an empty mempool, but we expected some transactions on rule " + rule.ruleName);
+                    rulesSinceFirstFail++;
+                } else if (mostRecentInv != null && ((MemoryPoolState) rule).mempool.isEmpty()) {
+                    log.error("ERROR: bitcoind had a non-empty mempool, but we expected an empty one on rule " + rule.ruleName);
+                    rulesSinceFirstFail++;
+                } else if (mostRecentInv != null) {
+                    Set<InventoryItem> originalRuleSet = new HashSet<>(((MemoryPoolState)rule).mempool);
+                    boolean matches = mostRecentInv.items.size() == ((MemoryPoolState)rule).mempool.size();
+                    for (InventoryItem item : mostRecentInv.items)
+                        if (!((MemoryPoolState) rule).mempool.remove(item))
+                            matches = false;
+                    if (matches)
+                        continue;
+                    log.error("bitcoind's mempool didn't match what we were expecting on rule " + rule.ruleName);
+ 
