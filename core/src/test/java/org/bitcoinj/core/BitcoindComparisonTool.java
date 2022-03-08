@@ -217,4 +217,42 @@ public class BitcoindComparisonTool {
                 FullBlockTestGenerator.BlockAndValidity block = (FullBlockTestGenerator.BlockAndValidity) rule;
                 boolean threw = false;
                 Block nextBlock = preloadedBlocks.get(((FullBlockTestGenerator.BlockAndValidity) rule).blockHash);
-                // Often load at least one block because sometimes we have duplicates with the same hash 
+                // Often load at least one block because sometimes we have duplicates with the same hash (b56/57)
+                for (int i = 0; i < 1
+                        || nextBlock == null || !nextBlock.getHash().equals(block.blockHash);
+                        i++) {
+                    try {
+                        Block b = blocks.next();
+                        Block oldBlockWithSameHash = preloadedBlocks.put(b.getHash(), b);
+                        if (oldBlockWithSameHash != null && oldBlockWithSameHash.getTransactions().size() != b.getTransactions().size())
+                            blocksRequested.remove(b.getHash());
+                        nextBlock = preloadedBlocks.get(block.blockHash);
+                    } catch (NoSuchElementException e) {
+                        if (nextBlock == null || !nextBlock.getHash().equals(block.blockHash))
+                            throw e;
+                    }
+                }
+                currentBlock.block = nextBlock;
+                log.info("Testing block {} {}", block.ruleName, currentBlock.block.getHash());
+                try {
+                    if (chain.add(nextBlock) != block.connects) {
+                        log.error("ERROR: Block didn't match connects flag on block \"" + block.ruleName + "\"");
+                        rulesSinceFirstFail++;
+                    }
+                } catch (VerificationException e) {
+                    threw = true;
+                    if (!block.throwsException) {
+                        log.error("ERROR: Block didn't match throws flag on block \"" + block.ruleName + "\"");
+                        e.printStackTrace();
+                        rulesSinceFirstFail++;
+                    } else if (block.connects) {
+                        log.error("ERROR: Block didn't match connects flag on block \"" + block.ruleName + "\"");
+                        e.printStackTrace();
+                        rulesSinceFirstFail++;
+                    }
+                }
+                if (!threw && block.throwsException) {
+                    log.error("ERROR: Block didn't match throws flag on block \"" + block.ruleName + "\"");
+                    rulesSinceFirstFail++;
+                } else if (!chain.getChainHead().getHeader().getHash().equals(block.hashChainTipAfterBlock)) {
+                    log.error("ERROR: New block head didn't match the correct value after block \"" + b
