@@ -75,4 +75,64 @@ public class BlockChainTest {
         BriefLogFormatter.initVerbose();
         Context.propagate(new Context(testNet, 100, Coin.ZERO, false));
         testNetChain = new BlockChain(testNet, new Wallet(testNet), new MemoryBlockStore(testNet));
-        Context.propagate(new
+        Context.propagate(new Context(PARAMS, 100, Coin.ZERO, false));
+        wallet = new Wallet(PARAMS) {
+            @Override
+            public void receiveFromBlock(Transaction tx, StoredBlock block, BlockChain.NewBlockType blockType,
+                                         int relativityOffset) throws VerificationException {
+                super.receiveFromBlock(tx, block, blockType, relativityOffset);
+                BlockChainTest.this.block[0] = block;
+                if (isTransactionRelevant(tx) && tx.isCoinBase()) {
+                    BlockChainTest.this.coinbaseTransaction = tx;
+                }
+            }
+        };
+        wallet.freshReceiveKey();
+
+        resetBlockStore();
+        chain = new BlockChain(PARAMS, wallet, blockStore);
+
+        coinbaseTo = wallet.currentReceiveKey().toAddress(PARAMS);
+    }
+
+    @Test
+    public void testBasicChaining() throws Exception {
+        // Check that we can plug a few blocks together and the futures work.
+        ListenableFuture<StoredBlock> future = testNetChain.getHeightFuture(2);
+        // Block 1 from the testnet.
+        Block b1 = getBlock1();
+        assertTrue(testNetChain.add(b1));
+        assertFalse(future.isDone());
+        // Block 2 from the testnet.
+        Block b2 = getBlock2();
+
+        // Let's try adding an invalid block.
+        long n = b2.getNonce();
+        try {
+            b2.setNonce(12345);
+            testNetChain.add(b2);
+            fail();
+        } catch (VerificationException e) {
+            b2.setNonce(n);
+        }
+
+        // Now it works because we reset the nonce.
+        assertTrue(testNetChain.add(b2));
+        assertTrue(future.isDone());
+        assertEquals(2, future.get().getHeight());
+    }
+
+    @Test
+    public void receiveCoins() throws Exception {
+        int height = 1;
+        // Quick check that we can actually receive coins.
+        Transaction tx1 = createFakeTx(PARAMS,
+                                       COIN,
+                                       wallet.currentReceiveKey().toAddress(PARAMS));
+        Block b1 = createFakeBlock(blockStore, height, tx1).block;
+        chain.add(b1);
+        assertTrue(wallet.getBalance().signum() > 0);
+    }
+
+    @Test
+    public void unconnectedB
