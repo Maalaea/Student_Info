@@ -370,4 +370,45 @@ public class BlockChainTest {
         // Wallet now has the coinbase transaction available for spend.
         assertEquals(wallet.getBalance(), FIFTY_COINS);
         assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
-        assertTrue(coinbaseTr
+        assertTrue(coinbaseTransaction.isMature());
+
+        // Create a spend with the coinbase BTC to the address in the second wallet - this should now succeed.
+        Transaction coinbaseSend2 = wallet.createSend(addressToSendTo, valueOf(49, 0));
+        assertNotNull(coinbaseSend2);
+
+        // Commit the coinbaseSpend to the first wallet and check the balances decrement.
+        wallet.commitTx(coinbaseSend2);
+        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), COIN);
+        // Available balance is zero as change has not been received from a block yet.
+        assertEquals(wallet.getBalance(BalanceType.AVAILABLE), ZERO);
+
+        // Give it one more block - change from coinbaseSpend should now be available in the first wallet.
+        Block b4 = createFakeBlock(blockStore, height++, coinbaseSend2).block;
+        chain.add(b4);
+        assertEquals(wallet.getBalance(BalanceType.AVAILABLE), COIN);
+
+        // Check the balances in the second wallet.
+        assertEquals(wallet2.getBalance(BalanceType.ESTIMATED), valueOf(49, 0));
+        assertEquals(wallet2.getBalance(BalanceType.AVAILABLE), valueOf(49, 0));
+    }
+
+    // Some blocks from the test net.
+    private static Block getBlock2() throws Exception {
+        Block b2 = new Block(testNet, Block.BLOCK_VERSION_GENESIS);
+        b2.setMerkleRoot(Sha256Hash.wrap("addc858a17e21e68350f968ccd384d6439b64aafa6c193c8b9dd66320470838b"));
+        b2.setNonce(2642058077L);
+        b2.setTime(1296734343L);
+        b2.setPrevBlockHash(Sha256Hash.wrap("000000033cc282bc1fa9dcae7a533263fd7fe66490f550d80076433340831604"));
+        assertEquals("000000037b21cac5d30fc6fda2581cf7b2612908aed2abbcc429c45b0557a15f", b2.getHashAsString());
+        b2.verifyHeader();
+        return b2;
+    }
+
+    private static Block getBlock1() throws Exception {
+        Block b1 = new Block(testNet, Block.BLOCK_VERSION_GENESIS);
+        b1.setMerkleRoot(Sha256Hash.wrap("0e8e58ecdacaa7b3c6304a35ae4ffff964816d2b80b62b58558866ce4e648c10"));
+        b1.setNonce(236038445);
+        b1.setTime(1296734340);
+        b1.setPrevBlockHash(Sha256Hash.wrap("00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008"));
+        assertEquals("000000033cc282bc1fa9dcae7a533263fd7fe66490f550d80076433340831604", b1.getHashAsString());
+        b1.
