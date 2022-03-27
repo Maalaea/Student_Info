@@ -275,4 +275,49 @@ public class BlockChainTest {
         Block b2 = b1.createNextBlock(coinbaseTo);
         Block b3 = b2.createNextBlock(coinbaseTo);
         assertTrue(chain.add(b1));
-        assertEquals(b1, block[0]
+        assertEquals(b1, block[0].getHeader());
+        assertTrue(chain.add(b2));
+        assertEquals(b2, block[0].getHeader());
+        assertTrue(chain.add(b3));
+        assertEquals(b3, block[0].getHeader());
+        assertEquals(b3, chain.getChainHead().getHeader());
+        assertTrue(chain.add(b2));
+        assertEquals(b3, chain.getChainHead().getHeader());
+        // Wallet was NOT called with the new block because the duplicate add was spotted.
+        assertEquals(b3, block[0].getHeader());
+    }
+
+    @Test
+    public void intraBlockDependencies() throws Exception {
+        // Covers issue 166 in which transactions that depend on each other inside a block were not always being
+        // considered relevant.
+        Address somebodyElse = new ECKey().toAddress(PARAMS);
+        Block b1 = PARAMS.getGenesisBlock().createNextBlock(somebodyElse);
+        ECKey key = wallet.freshReceiveKey();
+        Address addr = key.toAddress(PARAMS);
+        // Create a tx that gives us some coins, and another that spends it to someone else in the same block.
+        Transaction t1 = FakeTxBuilder.createFakeTx(PARAMS, COIN, addr);
+        Transaction t2 = new Transaction(PARAMS);
+        t2.addInput(t1.getOutputs().get(0));
+        t2.addOutput(valueOf(2, 0), somebodyElse);
+        b1.addTransaction(t1);
+        b1.addTransaction(t2);
+        b1.solve();
+        chain.add(b1);
+        assertEquals(Coin.ZERO, wallet.getBalance());
+    }
+
+    @Test
+    public void coinbaseTransactionAvailability() throws Exception {
+        // Check that a coinbase transaction is only available to spend after NetworkParameters.getSpendableCoinbaseDepth() blocks.
+
+        // Create a second wallet to receive the coinbase spend.
+        Wallet wallet2 = new Wallet(PARAMS);
+        ECKey receiveKey = wallet2.freshReceiveKey();
+        int height = 1;
+        chain.addWallet(wallet2);
+
+        Address addressToSendTo = receiveKey.toAddress(PARAMS);
+
+        // Create a block, sending the coinbase to the coinbaseTo address (which is in the wallet).
+        Block b1 = PARAMS.getGenesisBlock().createNextBlockWithCoinbase(Block.BLOCK_VERSION_GENESIS, wallet.currentReceiveKey()
