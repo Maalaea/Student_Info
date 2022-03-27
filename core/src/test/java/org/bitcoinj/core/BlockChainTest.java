@@ -223,4 +223,56 @@ public class BlockChainTest {
      */
     @Test
     public void badBip66Version() throws Exception {
-        testDeprecatedBlockVersion(Block.BLOCK_VERSION_BIP34, Block.BLOCK_
+        testDeprecatedBlockVersion(Block.BLOCK_VERSION_BIP34, Block.BLOCK_VERSION_BIP66);
+    }
+
+    /**
+     * Test that version 3 blocks are rejected once version 4 blocks are a super
+     * majority.
+     */
+    @Test
+    public void badBip65Version() throws Exception {
+        testDeprecatedBlockVersion(Block.BLOCK_VERSION_BIP66, Block.BLOCK_VERSION_BIP65);
+    }
+
+    private void testDeprecatedBlockVersion(final long deprecatedVersion, final long newVersion)
+            throws Exception {
+        final BlockStore versionBlockStore = new MemoryBlockStore(PARAMS);
+        final BlockChain versionChain = new BlockChain(PARAMS, versionBlockStore);
+
+        // Build a historical chain of version 3 blocks
+        long timeSeconds = 1231006505;
+        int height = 0;
+        FakeTxBuilder.BlockPair chainHead = null;
+
+        // Put in just enough v2 blocks to be a minority
+        for (height = 0; height < (PARAMS.getMajorityWindow() - PARAMS.getMajorityRejectBlockOutdated()); height++) {
+            chainHead = FakeTxBuilder.createFakeBlock(versionBlockStore, deprecatedVersion, timeSeconds, height);
+            versionChain.add(chainHead.block);
+            timeSeconds += 60;
+        }
+        // Fill the rest of the window with v3 blocks
+        for (; height < PARAMS.getMajorityWindow(); height++) {
+            chainHead = FakeTxBuilder.createFakeBlock(versionBlockStore, newVersion, timeSeconds, height);
+            versionChain.add(chainHead.block);
+            timeSeconds += 60;
+        }
+
+        chainHead = FakeTxBuilder.createFakeBlock(versionBlockStore, deprecatedVersion, timeSeconds, height);
+        // Trying to add a new v2 block should result in rejection
+        thrown.expect(VerificationException.BlockVersionOutOfDate.class);
+        try {
+            versionChain.add(chainHead.block);
+        } catch(final VerificationException ex) {
+            throw (Exception) ex.getCause();
+        }
+    }
+
+    @Test
+    public void duplicates() throws Exception {
+        // Adding a block twice should not have any effect, in particular it should not send the block to the wallet.
+        Block b1 = PARAMS.getGenesisBlock().createNextBlock(coinbaseTo);
+        Block b2 = b1.createNextBlock(coinbaseTo);
+        Block b3 = b2.createNextBlock(coinbaseTo);
+        assertTrue(chain.add(b1));
+        assertEquals(b1, block[0]
