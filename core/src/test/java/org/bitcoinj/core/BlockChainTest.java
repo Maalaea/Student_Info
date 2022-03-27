@@ -320,4 +320,54 @@ public class BlockChainTest {
         Address addressToSendTo = receiveKey.toAddress(PARAMS);
 
         // Create a block, sending the coinbase to the coinbaseTo address (which is in the wallet).
-        Block b1 = PARAMS.getGenesisBlock().createNextBlockWithCoinbase(Block.BLOCK_VERSION_GENESIS, wallet.currentReceiveKey()
+        Block b1 = PARAMS.getGenesisBlock().createNextBlockWithCoinbase(Block.BLOCK_VERSION_GENESIS, wallet.currentReceiveKey().getPubKey(), height++);
+        chain.add(b1);
+
+        // Check a transaction has been received.
+        assertNotNull(coinbaseTransaction);
+
+        // The coinbase tx is not yet available to spend.
+        assertEquals(Coin.ZERO, wallet.getBalance());
+        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+        assertTrue(!coinbaseTransaction.isMature());
+
+        // Attempt to spend the coinbase - this should fail as the coinbase is not mature yet.
+        try {
+            wallet.createSend(addressToSendTo, valueOf(49, 0));
+            fail();
+        } catch (InsufficientMoneyException e) {
+        }
+
+        // Check that the coinbase is unavailable to spend for the next spendableCoinbaseDepth - 2 blocks.
+        for (int i = 0; i < PARAMS.getSpendableCoinbaseDepth() - 2; i++) {
+            // Non relevant tx - just for fake block creation.
+            Transaction tx2 = createFakeTx(PARAMS, COIN,
+                new ECKey().toAddress(PARAMS));
+
+            Block b2 = createFakeBlock(blockStore, height++, tx2).block;
+            chain.add(b2);
+
+            // Wallet still does not have the coinbase transaction available for spend.
+            assertEquals(Coin.ZERO, wallet.getBalance());
+            assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+
+            // The coinbase transaction is still not mature.
+            assertTrue(!coinbaseTransaction.isMature());
+
+            // Attempt to spend the coinbase - this should fail.
+            try {
+                wallet.createSend(addressToSendTo, valueOf(49, 0));
+                fail();
+            } catch (InsufficientMoneyException e) {
+            }
+        }
+
+        // Give it one more block - should now be able to spend coinbase transaction. Non relevant tx.
+        Transaction tx3 = createFakeTx(PARAMS, COIN, new ECKey().toAddress(PARAMS));
+        Block b3 = createFakeBlock(blockStore, height++, tx3).block;
+        chain.add(b3);
+
+        // Wallet now has the coinbase transaction available for spend.
+        assertEquals(wallet.getBalance(), FIFTY_COINS);
+        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+        assertTrue(coinbaseTr
