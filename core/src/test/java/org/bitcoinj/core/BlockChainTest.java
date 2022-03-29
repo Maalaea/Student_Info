@@ -411,4 +411,54 @@ public class BlockChainTest {
         b1.setTime(1296734340);
         b1.setPrevBlockHash(Sha256Hash.wrap("00000007199508e34a9ff81e6ec0c477a4cccff2a4767a8eee39c11db367b008"));
         assertEquals("000000033cc282bc1fa9dcae7a533263fd7fe66490f550d80076433340831604", b1.getHashAsString());
-        b1.
+        b1.verifyHeader();
+        return b1;
+    }
+
+    @Test
+    public void estimatedBlockTime() throws Exception {
+        NetworkParameters params = MainNetParams.get();
+        BlockChain prod = new BlockChain(new Context(params), new MemoryBlockStore(params));
+        Date d = prod.estimateBlockTime(200000);
+        // The actual date of block 200,000 was 2012-09-22 10:47:00
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).parse("2012-10-23T08:35:05.000-0700"), d);
+    }
+
+    @Test
+    public void falsePositives() throws Exception {
+        double decay = AbstractBlockChain.FP_ESTIMATOR_ALPHA;
+        assertTrue(0 == chain.getFalsePositiveRate()); // Exactly
+        chain.trackFalsePositives(55);
+        assertEquals(decay * 55, chain.getFalsePositiveRate(), 1e-4);
+        chain.trackFilteredTransactions(550);
+        double rate1 = chain.getFalsePositiveRate();
+        // Run this scenario a few more time for the filter to converge
+        for (int i = 1 ; i < 10 ; i++) {
+            chain.trackFalsePositives(55);
+            chain.trackFilteredTransactions(550);
+        }
+
+        // Ensure we are within 10%
+        assertEquals(0.1, chain.getFalsePositiveRate(), 0.01);
+
+        // Check that we get repeatable results after a reset
+        chain.resetFalsePositiveEstimate();
+        assertTrue(0 == chain.getFalsePositiveRate()); // Exactly
+
+        chain.trackFalsePositives(55);
+        assertEquals(decay * 55, chain.getFalsePositiveRate(), 1e-4);
+        chain.trackFilteredTransactions(550);
+        assertEquals(rate1, chain.getFalsePositiveRate(), 1e-4);
+    }
+
+    @Test
+    public void rollbackBlockStore() throws Exception {
+        // This test simulates an issue on Android, that causes the VM to crash while receiving a block, so that the
+        // block store is persisted but the wallet is not.
+        Block b1 = PARAMS.getGenesisBlock().createNextBlock(coinbaseTo);
+        Block b2 = b1.createNextBlock(coinbaseTo);
+        // Add block 1, no frills.
+        assertTrue(chain.add(b1));
+        assertEquals(b1.cloneAsHeader(), chain.getChainHead().getHeader());
+        assertEquals(1, chain.getBestChainHeight());
+        assertEquals(1, wallet.getLastBlockSeenHeight());
