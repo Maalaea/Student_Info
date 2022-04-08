@@ -462,3 +462,21 @@ public class BlockChainTest {
         assertEquals(b1.cloneAsHeader(), chain.getChainHead().getHeader());
         assertEquals(1, chain.getBestChainHeight());
         assertEquals(1, wallet.getLastBlockSeenHeight());
+        // Add block 2 while wallet is disconnected, to simulate crash.
+        chain.removeWallet(wallet);
+        assertTrue(chain.add(b2));
+        assertEquals(b2.cloneAsHeader(), chain.getChainHead().getHeader());
+        assertEquals(2, chain.getBestChainHeight());
+        assertEquals(1, wallet.getLastBlockSeenHeight());
+        // Add wallet back. This will detect the height mismatch and repair the damage done.
+        chain.addWallet(wallet);
+        assertEquals(b1.cloneAsHeader(), chain.getChainHead().getHeader());
+        assertEquals(1, chain.getBestChainHeight());
+        assertEquals(1, wallet.getLastBlockSeenHeight());
+        // Now add block 2 correctly.
+        assertTrue(chain.add(b2));
+        assertEquals(b2.cloneAsHeader(), chain.getChainHead().getHeader());
+        assertEquals(2, chain.getBestChainHeight());
+        assertEquals(2, wallet.getLastBlockSeenHeight());
+    }
+}
