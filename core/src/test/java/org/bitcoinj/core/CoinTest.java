@@ -133,4 +133,27 @@ public class CoinTest {
      */
     @Test
     public void testToPlainString() {
-        assertEquals("0.0015", Coin
+        assertEquals("0.0015", Coin.valueOf(150000).toPlainString());
+        assertEquals("1.23", parseCoin("1.23").toPlainString());
+
+        assertEquals("0.1", parseCoin("0.1").toPlainString());
+        assertEquals("1.1", parseCoin("1.1").toPlainString());
+        assertEquals("21.12", parseCoin("21.12").toPlainString());
+        assertEquals("321.123", parseCoin("321.123").toPlainString());
+        assertEquals("4321.1234", parseCoin("4321.1234").toPlainString());
+        assertEquals("54321.12345", parseCoin("54321.12345").toPlainString());
+        assertEquals("654321.123456", parseCoin("654321.123456").toPlainString());
+        assertEquals("7654321.1234567", parseCoin("7654321.1234567").toPlainString());
+        assertEquals("87654321.12345678", parseCoin("87654321.12345678").toPlainString());
+
+        // check there are no trailing zeros
+        assertEquals("1", parseCoin("1.0").toPlainString());
+        assertEquals("2", parseCoin("2.00").toPlainString());
+        assertEquals("3", parseCoin("3.000").toPlainString());
+        assertEquals("4", parseCoin("4.0000").toPlainString());
+        assertEquals("5", parseCoin("5.00000").toPlainString());
+        assertEquals("6", parseCoin("6.000000").toPlainString());
+        assertEquals("7", parseCoin("7.0000000").toPlainString());
+        assertEquals("8", parseCoin("8.00000000").toPlainString());
+    }
+}
