@@ -158,4 +158,48 @@ public class FilteredBlockAndPartialMerkleTreeTests extends TestWithPeerGroup {
 
         BloomFilter filter = wallet.getBloomFilter(wallet.getKeyChainGroupSize()*2, 0.001, 0xDEADBEEF);
         // Compare the serialized bloom filter to a known-good value
-        assertArrayEquals(HEX.decode("0e1b091ca195e45a9164889b6bc46a09000000efbeadde02"), filter.unsafeBitcoinSerialize
+        assertArrayEquals(HEX.decode("0e1b091ca195e45a9164889b6bc46a09000000efbeadde02"), filter.unsafeBitcoinSerialize());
+
+        // Create a peer.
+        peerGroup.start();
+        InboundMessageQueuer p1 = connectPeer(1);
+        assertEquals(1, peerGroup.numConnectedPeers());
+        // Send an inv for block 100001
+        InventoryMessage inv = new InventoryMessage(PARAMS);
+        inv.addBlock(block);
+        inbound(p1, inv);
+        
+        // Check that we properly requested the correct FilteredBlock
+        Object getData = outbound(p1);
+        assertTrue(getData instanceof GetDataMessage);
+        assertTrue(((GetDataMessage)getData).getItems().size() == 1);
+        assertTrue(((GetDataMessage)getData).getItems().get(0).hash.equals(block.getHash()));
+        assertTrue(((GetDataMessage)getData).getItems().get(0).type == InventoryItem.Type.FilteredBlock);
+        
+        // Check that we then immediately pinged.
+        Object ping = outbound(p1);
+        assertTrue(ping instanceof Ping);
+        
+        // Respond with transactions and the filtered block
+        inbound(p1, filteredBlock);
+        inbound(p1, tx0);
+        inbound(p1, tx1);
+        inbound(p1, tx2);
+        inbound(p1, tx3);
+        inbound(p1, new Pong(((Ping)ping).getNonce()));
+
+        pingAndWait(p1);
+
+        Set<Transaction> transactions = wallet.getTransactions(false);
+        assertTrue(transactions.size() == 4);
+        for (Transaction tx : transactions) {
+            assertTrue(tx.getConfidence().getConfidenceType() == ConfidenceType.BUILDING);
+            assertTrue(tx.getConfidence().getDepthInBlocks() == 1);
+            assertTrue(tx.getAppearsInHashes().keySet().contains(block.getHash()));
+            assertTrue(tx.getAppearsInHashes().size() == 1);
+        }
+
+        // Peer 1 goes away.
+        closePeer(peerOf(p1));
+    }
+}
