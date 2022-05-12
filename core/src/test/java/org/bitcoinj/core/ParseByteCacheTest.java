@@ -98,4 +98,63 @@ public class ParseByteCacheTest {
         prevTx.addOutput(prevOut);
         // Connect it.
         tx1.addInput(prevOut);
- 
+        
+        Transaction tx2 = createFakeTx(PARAMS, COIN,
+                new ECKey().toAddress(PARAMS));
+
+        Block b1 = createFakeBlock(blockStore, BLOCK_HEIGHT_GENESIS, tx1, tx2).block;
+
+        MessageSerializer bs = PARAMS.getDefaultSerializer();
+        
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bs.serialize(tx1, bos);
+        tx1BytesWithHeader = bos.toByteArray();
+        tx1Bytes = tx1.bitcoinSerialize();
+        
+        bos.reset();
+        bs.serialize(tx2, bos);
+        tx2BytesWithHeader = bos.toByteArray();
+        tx2Bytes = tx2.bitcoinSerialize();
+        
+        bos.reset();
+        bs.serialize(b1, bos);
+        b1BytesWithHeader = bos.toByteArray();
+        b1Bytes = b1.bitcoinSerialize();
+    }
+    
+    @Test
+    public void validateSetup() {
+        byte[] b1 = {1, 1, 1, 2, 3, 4, 5, 6, 7};
+        byte[] b2 = {1, 2, 3};
+        assertTrue(arrayContains(b1, b2));
+        assertTrue(arrayContains(txMessage, txMessagePart));
+        assertTrue(arrayContains(tx1BytesWithHeader, tx1Bytes));
+        assertTrue(arrayContains(tx2BytesWithHeader, tx2Bytes));
+        assertTrue(arrayContains(b1BytesWithHeader, b1Bytes));
+        assertTrue(arrayContains(b1BytesWithHeader, tx1Bytes));
+        assertTrue(arrayContains(b1BytesWithHeader, tx2Bytes));
+        assertFalse(arrayContains(tx1BytesWithHeader, b1Bytes));
+    }
+    
+    @Test
+    public void testTransactionsRetain() throws Exception {
+        testTransaction(MainNetParams.get(), txMessage, false, true);
+        testTransaction(PARAMS, tx1BytesWithHeader, false, true);
+        testTransaction(PARAMS, tx2BytesWithHeader, false, true);
+    }
+    
+    @Test
+    public void testTransactionsNoRetain() throws Exception {
+        testTransaction(MainNetParams.get(), txMessage, false, false);
+        testTransaction(PARAMS, tx1BytesWithHeader, false, false);
+        testTransaction(PARAMS, tx2BytesWithHeader, false, false);
+    }
+
+    @Test
+    public void testBlockAll() throws Exception {
+        testBlock(b1BytesWithHeader, false, false);
+        testBlock(b1BytesWithHeader, false, true);
+    }
+
+    public void testBlock(byte[] blockBytes, boolean isChild, boolean retain) throws Exception {
+        // reference serializer to produce comparison serialization ou
