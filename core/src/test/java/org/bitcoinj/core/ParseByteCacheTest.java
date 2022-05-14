@@ -213,4 +213,64 @@ public class ParseByteCacheTest {
         
         // refresh block
         b1 = (Block) bs.deserialize(ByteBuffer.wrap(blockBytes));
-        bRef = (Block) bsRef.deserial
+        bRef = (Block) bsRef.deserialize(ByteBuffer.wrap(blockBytes));
+        
+        // retrieve a value from a child and header
+        b1.getDifficultyTarget();
+
+        b1.getTransactions();
+        if (b1.getTransactions().size() > 0) {
+            Transaction tx1 = b1.getTransactions().get(0);
+            
+            assertEquals(retain, tx1.isCached());
+        }
+        // does it still match ref block?
+        serDeser(bs, b1, bos.toByteArray(), null, null);
+        
+        // refresh block
+        b1 = (Block) bs.deserialize(ByteBuffer.wrap(blockBytes));
+        bRef = (Block) bsRef.deserialize(ByteBuffer.wrap(blockBytes));
+
+        // change a value in header
+        b1.setNonce(23);
+        bRef.setNonce(23);
+        assertFalse(b1.isHeaderBytesValid());
+        assertEquals(retain , b1.isTransactionBytesValid());
+        // does it still match ref block?
+        bos.reset();
+        bsRef.serialize(bRef, bos);
+        serDeser(bs, b1, bos.toByteArray(), null, null);
+        
+        // refresh block
+        b1 = (Block) bs.deserialize(ByteBuffer.wrap(blockBytes));
+        bRef = (Block) bsRef.deserialize(ByteBuffer.wrap(blockBytes));
+        
+        // retrieve a value from a child of a child
+        b1.getTransactions();
+        if (b1.getTransactions().size() > 0) {
+            Transaction tx1 = b1.getTransactions().get(0);
+            
+            TransactionInput tin = tx1.getInputs().get(0);
+            
+            assertEquals(retain, tin.isCached());
+            
+            // does it still match ref tx?
+            bos.reset();
+            bsRef.serialize(bRef, bos);
+            serDeser(bs, b1, bos.toByteArray(), null, null);
+        }
+        
+        // refresh block
+        b1 = (Block) bs.deserialize(ByteBuffer.wrap(blockBytes));
+        bRef = (Block) bsRef.deserialize(ByteBuffer.wrap(blockBytes));
+        
+        // add an input
+        b1.getTransactions();
+        if (b1.getTransactions().size() > 0) {
+            Transaction tx1 = b1.getTransactions().get(0);
+            
+            if (tx1.getInputs().size() > 0) {
+                tx1.addInput(tx1.getInputs().get(0));
+                // replicate on reference tx
+                bRef.getTransactions().get(0).addInput(bRef.getTransactions().get(0).getInputs().get(0));
+            
