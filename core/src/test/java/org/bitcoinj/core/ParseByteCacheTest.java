@@ -273,4 +273,53 @@ public class ParseByteCacheTest {
                 tx1.addInput(tx1.getInputs().get(0));
                 // replicate on reference tx
                 bRef.getTransactions().get(0).addInput(bRef.getTransactions().get(0).getInputs().get(0));
+                
+                assertFalse(tx1.isCached());
+                assertFalse(b1.isTransactionBytesValid());
+                
+                // confirm sibling cache status was unaffected
+                if (tx1.getInputs().size() > 1) {
+                    assertEquals(retain, tx1.getInputs().get(1).isCached());
+                }
+                
+                // this has to be false. Altering a tx invalidates the merkle root.
+                // when we have seperate merkle caching then the entire header won't need to be
+                // invalidated.
+                assertFalse(b1.isHeaderBytesValid());
+                
+                bos.reset();
+                bsRef.serialize(bRef, bos);
+                byte[] source = bos.toByteArray();
+                // confirm we still match the reference tx.
+                serDeser(bs, b1, source, null, null);
+            }
             
+            // does it still match ref tx?
+            bos.reset();
+            bsRef.serialize(bRef, bos);
+            serDeser(bs, b1, bos.toByteArray(), null, null);
+        }
+        
+        // refresh block
+        b1 = (Block) bs.deserialize(ByteBuffer.wrap(blockBytes));
+        Block b2 = (Block) bs.deserialize(ByteBuffer.wrap(blockBytes));
+        bRef = (Block) bsRef.deserialize(ByteBuffer.wrap(blockBytes));
+        Block bRef2 = (Block) bsRef.deserialize(ByteBuffer.wrap(blockBytes));
+        
+        // reparent an input
+        b1.getTransactions();
+        if (b1.getTransactions().size() > 0) {
+            Transaction tx1 = b1.getTransactions().get(0);
+            Transaction tx2 = b2.getTransactions().get(0);
+            
+            if (tx1.getInputs().size() > 0) {
+                TransactionInput fromTx1 = tx1.getInputs().get(0);
+                tx2.addInput(fromTx1);
+                
+                // replicate on reference tx
+                TransactionInput fromTxRef = bRef.getTransactions().get(0).getInputs().get(0);
+                bRef2.getTransactions().get(0).addInput(fromTxRef);
+                
+                // b1 hasn't changed but it's no longer in the parent
+                // chain of fromTx1 so has to have been uncached since it won't be
+                // notified of cha
