@@ -441,3 +441,19 @@ public class ParseByteCacheTest {
     public static boolean arrayContains(byte[] sup, byte[] sub) {
         if (sup.length < sub.length)
             return false;       
+        
+        String superstring = Utils.HEX.encode(sup);
+        String substring = Utils.HEX.encode(sub);
+        
+        int ind = superstring.indexOf(substring);
+        
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < superstring.indexOf(substring); i++)
+            sb.append(" ");
+        
+        //System.out.println(superstring);
+        //System.out.println(sb.append(substring).toString());
+        //System.out.println();
+        return ind > -1;
+    }
+}
