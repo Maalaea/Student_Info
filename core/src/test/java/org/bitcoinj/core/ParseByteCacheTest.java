@@ -375,4 +375,69 @@ public class ParseByteCacheTest {
 
         // compare to ref tx
         bos.reset();
-        bsRef.se
+        bsRef.serialize(tRef, bos);
+        serDeser(bs, t1, bos.toByteArray(), null, null);
+        
+        // retrieve a value from a child
+        t1.getInputs();
+        if (t1.getInputs().size() > 0) {
+            TransactionInput tin = t1.getInputs().get(0);
+            assertEquals(retain, tin.isCached());
+            
+            // does it still match ref tx?
+            serDeser(bs, t1, bos.toByteArray(), null, null);
+        }
+        
+        // refresh tx
+        t1 = (Transaction) bs.deserialize(ByteBuffer.wrap(txBytes));
+        tRef = (Transaction) bsRef.deserialize(ByteBuffer.wrap(txBytes));
+        
+        // add an input
+        if (t1.getInputs().size() > 0) {
+
+            t1.addInput(t1.getInputs().get(0));
+
+            // replicate on reference tx
+            tRef.addInput(tRef.getInputs().get(0));
+
+            assertFalse(t1.isCached());
+
+            bos.reset();
+            bsRef.serialize(tRef, bos);
+            byte[] source = bos.toByteArray();
+            //confirm we still match the reference tx.
+            serDeser(bs, t1, source, null, null);
+        }
+    }
+    
+    private void serDeser(MessageSerializer bs, Message message, byte[] sourceBytes, byte[] containedBytes, byte[] containingBytes) throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bs.serialize(message, bos);
+        byte[] b1 = bos.toByteArray();
+        
+        Message m2 = bs.deserialize(ByteBuffer.wrap(b1));
+
+        assertEquals(message, m2);
+
+        bos.reset();
+        bs.serialize(m2, bos);
+        byte[] b2 = bos.toByteArray(); 
+        assertTrue(Arrays.equals(b1, b2));
+
+        if (sourceBytes != null) {
+            assertTrue(arrayContains(sourceBytes, b1));
+            
+            assertTrue(arrayContains(sourceBytes, b2));
+        }
+
+        if (containedBytes != null) {
+            assertTrue(arrayContains(b1, containedBytes));
+        }
+        if (containingBytes != null) {
+            assertTrue(arrayContains(containingBytes, b1));
+        }
+    }
+    
+    public static boolean arrayContains(byte[] sup, byte[] sub) {
+        if (sup.length < sub.length)
+            return false;       
