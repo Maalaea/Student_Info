@@ -322,4 +322,57 @@ public class ParseByteCacheTest {
                 
                 // b1 hasn't changed but it's no longer in the parent
                 // chain of fromTx1 so has to have been uncached since it won't be
-                // notified of cha
+                // notified of changes throught the parent chain anymore.
+                assertFalse(b1.isTransactionBytesValid());
+                
+                // b2 should have it's cache invalidated because it has changed.
+                assertFalse(b2.isTransactionBytesValid());
+                
+                bos.reset();
+                bsRef.serialize(bRef2, bos);
+                byte[] source = bos.toByteArray();
+                // confirm altered block matches altered ref block.
+                serDeser(bs, b2, source, null, null);
+            }
+            
+            // does unaltered block still match ref block?
+            bos.reset();
+            bsRef.serialize(bRef, bos);
+            serDeser(bs, b1, bos.toByteArray(), null, null);
+
+            // how about if we refresh it?
+            bRef = (Block) bsRef.deserialize(ByteBuffer.wrap(blockBytes));
+            bos.reset();
+            bsRef.serialize(bRef, bos);
+            serDeser(bs, b1, bos.toByteArray(), null, null);
+        }
+    }
+    
+    public void testTransaction(NetworkParameters params, byte[] txBytes, boolean isChild, boolean retain) throws Exception {
+
+        // reference serializer to produce comparison serialization output after changes to
+        // message structure.
+        MessageSerializer bsRef = params.getSerializer(false);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+        BitcoinSerializer bs = params.getSerializer(retain);
+        Transaction t1;
+        Transaction tRef;
+        t1 = (Transaction) bs.deserialize(ByteBuffer.wrap(txBytes));
+        tRef = (Transaction) bsRef.deserialize(ByteBuffer.wrap(txBytes));
+
+        // verify our reference BitcoinSerializer produces matching byte array.
+        bos.reset();
+        bsRef.serialize(tRef, bos);
+        assertTrue(Arrays.equals(bos.toByteArray(), txBytes));
+
+        // check and retain status survive both before and after a serialization
+        assertEquals(retain, t1.isCached());
+
+        serDeser(bs, t1, txBytes, null, null);
+
+        assertEquals(retain, t1.isCached());
+
+        // compare to ref tx
+        bos.reset();
+        bsRef.se
