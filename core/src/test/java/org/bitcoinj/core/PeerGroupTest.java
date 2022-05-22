@@ -126,4 +126,48 @@ public class PeerGroupTest extends TestWithPeerGroup {
         disconnectedPeers.take();
         assertEquals(0, disconnectedPeers.size());
 
-        assertTrue(peerGroup.removeConnectedEventListen
+        assertTrue(peerGroup.removeConnectedEventListener(connectedListener));
+        assertFalse(peerGroup.removeConnectedEventListener(connectedListener));
+        assertTrue(peerGroup.removeDisconnectedEventListener(disconnectedListener));
+        assertFalse(peerGroup.removeDisconnectedEventListener(disconnectedListener));
+        assertTrue(peerGroup.removePreMessageReceivedEventListener(preMessageReceivedListener));
+        assertFalse(peerGroup.removePreMessageReceivedEventListener(preMessageReceivedListener));
+    }
+
+    @Test
+    public void peerDiscoveryPolling() throws InterruptedException {
+        // Check that if peer discovery fails, we keep trying until we have some nodes to talk with.
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicBoolean result = new AtomicBoolean();
+        peerGroup.addPeerDiscovery(new PeerDiscovery() {
+            @Override
+            public InetSocketAddress[] getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
+                if (!result.getAndSet(true)) {
+                    // Pretend we are not connected to the internet.
+                    throw new PeerDiscoveryException("test failure");
+                } else {
+                    // Return a bogus address.
+                    latch.countDown();
+                    return new InetSocketAddress[]{new InetSocketAddress("localhost", 1)};
+                }
+            }
+
+            @Override
+            public void shutdown() {
+            }
+        });
+        peerGroup.start();
+        latch.await();
+        // Check that we did indeed throw an exception. If we got here it means we threw and then PeerGroup tried
+        // again a bit later.
+        assertTrue(result.get());
+    }
+
+    // Utility method to create a PeerDiscovery with a certain number of addresses.
+    private PeerDiscovery createPeerDiscovery(int nrOfAddressesWanted, int port) {
+        final InetSocketAddress[] addresses = new InetSocketAddress[nrOfAddressesWanted];
+        for (int addressNr = 0; addressNr < nrOfAddressesWanted; addressNr++) {
+            // make each address unique by using the counter to increment the port.
+            addresses[addressNr] = new InetSocketAddress("localhost", port + addressNr);
+        }
+   
