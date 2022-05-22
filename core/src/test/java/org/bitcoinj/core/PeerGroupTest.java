@@ -63,4 +63,67 @@ public class PeerGroupTest extends TestWithPeerGroup {
     private PreMessageReceivedEventListener preMessageReceivedListener;
     private Map<Peer, AtomicInteger> peerToMessageCount;
 
-  
+    @Parameterized.Parameters
+    public static Collection<ClientType[]> parameters() {
+        return Arrays.asList(new ClientType[] {ClientType.NIO_CLIENT_MANAGER},
+                             new ClientType[] {ClientType.BLOCKING_CLIENT_MANAGER});
+    }
+
+    public PeerGroupTest(ClientType clientType) {
+        super(clientType);
+    }
+
+    @Override
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        peerToMessageCount = new HashMap<>();
+        connectedPeers = new LinkedBlockingQueue<>();
+        disconnectedPeers = new LinkedBlockingQueue<>();
+        preMessageReceivedListener = new PreMessageReceivedEventListener() {
+            @Override
+            public Message onPreMessageReceived(Peer peer, Message m) {
+                AtomicInteger messageCount = peerToMessageCount.get(peer);
+                if (messageCount == null) {
+                    messageCount = new AtomicInteger(0);
+                    peerToMessageCount.put(peer, messageCount);
+                }
+                messageCount.incrementAndGet();
+                // Just pass the message right through for further processing.
+                return m;
+            }
+        };
+    }
+
+    @Override
+    @After
+    public void tearDown() {
+        super.tearDown();
+    }
+
+    @Test
+    public void listener() throws Exception {
+        peerGroup.addConnectedEventListener(connectedListener);
+        peerGroup.addDisconnectedEventListener(disconnectedListener);
+        peerGroup.addPreMessageReceivedEventListener(preMessageReceivedListener);
+        peerGroup.start();
+
+        // Create a couple of peers.
+        InboundMessageQueuer p1 = connectPeer(1);
+        InboundMessageQueuer p2 = connectPeer(2);
+        connectedPeers.take();
+        connectedPeers.take();
+
+        pingAndWait(p1);
+        pingAndWait(p2);
+        Threading.waitForUserCode();
+        assertEquals(0, disconnectedPeers.size());
+
+        p1.close();
+        disconnectedPeers.take();
+        assertEquals(0, disconnectedPeers.size());
+        p2.close();
+        disconnectedPeers.take();
+        assertEquals(0, disconnectedPeers.size());
+
+        assertTrue(peerGroup.removeConnectedEventListen
