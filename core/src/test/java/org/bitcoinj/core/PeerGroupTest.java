@@ -170,4 +170,57 @@ public class PeerGroupTest extends TestWithPeerGroup {
             // make each address unique by using the counter to increment the port.
             addresses[addressNr] = new InetSocketAddress("localhost", port + addressNr);
         }
-   
+        return new PeerDiscovery() {
+            public InetSocketAddress[] getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
+                return addresses;
+            }
+            public void shutdown() {
+            }
+        };
+    }
+
+    @Test
+    public void multiplePeerDiscovery() throws InterruptedException {
+        peerGroup.setMaxPeersToDiscoverCount(98);
+        peerGroup.addPeerDiscovery(createPeerDiscovery(1, 0));
+        peerGroup.addPeerDiscovery(createPeerDiscovery(2, 100));
+        peerGroup.addPeerDiscovery(createPeerDiscovery(96, 200));
+        peerGroup.addPeerDiscovery(createPeerDiscovery(3, 300));
+        peerGroup.addPeerDiscovery(createPeerDiscovery(1, 400));
+        peerGroup.addDiscoveredEventListener(new PeerDiscoveredEventListener() {
+            @Override
+            public void onPeersDiscovered(Set<PeerAddress> peerAddresses) {
+                assertEquals(99, peerAddresses.size());
+            }
+        });
+        peerGroup.start();
+    }
+
+    @Test
+    public void receiveTxBroadcast() throws Exception {
+        // Check that when we receive transactions on all our peers, we do the right thing.
+        peerGroup.start();
+
+        // Create a couple of peers.
+        InboundMessageQueuer p1 = connectPeer(1);
+        InboundMessageQueuer p2 = connectPeer(2);
+        
+        // Check the peer accessors.
+        assertEquals(2, peerGroup.numConnectedPeers());
+        Set<Peer> tmp = new HashSet<>(peerGroup.getConnectedPeers());
+        Set<Peer> expectedPeers = new HashSet<>();
+        expectedPeers.add(peerOf(p1));
+        expectedPeers.add(peerOf(p2));
+        assertEquals(tmp, expectedPeers);
+
+        Coin value = COIN;
+        Transaction t1 = FakeTxBuilder.createFakeTx(PARAMS, value, address);
+        InventoryMessage inv = new InventoryMessage(PARAMS);
+        inv.addTransaction(t1);
+
+        // Note: we start with p2 here to verify that transactions are downloaded from whichever peer announces first
+        // which does not have to be the same as the download peer (which is really the "block download peer").
+        inbound(p2, inv);
+        assertTrue(outbound(p2) instanceof GetDataMessage);
+        inbound(p1, inv);
+        ass
