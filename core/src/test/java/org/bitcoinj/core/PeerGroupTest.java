@@ -223,4 +223,61 @@ public class PeerGroupTest extends TestWithPeerGroup {
         inbound(p2, inv);
         assertTrue(outbound(p2) instanceof GetDataMessage);
         inbound(p1, inv);
-        ass
+        assertNull(outbound(p1));  // Only one peer is used to download.
+        inbound(p2, t1);
+        assertNull(outbound(p1));
+        // Asks for dependency.
+        GetDataMessage getdata = (GetDataMessage) outbound(p2);
+        assertNotNull(getdata);
+        inbound(p2, new NotFoundMessage(PARAMS, getdata.getItems()));
+        pingAndWait(p2);
+        assertEquals(value, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+    }
+
+    
+    @Test
+    public void receiveTxBroadcastOnAddedWallet() throws Exception {
+        // Check that when we receive transactions on all our peers, we do the right thing.
+        peerGroup.start();
+
+        // Create a peer.
+        InboundMessageQueuer p1 = connectPeer(1);
+        
+        Wallet wallet2 = new Wallet(PARAMS);
+        ECKey key2 = wallet2.freshReceiveKey();
+        Address address2 = key2.toAddress(PARAMS);
+        
+        peerGroup.addWallet(wallet2);
+        blockChain.addWallet(wallet2);
+
+        assertEquals(BloomFilter.class, waitForOutbound(p1).getClass());
+        assertEquals(MemoryPoolMessage.class, waitForOutbound(p1).getClass());
+
+        Coin value = COIN;
+        Transaction t1 = FakeTxBuilder.createFakeTx(PARAMS, value, address2);
+        InventoryMessage inv = new InventoryMessage(PARAMS);
+        inv.addTransaction(t1);
+
+        inbound(p1, inv);
+        assertTrue(outbound(p1) instanceof GetDataMessage);
+        inbound(p1, t1);
+        // Asks for dependency.
+        GetDataMessage getdata = (GetDataMessage) outbound(p1);
+        assertNotNull(getdata);
+        inbound(p1, new NotFoundMessage(PARAMS, getdata.getItems()));
+        pingAndWait(p1);
+        assertEquals(value, wallet2.getBalance(Wallet.BalanceType.ESTIMATED));
+    }
+    
+    @Test
+    public void singleDownloadPeer1() throws Exception {
+        // Check that we don't attempt to retrieve blocks on multiple peers.
+        peerGroup.start();
+
+        // Create a couple of peers.
+        InboundMessageQueuer p1 = connectPeer(1);
+        InboundMessageQueuer p2 = connectPeer(2);
+        assertEquals(2, peerGroup.numConnectedPeers());
+
+        // Set up a little block chain. We heard about b1 but not b2 (it is pending download). b3 is solved whilst we
+   
