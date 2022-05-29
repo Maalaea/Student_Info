@@ -280,4 +280,53 @@ public class PeerGroupTest extends TestWithPeerGroup {
         assertEquals(2, peerGroup.numConnectedPeers());
 
         // Set up a little block chain. We heard about b1 but not b2 (it is pending download). b3 is solved whilst we
-   
+        // are downloading the chain.
+        Block b1 = FakeTxBuilder.createFakeBlock(blockStore, BLOCK_HEIGHT_GENESIS).block;
+        blockChain.add(b1);
+        Block b2 = FakeTxBuilder.makeSolvedTestBlock(b1);
+        Block b3 = FakeTxBuilder.makeSolvedTestBlock(b2);
+
+        // Peer 1 and 2 receives an inv advertising a newly solved block.
+        InventoryMessage inv = new InventoryMessage(PARAMS);
+        inv.addBlock(b3);
+        // Only peer 1 tries to download it.
+        inbound(p1, inv);
+        pingAndWait(p1);
+        
+        assertTrue(outbound(p1) instanceof GetDataMessage);
+        assertNull(outbound(p2));
+        // Peer 1 goes away, peer 2 becomes the download peer and thus queries the remote mempool.
+        final SettableFuture<Void> p1CloseFuture = SettableFuture.create();
+        peerOf(p1).addDisconnectedEventListener(new PeerDisconnectedEventListener() {
+            @Override
+            public void onPeerDisconnected(Peer peer, int peerCount) {
+                p1CloseFuture.set(null);
+            }
+        });
+        closePeer(peerOf(p1));
+        p1CloseFuture.get();
+        // Peer 2 fetches it next time it hears an inv (should it fetch immediately?).
+        inbound(p2, inv);
+        assertTrue(outbound(p2) instanceof GetDataMessage);
+    }
+
+    @Test
+    public void singleDownloadPeer2() throws Exception {
+        // Check that we don't attempt multiple simultaneous block chain downloads, when adding a new peer in the
+        // middle of an existing chain download.
+        // Create a couple of peers.
+        peerGroup.start();
+
+        // Create a couple of peers.
+        InboundMessageQueuer p1 = connectPeer(1);
+
+        // Set up a little block chain.
+        Block b1 = FakeTxBuilder.createFakeBlock(blockStore, BLOCK_HEIGHT_GENESIS).block;
+        Block b2 = FakeTxBuilder.makeSolvedTestBlock(b1);
+        Block b3 = FakeTxBuilder.makeSolvedTestBlock(b2);
+
+        // Expect a zero hash getblocks on p1. This is how the process starts.
+        peerGroup.startBlockChainDownload(new AbstractPeerDataEventListener() {
+        });
+        GetBlocksMessage getblocks = (GetBlocksMessage) outbound(p1);
+        assertEquals(Sha256Hash.ZERO_HASH, getblocks.getStop
