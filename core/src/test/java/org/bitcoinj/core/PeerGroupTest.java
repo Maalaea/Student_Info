@@ -329,4 +329,55 @@ public class PeerGroupTest extends TestWithPeerGroup {
         peerGroup.startBlockChainDownload(new AbstractPeerDataEventListener() {
         });
         GetBlocksMessage getblocks = (GetBlocksMessage) outbound(p1);
-        assertEquals(Sha256Hash.ZERO_HASH, getblocks.getStop
+        assertEquals(Sha256Hash.ZERO_HASH, getblocks.getStopHash());
+        // We give back an inv with some blocks in it.
+        InventoryMessage inv = new InventoryMessage(PARAMS);
+        inv.addBlock(b1);
+        inv.addBlock(b2);
+        inv.addBlock(b3);
+        
+        inbound(p1, inv);
+        assertTrue(outbound(p1) instanceof GetDataMessage);
+        // We hand back the first block.
+        inbound(p1, b1);
+        // Now we successfully connect to another peer. There should be no messages sent.
+        InboundMessageQueuer p2 = connectPeer(2);
+        Message message = outbound(p2);
+        assertNull(message == null ? "" : message.toString(), message);
+    }
+
+    @Test
+    public void transactionConfidence() throws Exception {
+        // Checks that we correctly count how many peers broadcast a transaction, so we can establish some measure of
+        // its trustworthyness assuming an untampered with internet connection.
+        peerGroup.start();
+
+        final Transaction[] event = new Transaction[1];
+        final TransactionConfidence[] confEvent = new TransactionConfidence[1];
+        peerGroup.addOnTransactionBroadcastListener(Threading.SAME_THREAD, new OnTransactionBroadcastListener() {
+            @Override
+            public void onTransaction(Peer peer, Transaction t) {
+                event[0] = t;
+            }
+        });
+
+        InboundMessageQueuer p1 = connectPeer(1);
+        InboundMessageQueuer p2 = connectPeer(2);
+        InboundMessageQueuer p3 = connectPeer(3);
+
+        Transaction tx = FakeTxBuilder.createFakeTx(PARAMS, valueOf(20, 0), address);
+        InventoryMessage inv = new InventoryMessage(PARAMS);
+        inv.addTransaction(tx);
+
+        assertEquals(0, tx.getConfidence().numBroadcastPeers());
+        assertNull(tx.getConfidence().getLastBroadcastedAt());
+
+        // Peer 2 advertises the tx but does not receive it yet.
+        inbound(p2, inv);
+        assertTrue(outbound(p2) instanceof GetDataMessage);
+        assertEquals(1, tx.getConfidence().numBroadcastPeers());
+        assertNull(event[0]);
+        // Peer 1 advertises the tx, we don't do anything as it's already been requested.
+        inbound(p1, inv);
+        assertNull(outbound(p1));
+        // Peer 2 gets sent the tx and requests the dep
