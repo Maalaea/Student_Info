@@ -380,4 +380,49 @@ public class PeerGroupTest extends TestWithPeerGroup {
         // Peer 1 advertises the tx, we don't do anything as it's already been requested.
         inbound(p1, inv);
         assertNull(outbound(p1));
-        // Peer 2 gets sent the tx and requests the dep
+        // Peer 2 gets sent the tx and requests the dependency.
+        inbound(p2, tx);
+        assertTrue(outbound(p2) instanceof GetDataMessage);
+        tx = event[0];  // We want to use the canonical copy delivered by the PeerGroup from now on.
+        assertNotNull(tx);
+        event[0] = null;
+
+        // Peer 1 (the download peer) advertises the tx, we download it.
+        inbound(p1, inv);  // returns getdata
+        inbound(p1, tx);   // returns nothing after a queue drain.
+        // Two peers saw this tx hash.
+        assertEquals(2, tx.getConfidence().numBroadcastPeers());
+        assertTrue(tx.getConfidence().wasBroadcastBy(peerOf(p1).getAddress()));
+        assertTrue(tx.getConfidence().wasBroadcastBy(peerOf(p2).getAddress()));
+        assertNotNull(tx.getConfidence().getLastBroadcastedAt());
+
+        tx.getConfidence().addEventListener(new TransactionConfidence.Listener() {
+            @Override
+            public void onConfidenceChanged(TransactionConfidence confidence, TransactionConfidence.Listener.ChangeReason reason) {
+                confEvent[0] = confidence;
+            }
+        });
+        // A straggler reports in.
+        inbound(p3, inv);
+        pingAndWait(p3);
+        Threading.waitForUserCode();
+        assertEquals(tx.getHash(), confEvent[0].getTransactionHash());
+        assertEquals(3, tx.getConfidence().numBroadcastPeers());
+        assertTrue(tx.getConfidence().wasBroadcastBy(peerOf(p3).getAddress()));
+    }
+
+    @Test
+    public void testWalletCatchupTime() throws Exception {
+        // Check the fast catchup time was initialized to something around the current runtime minus a week.
+        // The wallet was already added to the peer in setup.
+        final int WEEK = 86400 * 7;
+        final long now = Utils.currentTimeSeconds();
+        peerGroup.start();
+        assertTrue(peerGroup.getFastCatchupTimeSecs() > now - WEEK - 10000);
+        Wallet w2 = new Wallet(PARAMS);
+        ECKey key1 = new ECKey();
+        key1.setCreationTimeSeconds(now - 86400);  // One day ago.
+        w2.importKey(key1);
+        peerGroup.addWallet(w2);
+        peerGroup.waitForJobQueue();
+        assertEquals(peerGro
