@@ -425,4 +425,48 @@ public class PeerGroupTest extends TestWithPeerGroup {
         w2.importKey(key1);
         peerGroup.addWallet(w2);
         peerGroup.waitForJobQueue();
-        assertEquals(peerGro
+        assertEquals(peerGroup.getFastCatchupTimeSecs(), now - 86400 - WEEK);
+        // Adding a key to the wallet should update the fast catchup time, but asynchronously and in the background
+        // due to the need to avoid complicated lock inversions.
+        ECKey key2 = new ECKey();
+        key2.setCreationTimeSeconds(now - 100000);
+        w2.importKey(key2);
+        peerGroup.waitForJobQueue();
+        assertEquals(peerGroup.getFastCatchupTimeSecs(), now - WEEK - 100000);
+    }
+
+    @Test
+    public void noPings() throws Exception {
+        peerGroup.start();
+        peerGroup.setPingIntervalMsec(0);
+        VersionMessage versionMessage = new VersionMessage(PARAMS, 2);
+        versionMessage.clientVersion = NetworkParameters.ProtocolVersion.BLOOM_FILTER.getBitcoinProtocolVersion();
+        versionMessage.localServices = VersionMessage.NODE_NETWORK;
+        connectPeer(1, versionMessage);
+        peerGroup.waitForPeers(1).get();
+        assertFalse(peerGroup.getConnectedPeers().get(0).getLastPingTime() < Long.MAX_VALUE);
+    }
+
+    @Test
+    public void pings() throws Exception {
+        peerGroup.start();
+        peerGroup.setPingIntervalMsec(100);
+        VersionMessage versionMessage = new VersionMessage(PARAMS, 2);
+        versionMessage.clientVersion = NetworkParameters.ProtocolVersion.BLOOM_FILTER.getBitcoinProtocolVersion();
+        versionMessage.localServices = VersionMessage.NODE_NETWORK;
+        InboundMessageQueuer p1 = connectPeer(1, versionMessage);
+        Ping ping = (Ping) waitForOutbound(p1);
+        inbound(p1, new Pong(ping.getNonce()));
+        pingAndWait(p1);
+        assertTrue(peerGroup.getConnectedPeers().get(0).getLastPingTime() < Long.MAX_VALUE);
+        // The call to outbound should block until a ping arrives.
+        ping = (Ping) waitForOutbound(p1);
+        inbound(p1, new Pong(ping.getNonce()));
+        assertTrue(peerGroup.getConnectedPeers().get(0).getLastPingTime() < Long.MAX_VALUE);
+    }
+
+    @Test
+    public void downloadPeerSelection() throws Exception {
+        peerGroup.start();
+        VersionMessage versionMessage2 = new VersionMessage(PARAMS, 2);
+        versionMessage2.clientVersion = NetworkParameters.ProtocolVersion.BLOOM_FILTER.getBitcoinProtocolVersion(
