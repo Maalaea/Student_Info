@@ -508,4 +508,51 @@ public class PeerGroupTest extends TestWithPeerGroup {
         final SettableFuture<Void> peerDisconnectedFuture = SettableFuture.create();
         peerGroup.addConnectedEventListener(Threading.SAME_THREAD, new PeerConnectedEventListener() {
             @Override
-            public void onPeerConnected(Peer peer, int peerC
+            public void onPeerConnected(Peer peer, int peerCount) {
+                peerConnectedFuture.set(null);
+            }
+        });
+        peerGroup.addDisconnectedEventListener(Threading.SAME_THREAD, new PeerDisconnectedEventListener() {
+            @Override
+            public void onPeerDisconnected(Peer peer, int peerCount) {
+                peerDisconnectedFuture.set(null);
+            }
+        });
+        // connect to peer but don't do handshake
+        final Stopwatch watch = Stopwatch.createStarted(); // before connection so we don't get elapsed < timeout
+        connectPeerWithoutVersionExchange(0);
+        // wait for disconnect (plus a bit more, in case test server is overloaded)
+        try {
+            peerDisconnectedFuture.get(timeout + 200, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            // the checks below suffice for this case too
+        }
+        // check things after disconnect
+        watch.stop();
+        assertFalse(peerConnectedFuture.isDone()); // should never have connected
+        assertTrue(watch.elapsed(TimeUnit.MILLISECONDS) >= timeout); // should not disconnect before timeout
+        assertTrue(peerDisconnectedFuture.isDone()); // but should disconnect eventually
+    }
+
+    @Test
+    @Ignore("disabled for now as this test is too flaky")
+    public void peerPriority() throws Exception {
+        final List<InetSocketAddress> addresses = Lists.newArrayList(
+                new InetSocketAddress("localhost", 2000),
+                new InetSocketAddress("localhost", 2001),
+                new InetSocketAddress("localhost", 2002)
+        );
+        peerGroup.addConnectedEventListener(connectedListener);
+        peerGroup.addDisconnectedEventListener(disconnectedListener);
+        peerGroup.addPreMessageReceivedEventListener(preMessageReceivedListener);
+        peerGroup.addPeerDiscovery(new PeerDiscovery() {
+            @Override
+            public InetSocketAddress[] getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
+                return addresses.toArray(new InetSocketAddress[addresses.size()]);
+            }
+
+            @Override
+            public void shutdown() {
+            }
+        });
+        peerGroup.setMaxConnecti
