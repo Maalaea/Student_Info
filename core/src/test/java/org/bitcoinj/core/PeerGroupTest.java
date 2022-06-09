@@ -469,4 +469,43 @@ public class PeerGroupTest extends TestWithPeerGroup {
     public void downloadPeerSelection() throws Exception {
         peerGroup.start();
         VersionMessage versionMessage2 = new VersionMessage(PARAMS, 2);
-        versionMessage2.clientVersion = NetworkParameters.ProtocolVersion.BLOOM_FILTER.getBitcoinProtocolVersion(
+        versionMessage2.clientVersion = NetworkParameters.ProtocolVersion.BLOOM_FILTER.getBitcoinProtocolVersion();
+        versionMessage2.localServices = VersionMessage.NODE_NETWORK;
+        VersionMessage versionMessage3 = new VersionMessage(PARAMS, 3);
+        versionMessage3.clientVersion = NetworkParameters.ProtocolVersion.BLOOM_FILTER.getBitcoinProtocolVersion();
+        versionMessage3.localServices = VersionMessage.NODE_NETWORK;
+        assertNull(peerGroup.getDownloadPeer());
+        Peer a = connectPeer(1, versionMessage2).peer;
+        assertEquals(2, peerGroup.getMostCommonChainHeight());
+        assertEquals(a, peerGroup.getDownloadPeer());
+        connectPeer(2, versionMessage2);
+        assertEquals(2, peerGroup.getMostCommonChainHeight());
+        assertEquals(a, peerGroup.getDownloadPeer());  // No change.
+        Peer c = connectPeer(3, versionMessage3).peer;
+        assertEquals(2, peerGroup.getMostCommonChainHeight());
+        assertEquals(a, peerGroup.getDownloadPeer());  // No change yet.
+        connectPeer(4, versionMessage3);
+        assertEquals(3, peerGroup.getMostCommonChainHeight());
+        assertEquals(a, peerGroup.getDownloadPeer());  // Still no change.
+
+        // New peer with a higher protocol version but same chain height.
+        // TODO: When PeerGroup.selectDownloadPeer.PREFERRED_VERSION is not equal to vMinRequiredProtocolVersion,
+        // reenable this test
+        /*VersionMessage versionMessage4 = new VersionMessage(PARAMS, 3);
+        versionMessage4.clientVersion = 100000;
+        versionMessage4.localServices = VersionMessage.NODE_NETWORK;
+        InboundMessageQueuer d = connectPeer(5, versionMessage4);
+        assertEquals(d.peer, peerGroup.getDownloadPeer());*/
+    }
+
+    @Test
+    public void peerTimeoutTest() throws Exception {
+        final int timeout = 100;
+        peerGroup.start();
+        peerGroup.setConnectTimeoutMillis(timeout);
+
+        final SettableFuture<Void> peerConnectedFuture = SettableFuture.create();
+        final SettableFuture<Void> peerDisconnectedFuture = SettableFuture.create();
+        peerGroup.addConnectedEventListener(Threading.SAME_THREAD, new PeerConnectedEventListener() {
+            @Override
+            public void onPeerConnected(Peer peer, int peerC
