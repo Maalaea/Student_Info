@@ -555,4 +555,58 @@ public class PeerGroupTest extends TestWithPeerGroup {
             public void shutdown() {
             }
         });
-        peerGroup.setMaxConnecti
+        peerGroup.setMaxConnections(3);
+
+        Utils.setMockSleep(true);
+        blockJobs = true;
+
+        jobBlocks.release(2);   // startup + first peer discovery
+        peerGroup.start();
+
+        jobBlocks.release(3);  // One for each peer.
+        handleConnectToPeer(0);
+        handleConnectToPeer(1);
+        handleConnectToPeer(2);
+        connectedPeers.take();
+        connectedPeers.take();
+        connectedPeers.take();
+        addresses.clear();
+        addresses.addAll(Lists.newArrayList(new InetSocketAddress("localhost", 2003)));
+        stopPeerServer(2);
+        assertEquals(2002, disconnectedPeers.take().getAddress().getPort()); // peer died
+
+        // discovers, connects to new peer
+        jobBlocks.release(1);
+        handleConnectToPeer(3);
+        assertEquals(2003, connectedPeers.take().getAddress().getPort());
+
+        stopPeerServer(1);
+        assertEquals(2001, disconnectedPeers.take().getAddress().getPort()); // peer died
+
+        // Alternates trying two offline peers
+        jobBlocks.release(10);
+        assertEquals(2001, disconnectedPeers.take().getAddress().getPort());
+        assertEquals(2002, disconnectedPeers.take().getAddress().getPort());
+        assertEquals(2001, disconnectedPeers.take().getAddress().getPort());
+        assertEquals(2002, disconnectedPeers.take().getAddress().getPort());
+        assertEquals(2001, disconnectedPeers.take().getAddress().getPort());
+
+        // Peer 2 comes online
+        startPeerServer(2);
+        jobBlocks.release(1);
+        handleConnectToPeer(2);
+        assertEquals(2002, connectedPeers.take().getAddress().getPort());
+
+        jobBlocks.release(6);
+        stopPeerServer(2);
+        assertEquals(2002, disconnectedPeers.take().getAddress().getPort()); // peer died
+
+        // Peer 2 is tried before peer 1, since it has a lower backoff due to recent success
+        assertEquals(2002, disconnectedPeers.take().getAddress().getPort());
+        assertEquals(2001, disconnectedPeers.take().getAddress().getPort());
+    }
+
+    @Test
+    public void testBloomOnP2Pubkey() throws Exception {
+        // Cover bug 513. When a relevant transaction with a p2pubkey output is found, the Bloom filter should be
+        // recalculated to include that transaction hash but not re-broadcast as the remote nodes should have follow
