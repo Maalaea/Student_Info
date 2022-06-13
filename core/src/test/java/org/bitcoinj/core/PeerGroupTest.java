@@ -651,4 +651,59 @@ public class PeerGroupTest extends TestWithPeerGroup {
         peerGroup.waitForJobQueue();
         BloomFilter f1 = p1.lastReceivedFilter;
         ECKey key = null;
-        // We have to run ahead of the lookahead
+        // We have to run ahead of the lookahead zone for this test. There should only be one bloom filter recalc.
+        for (int i = 0; i < wallet.getKeyChainGroupLookaheadSize() + wallet.getKeyChainGroupLookaheadThreshold() + 1; i++) {
+            key = wallet.freshReceiveKey();
+        }
+        peerGroup.waitForJobQueue();
+        BloomFilter bf, f2 = null;
+        while ((bf = (BloomFilter) outbound(p1)) != null) {
+            assertEquals(MemoryPoolMessage.class, outbound(p1).getClass());
+            f2 = bf;
+        }
+        assertNotNull(key);
+        assertNotNull(f2);
+        assertNull(outbound(p1));
+        // Check the last filter received.
+        assertNotEquals(f1, f2);
+        assertTrue(f2.contains(key.getPubKey()));
+        assertTrue(f2.contains(key.getPubKeyHash()));
+        assertFalse(f1.contains(key.getPubKey()));
+        assertFalse(f1.contains(key.getPubKeyHash()));
+    }
+
+    @Test
+    public void waitForNumPeers1() throws Exception {
+        ListenableFuture<List<Peer>> future = peerGroup.waitForPeers(3);
+        peerGroup.start();
+        assertFalse(future.isDone());
+        connectPeer(1);
+        assertFalse(future.isDone());
+        connectPeer(2);
+        assertFalse(future.isDone());
+        assertTrue(peerGroup.waitForPeers(2).isDone());   // Immediate completion.
+        connectPeer(3);
+        future.get();
+        assertTrue(future.isDone());
+    }
+
+    @Test
+    public void waitForPeersOfVersion() throws Exception {
+        final int baseVer = peerGroup.getMinRequiredProtocolVersion() + 3000;
+        final int newVer = baseVer + 1000;
+
+        ListenableFuture<List<Peer>> future = peerGroup.waitForPeersOfVersion(2, newVer);
+
+        VersionMessage ver1 = new VersionMessage(PARAMS, 10);
+        ver1.clientVersion = baseVer;
+        ver1.localServices = VersionMessage.NODE_NETWORK;
+        VersionMessage ver2 = new VersionMessage(PARAMS, 10);
+        ver2.clientVersion = newVer;
+        ver2.localServices = VersionMessage.NODE_NETWORK;
+        peerGroup.start();
+        assertFalse(future.isDone());
+        connectPeer(1, ver1);
+        assertFalse(future.isDone());
+        connectPeer(2, ver2);
+        assertFalse(future.isDone());
+    
