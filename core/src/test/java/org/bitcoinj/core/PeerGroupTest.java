@@ -756,4 +756,50 @@ public class PeerGroupTest extends TestWithPeerGroup {
         }
 
         try {
-            peerGroup.setUseLoca
+            peerGroup.setUseLocalhostPeerWhenPossible(true);
+            peerGroup.start();
+            local.accept().close();   // Probe connect
+            local.accept();   // Real connect
+            // If we get here it used the local peer. Check no others are in use.
+            assertEquals(1, peerGroup.getMaxConnections());
+            assertEquals(PeerAddress.localhost(PARAMS), peerGroup.getPendingPeers().get(0).getAddress());
+        } finally {
+            local.close();
+        }
+    }
+
+    private <T extends Message> T assertNextMessageIs(InboundMessageQueuer q, Class<T> klass) throws Exception {
+        Message outbound = waitForOutbound(q);
+        assertEquals(klass, outbound.getClass());
+        return (T) outbound;
+    }
+
+    @Test
+    public void autoRescanOnKeyExhaustion() throws Exception {
+        // Check that if the last key that was inserted into the bloom filter is seen in some requested blocks,
+        // that the exhausting block is discarded, a new filter is calculated and sent, and then the download resumes.
+
+        final int NUM_KEYS = 9;
+
+        // First, grab a load of keys from the wallet, and then recreate it so it forgets that those keys were issued.
+        Wallet shadow = Wallet.fromSeed(wallet.getParams(), wallet.getKeyChainSeed());
+        List<ECKey> keys = new ArrayList<>(NUM_KEYS);
+        for (int i = 0; i < NUM_KEYS; i++) {
+            keys.add(shadow.freshReceiveKey());
+        }
+        // Reduce the number of keys we need to work with to speed up this test.
+        wallet.setKeyChainGroupLookaheadSize(4);
+        wallet.setKeyChainGroupLookaheadThreshold(2);
+
+        peerGroup.start();
+        InboundMessageQueuer p1 = connectPeer(1);
+        assertTrue(p1.lastReceivedFilter.contains(keys.get(0).getPubKey()));
+        assertTrue(p1.lastReceivedFilter.contains(keys.get(5).getPubKeyHash()));
+        assertFalse(p1.lastReceivedFilter.contains(keys.get(keys.size() - 1).getPubKey()));
+        peerGroup.startBlockChainDownload(null);
+        assertNextMessageIs(p1, GetBlocksMessage.class);
+
+        // Make some transactions and blocks that send money to the wallet thus using up all the keys.
+        List<Block> blocks = Lists.newArrayList();
+        Coin expectedBalance = Coin.ZERO;
+        Block prev = blockStore.getChainHead().getHea
