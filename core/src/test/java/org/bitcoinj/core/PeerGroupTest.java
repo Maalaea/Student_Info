@@ -802,4 +802,46 @@ public class PeerGroupTest extends TestWithPeerGroup {
         // Make some transactions and blocks that send money to the wallet thus using up all the keys.
         List<Block> blocks = Lists.newArrayList();
         Coin expectedBalance = Coin.ZERO;
-        Block prev = blockStore.getChainHead().getHea
+        Block prev = blockStore.getChainHead().getHeader();
+        for (ECKey key1 : keys) {
+            Address addr = key1.toAddress(PARAMS);
+            Block next = FakeTxBuilder.makeSolvedTestBlock(prev, FakeTxBuilder.createFakeTx(PARAMS, Coin.FIFTY_COINS, addr));
+            expectedBalance = expectedBalance.add(next.getTransactions().get(2).getOutput(0).getValue());
+            blocks.add(next);
+            prev = next;
+        }
+
+        // Send the chain that doesn't have all the transactions in it. The blocks after the exhaustion point should all
+        // be ignored.
+        int epoch = wallet.getKeyChainGroupCombinedKeyLookaheadEpochs();
+        BloomFilter filter = new BloomFilter(PARAMS, p1.lastReceivedFilter.bitcoinSerialize());
+        filterAndSend(p1, blocks, filter);
+        Block exhaustionPoint = blocks.get(3);
+        pingAndWait(p1);
+
+        assertNotEquals(epoch, wallet.getKeyChainGroupCombinedKeyLookaheadEpochs());
+        // 4th block was end of the lookahead zone and thus was discarded, so we got 3 blocks worth of money (50 each).
+        assertEquals(Coin.FIFTY_COINS.multiply(3), wallet.getBalance());
+        assertEquals(exhaustionPoint.getPrevBlockHash(), blockChain.getChainHead().getHeader().getHash());
+
+        // Await the new filter.
+        peerGroup.waitForJobQueue();
+        BloomFilter newFilter = assertNextMessageIs(p1, BloomFilter.class);
+        assertNotEquals(filter, newFilter);
+        assertNextMessageIs(p1, MemoryPoolMessage.class);
+        Ping ping = assertNextMessageIs(p1, Ping.class);
+        inbound(p1, new Pong(ping.getNonce()));
+
+        // Await restart of the chain download.
+        GetDataMessage getdata = assertNextMessageIs(p1, GetDataMessage.class);
+        assertEquals(exhaustionPoint.getHash(), getdata.getHashOf(0));
+        assertEquals(InventoryItem.Type.FilteredBlock, getdata.getItems().get(0).type);
+        List<Block> newBlocks = blocks.subList(3, blocks.size());
+        filterAndSend(p1, newBlocks, newFilter);
+        assertNextMessageIs(p1, Ping.class);
+
+        // It happened again.
+        peerGroup.waitForJobQueue();
+        newFilter = assertNextMessageIs(p1, BloomFilter.class);
+        assertNextMessageIs(p1, MemoryPoolMessage.class);
+        inbound(p1, new P
