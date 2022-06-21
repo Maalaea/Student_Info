@@ -706,4 +706,54 @@ public class PeerGroupTest extends TestWithPeerGroup {
         assertFalse(future.isDone());
         connectPeer(2, ver2);
         assertFalse(future.isDone());
-    
+        assertTrue(peerGroup.waitForPeersOfVersion(1, newVer).isDone());   // Immediate completion.
+        connectPeer(3, ver2);
+        future.get();
+        assertTrue(future.isDone());
+    }
+
+    @Test
+    public void waitForPeersWithServiceFlags() throws Exception {
+        ListenableFuture<List<Peer>> future = peerGroup.waitForPeersWithServiceMask(2, 3);
+
+        VersionMessage ver1 = new VersionMessage(PARAMS, 10);
+        ver1.clientVersion = 70000;
+        ver1.localServices = VersionMessage.NODE_NETWORK;
+        VersionMessage ver2 = new VersionMessage(PARAMS, 10);
+        ver2.clientVersion = 70000;
+        ver2.localServices = VersionMessage.NODE_NETWORK | 2;
+        peerGroup.start();
+        assertFalse(future.isDone());
+        connectPeer(1, ver1);
+        assertTrue(peerGroup.findPeersWithServiceMask(3).isEmpty());
+        assertFalse(future.isDone());
+        connectPeer(2, ver2);
+        assertFalse(future.isDone());
+        assertEquals(1, peerGroup.findPeersWithServiceMask(3).size());
+        assertTrue(peerGroup.waitForPeersWithServiceMask(1, 0x3).isDone());   // Immediate completion.
+        connectPeer(3, ver2);
+        future.get();
+        assertTrue(future.isDone());
+        peerGroup.stop();
+    }
+
+    @Test
+    public void preferLocalPeer() throws IOException {
+        // Because we are using the same port (8333 or 18333) that is used by Bitcoin Core
+        // We have to consider 2 cases:
+        // 1. Test are executed on the same machine that is running a full node
+        // 2. Test are executed without any full node running locally
+        // We have to avoid to connecting to real and external services in unit tests
+        // So we skip this test in case we have already something running on port PARAMS.getPort()
+
+        // Check that if we have a localhost port 8333 or 18333 then it's used instead of the p2p network.
+        ServerSocket local = null;
+        try {
+            local = new ServerSocket(PARAMS.getPort(), 100, InetAddresses.forString("127.0.0.1"));
+        }
+        catch(BindException e) { // Port already in use, skipping this test.
+            return;
+        }
+
+        try {
+            peerGroup.setUseLoca
