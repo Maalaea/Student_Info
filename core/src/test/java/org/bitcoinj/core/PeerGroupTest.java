@@ -844,4 +844,24 @@ public class PeerGroupTest extends TestWithPeerGroup {
         peerGroup.waitForJobQueue();
         newFilter = assertNextMessageIs(p1, BloomFilter.class);
         assertNextMessageIs(p1, MemoryPoolMessage.class);
-        inbound(p1, new P
+        inbound(p1, new Pong(assertNextMessageIs(p1, Ping.class).getNonce()));
+        assertNextMessageIs(p1, GetDataMessage.class);
+        newBlocks = blocks.subList(6, blocks.size());
+        filterAndSend(p1, newBlocks, newFilter);
+        // Send a non-tx message so the peer knows the filtered block is over and force processing.
+        inbound(p1, new Ping());
+        pingAndWait(p1);
+
+        assertEquals(expectedBalance, wallet.getBalance());
+        assertEquals(blocks.get(blocks.size() - 1).getHash(), blockChain.getChainHead().getHeader().getHash());
+    }
+
+    private void filterAndSend(InboundMessageQueuer p1, List<Block> blocks, BloomFilter filter) {
+        for (Block block : blocks) {
+            FilteredBlock fb = filter.applyAndUpdate(block);
+            inbound(p1, fb);
+            for (Transaction tx : fb.getAssociatedTransactions().values())
+                inbound(p1, tx);
+        }
+    }
+}
