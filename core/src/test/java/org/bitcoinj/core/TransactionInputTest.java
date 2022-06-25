@@ -59,4 +59,39 @@ public class TransactionInputTest {
     @Test
     public void testUTXOWalletDisconnect() throws Exception {
         final NetworkParameters params = UnitTestParams.get();
-        Wallet w = new 
+        Wallet w = new Wallet(new Context(params));
+        Address a = w.currentReceiveAddress();
+        final UTXO utxo = new UTXO(Sha256Hash.of(new byte[] { 1, 2, 3 }), 1, Coin.COIN, 0, false,
+                ScriptBuilder.createOutputScript(a));
+        w.setUTXOProvider(new UTXOProvider() {
+            @Override
+            public NetworkParameters getParams() {
+                return params;
+            }
+
+            @Override
+            public List<UTXO> getOpenTransactionOutputs(List<Address> addresses) throws UTXOProviderException {
+                return Lists.newArrayList(utxo);
+            }
+
+            @Override
+            public int getChainHeadHeight() throws UTXOProviderException {
+                return Integer.MAX_VALUE;
+            }
+        });
+
+        Transaction tx2 = new Transaction(params);
+        tx2.addOutput(Coin.valueOf(99000000), new ECKey());
+        w.completeTx(SendRequest.forTx(tx2));
+
+        TransactionInput txInToDisconnect = tx2.getInput(0);
+
+        assertNull(txInToDisconnect.getOutpoint().fromTx);
+        assertEquals(utxo.getHash(), txInToDisconnect.getOutpoint().connectedOutput.getParentTransactionHash());
+
+        txInToDisconnect.disconnect();
+
+        assertNull(txInToDisconnect.getOutpoint().fromTx);
+        assertNull(txInToDisconnect.getOutpoint().connectedOutput);
+    }
+}
