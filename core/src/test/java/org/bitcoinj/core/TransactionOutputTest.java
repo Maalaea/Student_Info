@@ -79,4 +79,12 @@ public class TransactionOutputTest extends TestWithWallet {
         Transaction tx = new Transaction(MainNetParams.get());
         tx.addOutput(Coin.CENT, ScriptBuilder.createOpReturnScript("hello world!".getBytes()));
         assertNull(tx.getOutput(0).getAddressFromP2SH(PARAMS));
-        assertNull(t
+        assertNull(tx.getOutput(0).getAddressFromP2PKHScript(PARAMS));
+    }
+
+    @Test
+    public void getMinNonDustValue() throws Exception {
+        TransactionOutput payToAddressOutput = new TransactionOutput(PARAMS, null, Coin.COIN, myAddress);
+        assertEquals(Transaction.MIN_NONDUST_OUTPUT, payToAddressOutput.getMinNonDustValue());
+    }
+}
