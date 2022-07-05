@@ -44,4 +44,18 @@ public class VersionedChecksummedBytesTest {
 
     @Test
     public void cloning() throws Exception {
-        VersionedChecksummed
+        VersionedChecksummedBytes a = new VersionedChecksummedBytes(testParams.getAddressHeader(), HEX.decode("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"));
+        VersionedChecksummedBytes b = a.clone();
+
+        assertEquals(a, b);
+        assertNotSame(a, b);
+    }
+
+    @Test
+    public void comparisonCloneEqualTo() throws Exception {
+        VersionedChecksummedBytes a = new VersionedChecksummedBytes(testParams.getAddressHeader(), HEX.decode("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"));
+        VersionedChecksummedBytes b = a.clone();
+
+        assertTrue(a.compareTo(b) == 0);
+    }
+}
