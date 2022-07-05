@@ -81,4 +81,22 @@ public class TxConfidenceTableTest {
         table.seen(tx1.getHash(), address1);
         assertEquals(TransactionConfidence.Listener.ChangeReason.SEEN_PEERS, run[0]);
         run[0] = null;
-        
+        table.seen(tx1.getHash(), address1);
+        assertNull(run[0]);
+    }
+
+    @Test
+    public void invAndDownload() throws Exception {
+        // Base case: we see a transaction announced twice and then download it. The count is in the confidence object.
+        assertEquals(0, table.numBroadcastPeers(tx1.getHash()));
+        table.seen(tx1.getHash(), address1);
+        assertEquals(1, table.numBroadcastPeers(tx1.getHash()));
+        table.seen(tx1.getHash(), address2);
+        assertEquals(2, table.numBroadcastPeers(tx1.getHash()));
+        assertEquals(2, tx2.getConfidence().numBroadcastPeers());
+        // And now we see another inv.
+        table.seen(tx1.getHash(), address3);
+        assertEquals(3, tx2.getConfidence().numBroadcastPeers());
+        assertEquals(3, table.numBroadcastPeers(tx1.getHash()));
+    }
+}
