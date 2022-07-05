@@ -37,3 +37,10 @@ public class UTXOTest {
         new ObjectOutputStream(os).writeObject(utxo);
         UTXO utxoCopy = (UTXO) new ObjectInputStream(
                 new ByteArrayInputStream(os.toByteArray())).readObject();
+        assertEquals(utxo, utxoCopy);
+        assertEquals(utxo.getValue(), utxoCopy.getValue());
+        assertEquals(utxo.getHeight(), utxoCopy.getHeight());
+        assertEquals(utxo.isCoinbase(), utxoCopy.isCoinbase());
+        assertEquals(utxo.getScript(), utxoCopy.getScript());
+    }
+}
