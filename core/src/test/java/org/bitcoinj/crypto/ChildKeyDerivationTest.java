@@ -219,4 +219,36 @@ public class ChildKeyDerivationTest {
         key1 = HDKeyDerivation.createMasterPrivateKey(hd_seed);
         // BIP49
         DeterministicKey key2 = HDKeyDerivation.deriveChildKey(key1, 49|ChildNumber.HARDENED_BIT);
-        DeterministicKey key3 = HDKeyDerivation.deriveChildKey(key2, ChildNum
+        DeterministicKey key3 = HDKeyDerivation.deriveChildKey(key2, ChildNumber.HARDENED_BIT);
+        int childnum = 0|ChildNumber.HARDENED_BIT;
+        DeterministicKey aKey = HDKeyDerivation.deriveChildKey(key3, childnum);
+        params = MainNetParams.get();
+        pub58 = aKey.serializePubB58(params, 49);
+        priv58 = aKey.serializePrivB58(params, 49);
+        assertEquals("ypub6WoG7B3T2iNt3gcVb8QEDZwpYwetWWBVBeJP5p1SoGy39Cp37TdvBTMCbjq2tURJR1G5A45VxbP6pCR9qrkD62KTKcshjo4AjJQMuKzXxbi", pub58);
+        assertEquals("yprvAHouhfWZCLpaqCY2V6sDrS15zupQ73TdpRNnHRbqEwS4GQUtZvKfdf2ikVWTfWnsLYUX6WYXiA7yk1akiQkL7Rr1aBx4S4r7RnZ7XgmRqSZ", priv58);
+        params = TestNet3Params.get();
+        pub58 = aKey.serializePubB58(params, 49);
+        priv58 = aKey.serializePrivB58(params, 49);
+        assertEquals("upub5DUCtWMnRzCxeVr2FhFjPDZos556k2DVXCDVxERuHFTWvoZ86pyfhCieWuzgtqocnSnrA9hG7wxuH3xty569u5b3rG61Q9nDeQ9nM42hj5v", pub58);
+        assertEquals("uprv8zUrUzptbcefS1mZ9fij25d5K3EcLZVe9yHu9r2HiuvY41DyZHfR9QQAffg7ftBBhz1J6cAHsWhnCs8Vqd6GvV7c6qAN6RaALtJXyNr5kLL", priv58);
+        // BIP84
+        key2 = HDKeyDerivation.deriveChildKey(key1, 84|ChildNumber.HARDENED_BIT);
+        key3 = HDKeyDerivation.deriveChildKey(key2, ChildNumber.HARDENED_BIT);
+        aKey = HDKeyDerivation.deriveChildKey(key3, childnum);
+        params = MainNetParams.get();
+        pub58 = aKey.serializePubB58(params, 84);
+        priv58 = aKey.serializePrivB58(params, 84);
+        assertEquals("zpub6rBun332vrUEDbUL4Yzfung4UasiNVA3qY7S6wNdrUudTynXPoqGRuTpt68n1xAbD9yd1GyjRBb3gmM7WqMCDqzuzBdVpAamjG4PjdGP5EK", pub58);
+        assertEquals("zprvAdCZNXW96Uuw17PrxXTfYejKvZ3Dy2SCUKBqJYy2J9NebBTNrGX1t79M2qZERzDamBhxonb1fhCZjhd3TixyCpa44L3ZC34ZFbQnFDrqaS5", priv58);
+        params = TestNet3Params.get();
+        pub58 = aKey.serializePubB58(params, 84);
+        priv58 = aKey.serializePrivB58(params, 84);
+        assertEquals("vpub5YrrZNMNL8JJpQhrj7rB5SJ3niHvc1C4B62YyMo6LTQ7FaXcPBB1weqGoGJS2KYuabWQ1NbVaYAr9ctre3h92uGWWpqoUXJpeMopBPEUYgu", pub58);
+        assertEquals("vprv9KsW9rpUVkk1bvdPd6KAiJMKEgTSCYUCos6xAyPUn7s8NnCTqdrmPrWnx1itSMbu8dEjotCmq3nNCZAnawJv1sqeayFrrPncAhACgsaiiWg", priv58);
+      }
+    }
+
+    @Test
+    public void serializeToTextAndBytes() {
+        DeterministicKey key1 = HDKe
