@@ -331,4 +331,11 @@ public class ChildKeyDerivationTest {
                           0);
         assertEquals("Parent fingerprint of root node private HD key should be zero",
                           DeterministicKey.deserializeB58("xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U", MainNetParams.get()).getParentFingerprint(),
-            
+                          0);
+
+    }
+
+    private static String hexEncodePub(DeterministicKey pubKey) {
+        return HEX.encode(pubKey.getPubKey());
+    }
+}
