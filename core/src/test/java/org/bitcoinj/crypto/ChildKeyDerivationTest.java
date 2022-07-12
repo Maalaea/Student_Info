@@ -272,4 +272,37 @@ public class ChildKeyDerivationTest {
             assertEquals(DeterministicKey.deserializeB58(null, pub58, params).getPubKeyPoint(), key1.getPubKeyPoint());
             assertEquals(DeterministicKey.deserializeB58(pub58, params).getPubKeyPoint(), key1.getPubKeyPoint());
             assertEquals(DeterministicKey.deserialize(params, priv, null), key1);
-    
+            assertEquals(DeterministicKey.deserialize(params, priv), key1);
+            assertEquals(DeterministicKey.deserialize(params, pub, null).getPubKeyPoint(), key1.getPubKeyPoint());
+            assertEquals(DeterministicKey.deserialize(params, pub).getPubKeyPoint(), key1.getPubKeyPoint());
+        }
+        {
+            final String pub58 = key2.serializePubB58(params);
+            final String priv58 = key2.serializePrivB58(params);
+            final byte[] pub = key2.serializePublic(params, 44);
+            final byte[] priv = key2.serializePrivate(params, 44);
+            assertEquals(DeterministicKey.deserializeB58(key1, priv58, params), key2);
+            assertEquals(DeterministicKey.deserializeB58(key1, pub58, params).getPubKeyPoint(), key2.getPubKeyPoint());
+            assertEquals(DeterministicKey.deserialize(params, priv, key1), key2);
+            assertEquals(DeterministicKey.deserialize(params, pub, key1).getPubKeyPoint(), key2.getPubKeyPoint());
+        }
+    }
+
+    @Test
+    public void parentlessDeserialization() {
+        NetworkParameters params = UnitTestParams.get();
+        DeterministicKey key1 = HDKeyDerivation.createMasterPrivateKey("satoshi lives!".getBytes());
+        DeterministicKey key2 = HDKeyDerivation.deriveChildKey(key1, ChildNumber.ZERO_HARDENED);
+        DeterministicKey key3 = HDKeyDerivation.deriveChildKey(key2, ChildNumber.ZERO_HARDENED);
+        DeterministicKey key4 = HDKeyDerivation.deriveChildKey(key3, ChildNumber.ZERO_HARDENED);
+        assertEquals(key4.getPath().size(), 3);
+        assertEquals(DeterministicKey.deserialize(params, key4.serializePrivate(params, 44), key3).getPath().size(), 3);
+        assertEquals(DeterministicKey.deserialize(params, key4.serializePrivate(params, 44), null).getPath().size(), 1);
+        assertEquals(DeterministicKey.deserialize(params, key4.serializePrivate(params, 44)).getPath().size(), 1);
+    }
+
+    /** Reserializing a deserialized key should yield the original input */
+    @Test
+    public void reserialization() {
+        // This is the public encoding of the key with path m/0H/1/2H from BIP32 published test vector 1:
+        // https://en.bitcoin.it/wiki/BIP_0032_TestV
