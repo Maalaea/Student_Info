@@ -55,4 +55,62 @@ public class PaymentChannelServerTest {
     }
 
     /**
-   
+     * We use parameterized tests to run the client channel tests with each
+     * version of the channel.
+     */
+    @Parameterized.Parameters(name = "{index}: PaymentChannelServerTest(version {0})")
+    public static Collection<Integer> data() {
+        return Arrays.asList(1, 2);
+    }
+
+    @Parameterized.Parameter
+    public int protocolVersion;
+
+    @Test
+    public void shouldAcceptDefaultTimeWindow() {
+        final TwoWayChannelMessage message = createClientVersionMessage();
+        final Capture<TwoWayChannelMessage> initiateCapture = new Capture<>();
+        connection.sendToClient(capture(initiateCapture));
+        replay(connection);
+
+        dut = new PaymentChannelServer(broadcaster, wallet, Coin.CENT, connection);
+
+        dut.connectionOpen();
+        dut.receiveMessage(message);
+
+        long expectedExpire = Utils.currentTimeSeconds() + 24 * 60 * 60 - 60;  // This the default defined in paymentchannel.proto
+        assertServerVersion();
+        assertExpireTime(expectedExpire, initiateCapture);
+    }
+
+    @Test
+    public void shouldTruncateTooSmallTimeWindow() {
+        final int minTimeWindow = 20000;
+        final int timeWindow = minTimeWindow - 1;
+        final TwoWayChannelMessage message = createClientVersionMessage(timeWindow);
+        final Capture<TwoWayChannelMessage> initiateCapture = new Capture<>();
+        connection.sendToClient(capture(initiateCapture));
+
+        replay(connection);
+        dut = new PaymentChannelServer(broadcaster, wallet, Coin.CENT, new PaymentChannelServer.DefaultServerChannelProperties() {
+            @Override
+            public long getMinTimeWindow() {
+                return minTimeWindow;
+            }
+            @Override
+            public long getMaxTimeWindow() {
+                return 40000;
+            }
+        }, connection);
+
+        dut.connectionOpen();
+        dut.receiveMessage(message);
+
+        long expectedExpire = Utils.currentTimeSeconds() + minTimeWindow;
+        assertServerVersion();
+        assertExpireTime(expectedExpire, initiateCapture);
+    }
+
+    @Test
+    public void shouldTruncateTooLargeTimeWindow() {
+        final in
