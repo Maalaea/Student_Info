@@ -113,4 +113,58 @@ public class PaymentChannelServerTest {
 
     @Test
     public void shouldTruncateTooLargeTimeWindow() {
-        final in
+        final int maxTimeWindow = 40000;
+        final int timeWindow = maxTimeWindow + 1;
+        final TwoWayChannelMessage message = createClientVersionMessage(timeWindow);
+        final Capture<TwoWayChannelMessage> initiateCapture = new Capture<>();
+        connection.sendToClient(capture(initiateCapture));
+        replay(connection);
+
+        dut = new PaymentChannelServer(broadcaster, wallet, Coin.CENT, new PaymentChannelServer.DefaultServerChannelProperties(){
+            @Override
+            public long getMaxTimeWindow() {
+                return maxTimeWindow;
+            }
+            @Override
+            public long getMinTimeWindow() { return 20000; }
+        }, connection);
+
+        dut.connectionOpen();
+        dut.receiveMessage(message);
+
+        long expectedExpire = Utils.currentTimeSeconds() + maxTimeWindow;
+        assertServerVersion();
+        assertExpireTime(expectedExpire, initiateCapture);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldNotAllowTimeWindowLessThan2h() {
+        dut = new PaymentChannelServer(broadcaster, wallet, Coin.CENT, new PaymentChannelServer.DefaultServerChannelProperties(){
+            @Override
+            public long getMaxTimeWindow() { return 40000; }
+            @Override
+            public long getMinTimeWindow() {
+                return 7199;
+            }
+        }, connection);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldNotAllowNegativeTimeWindow() {
+        dut = new PaymentChannelServer(broadcaster, wallet, Coin.CENT, new PaymentChannelServer.DefaultServerChannelProperties(){
+            @Override
+            public long getMaxTimeWindow() { return 40000; }
+            @Override
+            public long getMinTimeWindow() { return 40001; }
+        }, connection);
+    }
+
+    @Test
+    public void shouldAllowExactTimeWindow() {
+        final TwoWayChannelMessage message = createClientVersionMessage();
+        final Capture<TwoWayChannelMessage> initiateCapture = new Capture<>();
+        connection.sendToClient(capture(initiateCapture));
+        replay(connection);
+        final int expire = 24 * 60 * 60 - 60;  // This the default defined in paymentchannel.proto
+
+        dut = new PaymentChannelServer(br
