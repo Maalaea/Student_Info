@@ -167,4 +167,43 @@ public class PaymentChannelServerTest {
         replay(connection);
         final int expire = 24 * 60 * 60 - 60;  // This the default defined in paymentchannel.proto
 
-        dut = new PaymentChannelServer(br
+        dut = new PaymentChannelServer(broadcaster, wallet, Coin.CENT, new PaymentChannelServer.DefaultServerChannelProperties(){
+            @Override
+            public long getMaxTimeWindow() { return expire; }
+            @Override
+            public long getMinTimeWindow() { return expire; }
+        }, connection);
+        dut.connectionOpen();
+        long expectedExpire = Utils.currentTimeSeconds() + expire;
+        dut.receiveMessage(message);
+
+        assertServerVersion();
+        assertExpireTime(expectedExpire, initiateCapture);
+    }
+
+    private void assertServerVersion() {
+        final TwoWayChannelMessage response = serverVersionCapture.getValue();
+        final MessageType type = response.getType();
+        assertEquals("Wrong type " + type, MessageType.SERVER_VERSION, type);
+        final long major = response.getServerVersion().getMajor();
+        assertEquals("Wrong major version", protocolVersion, major);
+    }
+
+    private void assertExpireTime(long expectedExpire, Capture<TwoWayChannelMessage> initiateCapture) {
+        final TwoWayChannelMessage response = initiateCapture.getValue();
+        final MessageType type = response.getType();
+        assertEquals("Wrong type " + type, MessageType.INITIATE, type);
+        final long actualExpire = response.getInitiate().getExpireTimeSecs();
+        assertTrue("Expire time too small " + expectedExpire + " > " + actualExpire, expectedExpire <= actualExpire);
+        assertTrue("Expire time too large  " + expectedExpire + "<" + actualExpire, expectedExpire >= actualExpire);
+    }
+
+    private TwoWayChannelMessage createClientVersionMessage() {
+        final Protos.ClientVersion.Builder clientVersion = Protos.ClientVersion.newBuilder().setMajor(protocolVersion);
+        return TwoWayChannelMessage.newBuilder().setType(MessageType.CLIENT_VERSION).setClientVersion(clientVersion).build();
+    }
+
+    private TwoWayChannelMessage createClientVersionMessage(long timeWindow) {
+        final Protos.ClientVersion.Builder clientVersion = Protos.ClientVersion.newBuilder().setMajor(protocolVersion);
+        if (timeWindow > 0) clientVersion.setTimeWindowSecs(timeWindow);
+        return TwoWayChannelMessage.newBuilder().setType(MessageType.CLIENT_VERSION).se
