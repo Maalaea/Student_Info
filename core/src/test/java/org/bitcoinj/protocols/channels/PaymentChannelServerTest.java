@@ -206,4 +206,7 @@ public class PaymentChannelServerTest {
     private TwoWayChannelMessage createClientVersionMessage(long timeWindow) {
         final Protos.ClientVersion.Builder clientVersion = Protos.ClientVersion.newBuilder().setMajor(protocolVersion);
         if (timeWindow > 0) clientVersion.setTimeWindowSecs(timeWindow);
-        return TwoWayChannelMessage.newBuilder().setType(MessageType.CLIENT_VERSION).se
+        return TwoWayChannelMessage.newBuilder().setType(MessageType.CLIENT_VERSION).setClientVersion(clientVersion).build();
+    }
+
+}
