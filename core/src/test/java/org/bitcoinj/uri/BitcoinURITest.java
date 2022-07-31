@@ -164,4 +164,59 @@ public class BitcoinURITest {
      */
     @Test
     public void testGood_Amount() throws BitcoinURIParseException {
-   
+        // Test the decimal parsing
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?amount=6543210.12345678");
+        assertEquals("654321012345678", testObject.getAmount().toString());
+
+        // Test the decimal parsing
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?amount=.12345678");
+        assertEquals("12345678", testObject.getAmount().toString());
+
+        // Test the integer parsing
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?amount=6543210");
+        assertEquals("654321000000000", testObject.getAmount().toString());
+    }
+
+    /**
+     * Handles a simple label
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testGood_Label() throws BitcoinURIParseException {
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?label=Hello%20World");
+        assertEquals("Hello World", testObject.getLabel());
+    }
+
+    /**
+     * Handles a simple label with an embedded ampersand and plus
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testGood_LabelWithAmpersandAndPlus() throws BitcoinURIParseException {
+        String testString = "Hello Earth & Mars + Venus";
+        String encodedLabel = BitcoinURI.encodeURLString(testString);
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS + "?label="
+                + encodedLabel);
+        assertEquals(testString, testObject.getLabel());
+    }
+
+    /**
+     * Handles a Russian label (Unicode test)
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testGood_LabelWithRussian() throws BitcoinURIParseException {
+        // Moscow in Russian in Cyrillic
+        String moscowString = "\u041c\u043e\u0441\u043a\u0432\u0430";
+        String encodedLabel = BitcoinURI.encodeURLString(moscowString); 
+        testObject = new BitcoinURI(MAINNET, BITCOIN_
