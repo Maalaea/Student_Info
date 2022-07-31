@@ -16,4 +16,40 @@
 
 package org.bitcoinj.uri;
 
-import org.
+import org.bitcoinj.core.Address;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.TestNet3Params;
+import com.google.common.collect.ImmutableList;
+import org.junit.Test;
+
+import static org.bitcoinj.core.Coin.*;
+import org.bitcoinj.core.NetworkParameters;
+import static org.junit.Assert.*;
+
+public class BitcoinURITest {
+    private BitcoinURI testObject = null;
+
+    private static final NetworkParameters MAINNET = MainNetParams.get();
+    private static final String MAINNET_GOOD_ADDRESS = "1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH";
+    private static final String BITCOIN_SCHEME = MAINNET.getUriScheme();
+
+    @Test
+    public void testConvertToBitcoinURI() throws Exception {
+        Address goodAddress = Address.fromBase58(MAINNET, MAINNET_GOOD_ADDRESS);
+        
+        // simple example
+        assertEquals("bitcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello&message=AMessage", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", "AMessage"));
+        
+        // example with spaces, ampersand and plus
+        assertEquals("bitcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello%20World&message=Mess%20%26%20age%20%2B%20hope", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello World", "Mess & age + hope"));
+
+        // no amount, label present, message present
+        assertEquals("bitcoin:" + MAINNET_GOOD_ADDRESS + "?label=Hello&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, null, "Hello", "glory"));
+        
+        // amount present, no label, message present
+        assertEquals("bitcoin:" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("0.1"), null, "glory"));
+        assertEquals("bitcoin:" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("0.1"), "", "glory"));
+
+        // amount present, label present, no message
+        assertEquals("bitcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", null));
+        assertEquals("bitcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", 
