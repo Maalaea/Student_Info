@@ -91,3 +91,77 @@ public class BitcoinURITest {
     }
 
     /**
+     * Test a broken URI (bad scheme)
+     */
+    @Test
+    public void testBad_Scheme() {
+        try {
+            testObject = new BitcoinURI(MAINNET, "blimpcoin:" + MAINNET_GOOD_ADDRESS);
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+        }
+    }
+
+    /**
+     * Test a broken URI (bad syntax)
+     */
+    @Test
+    public void testBad_BadSyntax() {
+        // Various illegal characters
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + "|" + MAINNET_GOOD_ADDRESS);
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("Bad URI syntax"));
+        }
+
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS + "\\");
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("Bad URI syntax"));
+        }
+
+        // Separator without field
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":");
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("Bad URI syntax"));
+        }
+    }
+
+    /**
+     * Test a broken URI (missing address)
+     */
+    @Test
+    public void testBad_Address() {
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME);
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+        }
+    }
+
+    /**
+     * Test a broken URI (bad address type)
+     */
+    @Test
+    public void testBad_IncorrectAddressType() {
+        try {
+            testObject = new BitcoinURI(TestNet3Params.get(), BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS);
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("Bad address"));
+        }
+    }
+
+    /**
+     * Handles a simple amount
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testGood_Amount() throws BitcoinURIParseException {
+   
