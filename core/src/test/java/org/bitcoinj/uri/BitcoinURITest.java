@@ -219,4 +219,65 @@ public class BitcoinURITest {
         // Moscow in Russian in Cyrillic
         String moscowString = "\u041c\u043e\u0441\u043a\u0432\u0430";
         String encodedLabel = BitcoinURI.encodeURLString(moscowString); 
-        testObject = new BitcoinURI(MAINNET, BITCOIN_
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS + "?label="
+                + encodedLabel);
+        assertEquals(moscowString, testObject.getLabel());
+    }
+
+    /**
+     * Handles a simple message
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testGood_Message() throws BitcoinURIParseException {
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?message=Hello%20World");
+        assertEquals("Hello World", testObject.getMessage());
+    }
+
+    /**
+     * Handles various well-formed combinations
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testGood_Combinations() throws BitcoinURIParseException {
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?amount=6543210&label=Hello%20World&message=Be%20well");
+        assertEquals(
+                "BitcoinURI['amount'='654321000000000','label'='Hello World','message'='Be well','address'='1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH']",
+                testObject.toString());
+    }
+
+    /**
+     * Handles a badly formatted amount field
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testBad_Amount() throws BitcoinURIParseException {
+        // Missing
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                    + "?amount=");
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("amount"));
+        }
+
+        // Non-decimal (BIP 21)
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                    + "?amount=12X4");
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("amount"));
+        }
+    }
+
+    @Test
+    public void testEmpty_Label()
