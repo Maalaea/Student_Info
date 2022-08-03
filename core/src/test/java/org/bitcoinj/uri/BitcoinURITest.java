@@ -381,4 +381,32 @@ public class BitcoinURITest {
         BitcoinURI uri = new BitcoinURI(TestNet3Params.get(), "bitcoin:?r=https%3A%2F%2Fbitcoincore.org%2F%7Egavin%2Ff.php%3Fh%3Db0f02e7cea67f168e25ec9b9f9d584f9");
         assertEquals("https://bitcoincore.org/~gavin/f.php?h=b0f02e7cea67f168e25ec9b9f9d584f9", uri.getPaymentRequestUrl());
         assertEquals(ImmutableList.of("https://bitcoincore.org/~gavin/f.php?h=b0f02e7cea67f168e25ec9b9f9d584f9"),
-       
+                uri.getPaymentRequestUrls());
+        assertNull(uri.getAddress());
+    }
+
+    @Test
+    public void testMultiplePaymentProtocolReq() throws Exception {
+        BitcoinURI uri = new BitcoinURI(MAINNET,
+                "bitcoin:?r=https%3A%2F%2Fbitcoincore.org%2F%7Egavin&r1=bt:112233445566");
+        assertEquals(ImmutableList.of("bt:112233445566", "https://bitcoincore.org/~gavin"), uri.getPaymentRequestUrls());
+        assertEquals("https://bitcoincore.org/~gavin", uri.getPaymentRequestUrl());
+    }
+
+    @Test
+    public void testNoPaymentProtocolReq() throws Exception {
+        BitcoinURI uri = new BitcoinURI(MAINNET, "bitcoin:" + MAINNET_GOOD_ADDRESS);
+        assertNull(uri.getPaymentRequestUrl());
+        assertEquals(ImmutableList.of(), uri.getPaymentRequestUrls());
+        assertNotNull(uri.getAddress());
+    }
+
+    @Test
+    public void testUnescapedPaymentProtocolReq() throws Exception {
+        BitcoinURI uri = new BitcoinURI(TestNet3Params.get(),
+                "bitcoin:?r=https://merchant.com/pay.php?h%3D2a8628fc2fbe");
+        assertEquals("https://merchant.com/pay.php?h=2a8628fc2fbe", uri.getPaymentRequestUrl());
+        assertEquals(ImmutableList.of("https://merchant.com/pay.php?h=2a8628fc2fbe"), uri.getPaymentRequestUrls());
+        assertNull(uri.getAddress());
+    }
+}
