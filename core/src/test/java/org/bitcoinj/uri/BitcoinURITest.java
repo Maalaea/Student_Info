@@ -334,4 +334,51 @@ public class BitcoinURITest {
             testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
                     + "?aardvark");
             fail("Expecting BitcoinURIParseException");
-        } catch (BitcoinURIPar
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("no separator"));
+        }
+
+        // Unknown and required field
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                    + "?req-aardvark=true");
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("req-aardvark"));
+        }
+    }
+
+    @Test
+    public void brokenURIs() throws BitcoinURIParseException {
+        // Check we can parse the incorrectly formatted URIs produced by blockchain.info and its iPhone app.
+        String str = "bitcoin://1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH?amount=0.01000000";
+        BitcoinURI uri = new BitcoinURI(str);
+        assertEquals("1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH", uri.getAddress().toString());
+        assertEquals(CENT, uri.getAmount());
+    }
+
+    @Test(expected = BitcoinURIParseException.class)
+    public void testBad_AmountTooPrecise() throws BitcoinURIParseException {
+        new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?amount=0.123456789");
+    }
+
+    @Test(expected = BitcoinURIParseException.class)
+    public void testBad_NegativeAmount() throws BitcoinURIParseException {
+        new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?amount=-1");
+    }
+
+    @Test(expected = BitcoinURIParseException.class)
+    public void testBad_TooLargeAmount() throws BitcoinURIParseException {
+        new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?amount=100000000");
+    }
+
+    @Test
+    public void testPaymentProtocolReq() throws Exception {
+        // Non-backwards compatible form ...
+        BitcoinURI uri = new BitcoinURI(TestNet3Params.get(), "bitcoin:?r=https%3A%2F%2Fbitcoincore.org%2F%7Egavin%2Ff.php%3Fh%3Db0f02e7cea67f168e25ec9b9f9d584f9");
+        assertEquals("https://bitcoincore.org/~gavin/f.php?h=b0f02e7cea67f168e25ec9b9f9d584f9", uri.getPaymentRequestUrl());
+        assertEquals(ImmutableList.of("https://bitcoincore.org/~gavin/f.php?h=b0f02e7cea67f168e25ec9b9f9d584f9"),
+       
