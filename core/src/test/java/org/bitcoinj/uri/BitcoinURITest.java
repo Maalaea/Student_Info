@@ -280,4 +280,58 @@ public class BitcoinURITest {
     }
 
     @Test
-    public void testEmpty_Label()
+    public void testEmpty_Label() throws BitcoinURIParseException {
+        assertNull(new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?label=").getLabel());
+    }
+
+    @Test
+    public void testEmpty_Message() throws BitcoinURIParseException {
+        assertNull(new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?message=").getMessage());
+    }
+
+    /**
+     * Handles duplicated fields (sneaky address overwrite attack)
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testBad_Duplicated() throws BitcoinURIParseException {
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                    + "?address=aardvark");
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIParseException e) {
+            assertTrue(e.getMessage().contains("address"));
+        }
+    }
+
+    @Test
+    public void testGood_ManyEquals() throws BitcoinURIParseException {
+        assertEquals("aardvark=zebra", new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":"
+                + MAINNET_GOOD_ADDRESS + "?label=aardvark=zebra").getLabel());
+    }
+    
+    /**
+     * Handles unknown fields (required and not required)
+     * 
+     * @throws BitcoinURIParseException
+     *             If something goes wrong
+     */
+    @Test
+    public void testUnknown() throws BitcoinURIParseException {
+        // Unknown not required field
+        testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                + "?aardvark=true");
+        assertEquals("BitcoinURI['aardvark'='true','address'='1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH']", testObject.toString());
+
+        assertEquals("true", testObject.getParameterByName("aardvark"));
+
+        // Unknown not required field (isolated)
+        try {
+            testObject = new BitcoinURI(MAINNET, BITCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
+                    + "?aardvark");
+            fail("Expecting BitcoinURIParseException");
+        } catch (BitcoinURIPar
