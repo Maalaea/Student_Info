@@ -942,3 +942,537 @@ public class BtcFormatTest {
         BtcFixedFormat symbolHecto = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-2).
                                                                symbol("B\u20e6").build();
         assertEquals("hBTC", symbolHecto.code());
+        assertEquals("hB⃦", symbolHecto.symbol());
+        BtcFixedFormat symbolKilo = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-3).
+                                                              symbol("B\u20e6").build();
+        assertEquals("kBTC", symbolKilo.code());
+        assertEquals("kB⃦", symbolKilo.symbol());
+        BtcFixedFormat symbolMega = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-6).
+                                                              symbol("B\u20e6").build();
+        assertEquals("MBTC", symbolMega.code());
+        assertEquals("MB⃦", symbolMega.symbol());
+
+        BtcFixedFormat codeCoin = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(0).
+                                                            code("XBT").build();
+        assertEquals("XBT", codeCoin.code());
+        assertEquals("฿", codeCoin.symbol());
+        BtcFixedFormat codeCent = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(2).
+                                                            code("XBT").build();
+        assertEquals("cXBT", codeCent.code());
+        assertEquals("¢฿", codeCent.symbol());
+        BtcFixedFormat codeMilli = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(3).
+                                                             code("XBT").build();
+        assertEquals("mXBT", codeMilli.code());
+        assertEquals("₥฿", codeMilli.symbol());
+        BtcFixedFormat codeMicro = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(6).
+                                                             code("XBT").build();
+        assertEquals("µXBT", codeMicro.code());
+        assertEquals("µ฿", codeMicro.symbol());
+        BtcFixedFormat codeDeka = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-1).
+                                                            code("XBT").build();
+        assertEquals("daXBT", codeDeka.code());
+        assertEquals("da฿", codeDeka.symbol());
+        BtcFixedFormat codeHecto = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-2).
+                                                             code("XBT").build();
+        assertEquals("hXBT", codeHecto.code());
+        assertEquals("h฿", codeHecto.symbol());
+        BtcFixedFormat codeKilo = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-3).
+                                                            code("XBT").build();
+        assertEquals("kXBT", codeKilo.code());
+        assertEquals("k฿", codeKilo.symbol());
+        BtcFixedFormat codeMega = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-6).
+                                                            code("XBT").build();
+        assertEquals("MXBT", codeMega.code());
+        assertEquals("M฿", codeMega.symbol());
+
+        BtcFixedFormat symbolCodeCoin = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(0).
+                                                                  symbol("B\u20e6").code("XBT").build();
+        assertEquals("XBT", symbolCodeCoin.code());
+        assertEquals("B⃦", symbolCodeCoin.symbol());
+        BtcFixedFormat symbolCodeCent = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(2).
+                                                                  symbol("B\u20e6").code("XBT").build();
+        assertEquals("cXBT", symbolCodeCent.code());
+        assertEquals("¢B⃦", symbolCodeCent.symbol());
+        BtcFixedFormat symbolCodeMilli = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(3).
+                                                                   symbol("B\u20e6").code("XBT").build();
+        assertEquals("mXBT", symbolCodeMilli.code());
+        assertEquals("₥B⃦", symbolCodeMilli.symbol());
+        BtcFixedFormat symbolCodeMicro = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(6).
+                                                                   symbol("B\u20e6").code("XBT").build();
+        assertEquals("µXBT", symbolCodeMicro.code());
+        assertEquals("µB⃦", symbolCodeMicro.symbol());
+        BtcFixedFormat symbolCodeDeka = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-1).
+                                                                  symbol("B\u20e6").code("XBT").build();
+        assertEquals("daXBT", symbolCodeDeka.code());
+        assertEquals("daB⃦", symbolCodeDeka.symbol());
+        BtcFixedFormat symbolCodeHecto = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-2).
+                                                                   symbol("B\u20e6").code("XBT").build();
+        assertEquals("hXBT", symbolCodeHecto.code());
+        assertEquals("hB⃦", symbolCodeHecto.symbol());
+        BtcFixedFormat symbolCodeKilo = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-3).
+                                                                  symbol("B\u20e6").code("XBT").build();
+        assertEquals("kXBT", symbolCodeKilo.code());
+        assertEquals("kB⃦", symbolCodeKilo.symbol());
+        BtcFixedFormat symbolCodeMega = (BtcFixedFormat)BtcFormat.builder().locale(US).scale(-6).
+                                                                  symbol("B\u20e6").code("XBT").build();
+        assertEquals("MXBT", symbolCodeMega.code());
+        assertEquals("MB⃦", symbolCodeMega.symbol());
+    }
+
+    /* copied from CoinFormatTest.java and modified */
+    @Test
+    public void parse() throws Exception {
+        BtcFormat coin = BtcFormat.getCoinInstance(Locale.US);
+        assertEquals(Coin.COIN, coin.parseObject("1"));
+        assertEquals(Coin.COIN, coin.parseObject("1."));
+        assertEquals(Coin.COIN, coin.parseObject("1.0"));
+        assertEquals(Coin.COIN, BtcFormat.getCoinInstance(Locale.GERMANY).parseObject("1,0"));
+        assertEquals(Coin.COIN, coin.parseObject("01.0000000000"));
+        // TODO work with express positive sign
+        // assertEquals(Coin.COIN, coin.parseObject("+1.0"));
+        assertEquals(Coin.COIN.negate(), coin.parseObject("-1"));
+        assertEquals(Coin.COIN.negate(), coin.parseObject("-1.0"));
+
+        assertEquals(Coin.CENT, coin.parseObject(".01"));
+
+        BtcFormat milli = BtcFormat.getMilliInstance(Locale.US);
+        assertEquals(Coin.MILLICOIN, milli.parseObject("1"));
+        assertEquals(Coin.MILLICOIN, milli.parseObject("1.0"));
+        assertEquals(Coin.MILLICOIN, milli.parseObject("01.0000000000"));
+        // TODO work with express positive sign
+        //assertEquals(Coin.MILLICOIN, milli.parseObject("+1.0"));
+        assertEquals(Coin.MILLICOIN.negate(), milli.parseObject("-1"));
+        assertEquals(Coin.MILLICOIN.negate(), milli.parseObject("-1.0"));
+
+        BtcFormat micro = BtcFormat.getMicroInstance(Locale.US);
+        assertEquals(Coin.MICROCOIN, micro.parseObject("1"));
+        assertEquals(Coin.MICROCOIN, micro.parseObject("1.0"));
+        assertEquals(Coin.MICROCOIN, micro.parseObject("01.0000000000"));
+        // TODO work with express positive sign
+        // assertEquals(Coin.MICROCOIN, micro.parseObject("+1.0"));
+        assertEquals(Coin.MICROCOIN.negate(), micro.parseObject("-1"));
+        assertEquals(Coin.MICROCOIN.negate(), micro.parseObject("-1.0"));
+    }
+
+    /* Copied (and modified) from CoinFormatTest.java */
+    @Test
+    public void btcRounding() throws Exception {
+        BtcFormat coinFormat = BtcFormat.getCoinInstance(Locale.US);
+        assertEquals("0", BtcFormat.getCoinInstance(Locale.US, 0).format(ZERO));
+        assertEquals("0", coinFormat.format(ZERO, 0));
+        assertEquals("0.00", BtcFormat.getCoinInstance(Locale.US, 2).format(ZERO));
+        assertEquals("0.00", coinFormat.format(ZERO, 2));
+
+        assertEquals("1", BtcFormat.getCoinInstance(Locale.US, 0).format(COIN));
+        assertEquals("1", coinFormat.format(COIN, 0));
+        assertEquals("1.0", BtcFormat.getCoinInstance(Locale.US, 1).format(COIN));
+        assertEquals("1.0", coinFormat.format(COIN, 1));
+        assertEquals("1.00", BtcFormat.getCoinInstance(Locale.US, 2, 2).format(COIN));
+        assertEquals("1.00", coinFormat.format(COIN, 2, 2));
+        assertEquals("1.00", BtcFormat.getCoinInstance(Locale.US, 2, 2, 2).format(COIN));
+        assertEquals("1.00", coinFormat.format(COIN, 2, 2, 2));
+        assertEquals("1.00", BtcFormat.getCoinInstance(Locale.US, 2, 2, 2, 2).format(COIN));
+        assertEquals("1.00", coinFormat.format(COIN, 2, 2, 2, 2));
+        assertEquals("1.000", BtcFormat.getCoinInstance(Locale.US, 3).format(COIN));
+        assertEquals("1.000", coinFormat.format(COIN, 3));
+        assertEquals("1.0000", BtcFormat.getCoinInstance(US, 4).format(COIN));
+        assertEquals("1.0000", coinFormat.format(COIN, 4));
+
+        final Coin justNot = COIN.subtract(SATOSHI);
+        assertEquals("1", BtcFormat.getCoinInstance(US, 0).format(justNot));
+        assertEquals("1", coinFormat.format(justNot, 0));
+        assertEquals("1.0", BtcFormat.getCoinInstance(US, 1).format(justNot));
+        assertEquals("1.0", coinFormat.format(justNot, 1));
+        final Coin justNotUnder = Coin.valueOf(99995000);
+        assertEquals("1.00", BtcFormat.getCoinInstance(US, 2, 2).format(justNot));
+        assertEquals("1.00", coinFormat.format(justNot, 2, 2));
+        assertEquals("1.00", BtcFormat.getCoinInstance(US, 2, 2).format(justNotUnder));
+        assertEquals("1.00", coinFormat.format(justNotUnder, 2, 2));
+        assertEquals("1.00", BtcFormat.getCoinInstance(US, 2, 2, 2).format(justNot));
+        assertEquals("1.00", coinFormat.format(justNot, 2, 2, 2));
+        assertEquals("0.999950", BtcFormat.getCoinInstance(US, 2, 2, 2).format(justNotUnder));
+        assertEquals("0.999950", coinFormat.format(justNotUnder, 2, 2, 2));
+        assertEquals("0.99999999", BtcFormat.getCoinInstance(US, 2, 2, 2, 2).format(justNot));
+        assertEquals("0.99999999", coinFormat.format(justNot, 2, 2, 2, 2));
+        assertEquals("0.99999999", BtcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(justNot));
+        assertEquals("0.99999999", coinFormat.format(justNot, 2, REPEATING_DOUBLETS));
+        assertEquals("0.999950", BtcFormat.getCoinInstance(US, 2, 2, 2, 2).format(justNotUnder));
+        assertEquals("0.999950", coinFormat.format(justNotUnder, 2, 2, 2, 2));
+        assertEquals("0.999950", BtcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(justNotUnder));
+        assertEquals("0.999950", coinFormat.format(justNotUnder, 2, REPEATING_DOUBLETS));
+        assertEquals("1.000", BtcFormat.getCoinInstance(US, 3).format(justNot));
+        assertEquals("1.000", coinFormat.format(justNot, 3));
+        assertEquals("1.0000", BtcFormat.getCoinInstance(US, 4).format(justNot));
+        assertEquals("1.0000", coinFormat.format(justNot, 4));
+
+        final Coin slightlyMore = COIN.add(SATOSHI);
+        assertEquals("1", BtcFormat.getCoinInstance(US, 0).format(slightlyMore));
+        assertEquals("1", coinFormat.format(slightlyMore, 0));
+        assertEquals("1.0", BtcFormat.getCoinInstance(US, 1).format(slightlyMore));
+        assertEquals("1.0", coinFormat.format(slightlyMore, 1));
+        assertEquals("1.00", BtcFormat.getCoinInstance(US, 2, 2).format(slightlyMore));
+        assertEquals("1.00", coinFormat.format(slightlyMore, 2, 2));
+        assertEquals("1.00", BtcFormat.getCoinInstance(US, 2, 2, 2).format(slightlyMore));
+        assertEquals("1.00", coinFormat.format(slightlyMore, 2, 2, 2));
+        assertEquals("1.00000001", BtcFormat.getCoinInstance(US, 2, 2, 2, 2).format(slightlyMore));
+        assertEquals("1.00000001", coinFormat.format(slightlyMore, 2, 2, 2, 2));
+        assertEquals("1.00000001", BtcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(slightlyMore));
+        assertEquals("1.00000001", coinFormat.format(slightlyMore, 2, REPEATING_DOUBLETS));
+        assertEquals("1.000", BtcFormat.getCoinInstance(US, 3).format(slightlyMore));
+        assertEquals("1.000", coinFormat.format(slightlyMore, 3));
+        assertEquals("1.0000", BtcFormat.getCoinInstance(US, 4).format(slightlyMore));
+        assertEquals("1.0000", coinFormat.format(slightlyMore, 4));
+
+        final Coin pivot = COIN.add(SATOSHI.multiply(5));
+        assertEquals("1.00000005", BtcFormat.getCoinInstance(US, 8).format(pivot));
+        assertEquals("1.00000005", coinFormat.format(pivot, 8));
+        assertEquals("1.00000005", BtcFormat.getCoinInstance(US, 7, 1).format(pivot));
+        assertEquals("1.00000005", coinFormat.format(pivot, 7, 1));
+        assertEquals("1.0000001", BtcFormat.getCoinInstance(US, 7).format(pivot));
+        assertEquals("1.0000001", coinFormat.format(pivot, 7));
+
+        final Coin value = Coin.valueOf(1122334455667788l);
+        assertEquals("11,223,345", BtcFormat.getCoinInstance(US, 0).format(value));
+        assertEquals("11,223,345", coinFormat.format(value, 0));
+        assertEquals("11,223,344.6", BtcFormat.getCoinInstance(US, 1).format(value));
+        assertEquals("11,223,344.6", coinFormat.format(value, 1));
+        assertEquals("11,223,344.5567", BtcFormat.getCoinInstance(US, 2, 2).format(value));
+        assertEquals("11,223,344.5567", coinFormat.format(value, 2, 2));
+        assertEquals("11,223,344.556678", BtcFormat.getCoinInstance(US, 2, 2, 2).format(value));
+        assertEquals("11,223,344.556678", coinFormat.format(value, 2, 2, 2));
+        assertEquals("11,223,344.55667788", BtcFormat.getCoinInstance(US, 2, 2, 2, 2).format(value));
+        assertEquals("11,223,344.55667788", coinFormat.format(value, 2, 2, 2, 2));
+        assertEquals("11,223,344.55667788", BtcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(value));
+        assertEquals("11,223,344.55667788", coinFormat.format(value, 2, REPEATING_DOUBLETS));
+        assertEquals("11,223,344.557", BtcFormat.getCoinInstance(US, 3).format(value));
+        assertEquals("11,223,344.557", coinFormat.format(value, 3));
+        assertEquals("11,223,344.5567", BtcFormat.getCoinInstance(US, 4).format(value));
+        assertEquals("11,223,344.5567", coinFormat.format(value, 4));
+
+        BtcFormat megaFormat = BtcFormat.getInstance(-6, US);
+        assertEquals("21.00", megaFormat.format(MAX_MONEY));
+        assertEquals("21", megaFormat.format(MAX_MONEY, 0));
+        assertEquals("11.22334455667788", megaFormat.format(value, 0, REPEATING_DOUBLETS));
+        assertEquals("11.223344556677", megaFormat.format(Coin.valueOf(1122334455667700l), 0, REPEATING_DOUBLETS));
+        assertEquals("11.22334455667788", megaFormat.format(value, 0, REPEATING_TRIPLETS));
+        assertEquals("11.223344556677", megaFormat.format(Coin.valueOf(1122334455667700l), 0, REPEATING_TRIPLETS));
+    }
+
+    @Test
+    public void negativeTest() throws Exception {
+        assertEquals("-1,00 BTC", BtcFormat.getInstance(FRANCE).format(COIN.multiply(-1)));
+        assertEquals("BTC -1,00", BtcFormat.getInstance(ITALY).format(COIN.multiply(-1)));
+        assertEquals("฿ -1,00", BtcFormat.getSymbolInstance(ITALY).format(COIN.multiply(-1)));
+        assertEquals("BTC -1.00", BtcFormat.getInstance(JAPAN).format(COIN.multiply(-1)));
+        assertEquals("฿-1.00", BtcFormat.getSymbolInstance(JAPAN).format(COIN.multiply(-1)));
+        assertEquals("(BTC 1.00)", BtcFormat.getInstance(US).format(COIN.multiply(-1)));
+        assertEquals("(฿1.00)", BtcFormat.getSymbolInstance(US).format(COIN.multiply(-1)));
+        // assertEquals("BTC -१.००", BtcFormat.getInstance(Locale.forLanguageTag("hi-IN")).format(COIN.multiply(-1)));
+        assertEquals("BTC -๑.๐๐", BtcFormat.getInstance(new Locale("th","TH","TH")).format(COIN.multiply(-1)));
+        assertEquals("Ƀ-๑.๐๐", BtcFormat.getSymbolInstance(new Locale("th","TH","TH")).format(COIN.multiply(-1)));
+    }
+
+    /* Warning: these tests assume the state of Locale data extant on the platform on which
+     * they were written: openjdk 7u21-2.3.9-5 */
+    @Test
+    public void equalityTest() throws Exception {
+        // First, autodenominator
+        assertEquals(BtcFormat.getInstance(), BtcFormat.getInstance());
+        assertEquals(BtcFormat.getInstance().hashCode(), BtcFormat.getInstance().hashCode());
+
+        assertNotEquals(BtcFormat.getCodeInstance(), BtcFormat.getSymbolInstance());
+        assertNotEquals(BtcFormat.getCodeInstance().hashCode(), BtcFormat.getSymbolInstance().hashCode());
+
+        assertEquals(BtcFormat.getSymbolInstance(5), BtcFormat.getSymbolInstance(5));
+        assertEquals(BtcFormat.getSymbolInstance(5).hashCode(), BtcFormat.getSymbolInstance(5).hashCode());
+
+        assertNotEquals(BtcFormat.getSymbolInstance(5), BtcFormat.getSymbolInstance(4));
+        assertNotEquals(BtcFormat.getSymbolInstance(5).hashCode(), BtcFormat.getSymbolInstance(4).hashCode());
+
+        /* The underlying formatter is mutable, and its currency code
+         * and symbol may be reset each time a number is
+         * formatted or parsed.  Here we check to make sure that state is
+         * ignored when comparing for equality */
+        // when formatting
+        BtcAutoFormat a = (BtcAutoFormat)BtcFormat.getSymbolInstance(US);
+        BtcAutoFormat b = (BtcAutoFormat)BtcFormat.getSymbolInstance(US);
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        a.format(COIN.multiply(1000000));
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        b.format(COIN.divide(1000000));
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        // when parsing
+        a = (BtcAutoFormat)BtcFormat.getSymbolInstance(US);
+        b = (BtcAutoFormat)BtcFormat.getSymbolInstance(US);
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        a.parseObject("mBTC2");
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        b.parseObject("µ฿4.35");
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+
+        // FRANCE and GERMANY have different pattterns
+        assertNotEquals(BtcFormat.getInstance(FRANCE).hashCode(), BtcFormat.getInstance(GERMANY).hashCode());
+        // TAIWAN and CHINA differ only in the Locale and Currency, i.e. the patterns and symbols are
+        // all the same (after setting the currency symbols to bitcoins)
+        assertNotEquals(BtcFormat.getInstance(TAIWAN), BtcFormat.getInstance(CHINA));
+        // but they hash the same because of the DecimalFormatSymbols.hashCode() implementation
+
+        assertEquals(BtcFormat.getSymbolInstance(4), BtcFormat.getSymbolInstance(4));
+        assertEquals(BtcFormat.getSymbolInstance(4).hashCode(), BtcFormat.getSymbolInstance(4).hashCode());
+
+        assertNotEquals(BtcFormat.getSymbolInstance(4), BtcFormat.getSymbolInstance(5));
+        assertNotEquals(BtcFormat.getSymbolInstance(4).hashCode(), BtcFormat.getSymbolInstance(5).hashCode());
+
+        // Fixed-denomination
+        assertEquals(BtcFormat.getCoinInstance(), BtcFormat.getCoinInstance());
+        assertEquals(BtcFormat.getCoinInstance().hashCode(), BtcFormat.getCoinInstance().hashCode());
+
+        assertEquals(BtcFormat.getMilliInstance(), BtcFormat.getMilliInstance());
+        assertEquals(BtcFormat.getMilliInstance().hashCode(), BtcFormat.getMilliInstance().hashCode());
+
+        assertEquals(BtcFormat.getMicroInstance(), BtcFormat.getMicroInstance());
+        assertEquals(BtcFormat.getMicroInstance().hashCode(), BtcFormat.getMicroInstance().hashCode());
+
+        assertEquals(BtcFormat.getInstance(-6), BtcFormat.getInstance(-6));
+        assertEquals(BtcFormat.getInstance(-6).hashCode(), BtcFormat.getInstance(-6).hashCode());
+
+        assertNotEquals(BtcFormat.getCoinInstance(), BtcFormat.getMilliInstance());
+        assertNotEquals(BtcFormat.getCoinInstance().hashCode(), BtcFormat.getMilliInstance().hashCode());
+
+        assertNotEquals(BtcFormat.getCoinInstance(), BtcFormat.getMicroInstance());
+        assertNotEquals(BtcFormat.getCoinInstance().hashCode(), BtcFormat.getMicroInstance().hashCode());
+
+        assertNotEquals(BtcFormat.getMilliInstance(), BtcFormat.getMicroInstance());
+        assertNotEquals(BtcFormat.getMilliInstance().hashCode(), BtcFormat.getMicroInstance().hashCode());
+
+        assertNotEquals(BtcFormat.getInstance(SMALLEST_UNIT_EXPONENT),
+                        BtcFormat.getInstance(SMALLEST_UNIT_EXPONENT - 1));
+        assertNotEquals(BtcFormat.getInstance(SMALLEST_UNIT_EXPONENT).hashCode(),
+                        BtcFormat.getInstance(SMALLEST_UNIT_EXPONENT - 1).hashCode());
+
+        assertNotEquals(BtcFormat.getCoinInstance(TAIWAN), BtcFormat.getCoinInstance(CHINA));
+
+        assertNotEquals(BtcFormat.getCoinInstance(2,3), BtcFormat.getCoinInstance(2,4));
+        assertNotEquals(BtcFormat.getCoinInstance(2,3).hashCode(), BtcFormat.getCoinInstance(2,4).hashCode());
+
+        assertNotEquals(BtcFormat.getCoinInstance(2,3), BtcFormat.getCoinInstance(2,3,3));
+        assertNotEquals(BtcFormat.getCoinInstance(2,3).hashCode(), BtcFormat.getCoinInstance(2,3,3).hashCode());
+
+
+    }
+
+    @Test
+    public void attributeTest() throws Exception {
+        String codePat = BtcFormat.getCodeInstance(Locale.US).pattern();
+        assertTrue(codePat.contains("BTC") && ! codePat.contains("(^|[^฿])฿([^฿]|$)") && ! codePat.contains("(^|[^¤])¤([^¤]|$)"));
+        String symPat = BtcFormat.getSymbolInstance(Locale.US).pattern();
+        assertTrue(symPat.contains("฿") && !symPat.contains("BTC") && !symPat.contains("¤¤"));
+
+        assertEquals("BTC #,##0.00;(BTC #,##0.00)", BtcFormat.getCodeInstance(Locale.US).pattern());
+        assertEquals("฿#,##0.00;(฿#,##0.00)", BtcFormat.getSymbolInstance(Locale.US).pattern());
+        assertEquals('0', BtcFormat.getInstance(Locale.US).symbols().getZeroDigit());
+        // assertEquals('०', BtcFormat.getInstance(Locale.forLanguageTag("hi-IN")).symbols().getZeroDigit());
+        // TODO will this next line work with other JREs?
+        assertEquals('๐', BtcFormat.getInstance(new Locale("th","TH","TH")).symbols().getZeroDigit());
+    }
+
+    @Test
+    public void toStringTest() {
+        assertEquals("Auto-format ฿#,##0.00;(฿#,##0.00)", BtcFormat.getSymbolInstance(Locale.US).toString());
+        assertEquals("Auto-format ฿#,##0.0000;(฿#,##0.0000)", BtcFormat.getSymbolInstance(Locale.US, 4).toString());
+        assertEquals("Auto-format BTC #,##0.00;(BTC #,##0.00)", BtcFormat.getCodeInstance(Locale.US).toString());
+        assertEquals("Auto-format BTC #,##0.0000;(BTC #,##0.0000)", BtcFormat.getCodeInstance(Locale.US, 4).toString());
+        assertEquals("Coin-format #,##0.00", BtcFormat.getCoinInstance(Locale.US).toString());
+        assertEquals("Millicoin-format #,##0.00", BtcFormat.getMilliInstance(Locale.US).toString());
+        assertEquals("Microcoin-format #,##0.00", BtcFormat.getMicroInstance(Locale.US).toString());
+        assertEquals("Coin-format #,##0.000", BtcFormat.getCoinInstance(Locale.US,3).toString());
+        assertEquals("Coin-format #,##0.000(####)(#######)", BtcFormat.getCoinInstance(Locale.US,3,4,7).toString());
+        assertEquals("Kilocoin-format #,##0.000", BtcFormat.getInstance(-3,Locale.US,3).toString());
+        assertEquals("Kilocoin-format #,##0.000(####)(#######)", BtcFormat.getInstance(-3,Locale.US,3,4,7).toString());
+        assertEquals("Decicoin-format #,##0.000", BtcFormat.getInstance(1,Locale.US,3).toString());
+        assertEquals("Decicoin-format #,##0.000(####)(#######)", BtcFormat.getInstance(1,Locale.US,3,4,7).toString());
+        assertEquals("Dekacoin-format #,##0.000", BtcFormat.getInstance(-1,Locale.US,3).toString());
+        assertEquals("Dekacoin-format #,##0.000(####)(#######)", BtcFormat.getInstance(-1,Locale.US,3,4,7).toString());
+        assertEquals("Hectocoin-format #,##0.000", BtcFormat.getInstance(-2,Locale.US,3).toString());
+        assertEquals("Hectocoin-format #,##0.000(####)(#######)", BtcFormat.getInstance(-2,Locale.US,3,4,7).toString());
+        assertEquals("Megacoin-format #,##0.000", BtcFormat.getInstance(-6,Locale.US,3).toString());
+        assertEquals("Megacoin-format #,##0.000(####)(#######)", BtcFormat.getInstance(-6,Locale.US,3,4,7).toString());
+        assertEquals("Fixed (-4) format #,##0.000", BtcFormat.getInstance(-4,Locale.US,3).toString());
+        assertEquals("Fixed (-4) format #,##0.000(####)", BtcFormat.getInstance(-4,Locale.US,3,4).toString());
+        assertEquals("Fixed (-4) format #,##0.000(####)(#######)",
+                     BtcFormat.getInstance(-4, Locale.US, 3, 4, 7).toString());
+
+        assertEquals("Auto-format ฿#,##0.00;(฿#,##0.00)",
+                     BtcFormat.builder().style(SYMBOL).code("USD").locale(US).build().toString());
+        assertEquals("Auto-format #.##0,00 $",
+                     BtcFormat.builder().style(SYMBOL).symbol("$").locale(GERMANY).build().toString());
+        assertEquals("Auto-format #.##0,0000 $",
+                     BtcFormat.builder().style(SYMBOL).symbol("$").fractionDigits(4).locale(GERMANY).build().toString());
+        assertEquals("Auto-format BTC#,00฿;BTC-#,00฿",
+                     BtcFormat.builder().style(SYMBOL).locale(GERMANY).pattern("¤¤#¤").build().toString());
+        assertEquals("Coin-format BTC#,00฿;BTC-#,00฿",
+                     BtcFormat.builder().scale(0).locale(GERMANY).pattern("¤¤#¤").build().toString());
+        assertEquals("Millicoin-format BTC#.00฿;BTC-#.00฿",
+                     BtcFormat.builder().scale(3).locale(US).pattern("¤¤#¤").build().toString());
+    }
+
+    @Test
+    public void patternDecimalPlaces() {
+        /* The pattern format provided by DecimalFormat includes specification of fractional digits,
+         * but we ignore that because we have alternative mechanism for specifying that.. */
+        BtcFormat f = BtcFormat.builder().locale(US).scale(3).pattern("¤¤ #.0").fractionDigits(3).build();
+        assertEquals("Millicoin-format BTC #.000;BTC -#.000", f.toString());
+        assertEquals("mBTC 1000.000", f.format(COIN));
+    }
+
+    @Test
+    public void builderTest() {
+        Locale locale;
+        if (Locale.getDefault().equals(GERMANY)) locale = FRANCE;
+        else locale = GERMANY;
+
+        assertEquals(BtcFormat.builder().build(), BtcFormat.getCoinInstance());
+        try {
+            BtcFormat.builder().scale(0).style(CODE);
+            fail("Invoking both scale() and style() on a Builder should raise exception");
+        } catch (IllegalStateException e) {}
+        try {
+            BtcFormat.builder().style(CODE).scale(0);
+            fail("Invoking both style() and scale() on a Builder should raise exception");
+        } catch (IllegalStateException e) {}
+
+        BtcFormat built = BtcFormat.builder().style(BtcAutoFormat.Style.CODE).fractionDigits(4).build();
+        assertEquals(built, BtcFormat.getCodeInstance(4));
+        built = BtcFormat.builder().style(BtcAutoFormat.Style.SYMBOL).fractionDigits(4).build();
+        assertEquals(built, BtcFormat.getSymbolInstance(4));
+
+        built = BtcFormat.builder().scale(0).build();
+        assertEquals(built, BtcFormat.getCoinInstance());
+        built = BtcFormat.builder().scale(3).build();
+        assertEquals(built, BtcFormat.getMilliInstance());
+        built = BtcFormat.builder().scale(6).build();
+        assertEquals(built, BtcFormat.getMicroInstance());
+
+        built = BtcFormat.builder().locale(locale).scale(0).build();
+        assertEquals(built, BtcFormat.getCoinInstance(locale));
+        built = BtcFormat.builder().locale(locale).scale(3).build();
+        assertEquals(built, BtcFormat.getMilliInstance(locale));
+        built = BtcFormat.builder().locale(locale).scale(6).build();
+        assertEquals(built, BtcFormat.getMicroInstance(locale));
+
+        built = BtcFormat.builder().minimumFractionDigits(3).scale(0).build();
+        assertEquals(built, BtcFormat.getCoinInstance(3));
+        built = BtcFormat.builder().minimumFractionDigits(3).scale(3).build();
+        assertEquals(built, BtcFormat.getMilliInstance(3));
+        built = BtcFormat.builder().minimumFractionDigits(3).scale(6).build();
+        assertEquals(built, BtcFormat.getMicroInstance(3));
+
+        built = BtcFormat.builder().fractionGroups(3,4).scale(0).build();
+        assertEquals(built, BtcFormat.getCoinInstance(2,3,4));
+        built = BtcFormat.builder().fractionGroups(3,4).scale(3).build();
+        assertEquals(built, BtcFormat.getMilliInstance(2,3,4));
+        built = BtcFormat.builder().fractionGroups(3,4).scale(6).build();
+        assertEquals(built, BtcFormat.getMicroInstance(2,3,4));
+
+        built = BtcFormat.builder().pattern("#,####.#").scale(6).locale(GERMANY).build();
+        assertEquals("100.0000,00", built.format(COIN));
+        built = BtcFormat.builder().pattern("#,####.#").scale(6).locale(GERMANY).build();
+        assertEquals("-100.0000,00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().localizedPattern("#.####,#").scale(6).locale(GERMANY).build();
+        assertEquals("100.0000,00", built.format(COIN));
+
+        built = BtcFormat.builder().pattern("¤#,####.#").style(CODE).locale(GERMANY).build();
+        assertEquals("฿-1,00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("¤¤ #,####.#").style(SYMBOL).locale(GERMANY).build();
+        assertEquals("BTC -1,00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("¤¤##,###.#").scale(3).locale(US).build();
+        assertEquals("mBTC1,000.00", built.format(COIN));
+        built = BtcFormat.builder().pattern("¤ ##,###.#").scale(3).locale(US).build();
+        assertEquals("₥฿ 1,000.00", built.format(COIN));
+
+        try {
+            BtcFormat.builder().pattern("¤¤##,###.#").scale(4).locale(US).build().format(COIN);
+            fail("Pattern with currency sign and non-standard denomination should raise exception");
+        } catch (IllegalStateException e) {}
+
+        try {
+            BtcFormat.builder().localizedPattern("¤¤##,###.#").scale(4).locale(US).build().format(COIN);
+            fail("Localized pattern with currency sign and non-standard denomination should raise exception");
+        } catch (IllegalStateException e) {}
+
+        built = BtcFormat.builder().style(SYMBOL).symbol("B\u20e6").locale(US).build();
+        assertEquals("B⃦1.00", built.format(COIN));
+        built = BtcFormat.builder().style(CODE).code("XBT").locale(US).build();
+        assertEquals("XBT 1.00", built.format(COIN));
+        built = BtcFormat.builder().style(SYMBOL).symbol("$").locale(GERMANY).build();
+        assertEquals("1,00 $", built.format(COIN));
+        // Setting the currency code on a DecimalFormatSymbols object can affect the currency symbol.
+        built = BtcFormat.builder().style(SYMBOL).code("USD").locale(US).build();
+        assertEquals("฿1.00", built.format(COIN));
+
+        built = BtcFormat.builder().style(SYMBOL).symbol("B\u20e6").locale(US).build();
+        assertEquals("₥B⃦1.00", built.format(COIN.divide(1000)));
+        built = BtcFormat.builder().style(CODE).code("XBT").locale(US).build();
+        assertEquals("mXBT 1.00", built.format(COIN.divide(1000)));
+
+        built = BtcFormat.builder().style(SYMBOL).symbol("B\u20e6").locale(US).build();
+        assertEquals("µB⃦1.00", built.format(valueOf(100)));
+        built = BtcFormat.builder().style(CODE).code("XBT").locale(US).build();
+        assertEquals("µXBT 1.00", built.format(valueOf(100)));
+
+        /* The prefix of a pattern can have number symbols in quotes.
+         * Make sure our custom negative-subpattern creator handles this. */
+        built = BtcFormat.builder().pattern("'#'¤#0").scale(0).locale(US).build();
+        assertEquals("#฿-1.00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("'#0'¤#0").scale(0).locale(US).build();
+        assertEquals("#0฿-1.00", built.format(COIN.multiply(-1)));
+        // this is an escaped quote between two hash marks in one set of quotes, not
+        // two adjacent quote-enclosed hash-marks:
+        built = BtcFormat.builder().pattern("'#''#'¤#0").scale(0).locale(US).build();
+        assertEquals("#'#฿-1.00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("'#0''#'¤#0").scale(0).locale(US).build();
+        assertEquals("#0'#฿-1.00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("'#0#'¤#0").scale(0).locale(US).build();
+        assertEquals("#0#฿-1.00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("'#0'E'#'¤#0").scale(0).locale(US).build();
+        assertEquals("#0E#฿-1.00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("E'#0''#'¤#0").scale(0).locale(US).build();
+        assertEquals("E#0'#฿-1.00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("E'#0#'¤#0").scale(0).locale(US).build();
+        assertEquals("E#0#฿-1.00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("E'#0''''#'¤#0").scale(0).locale(US).build();
+        assertEquals("E#0''#฿-1.00", built.format(COIN.multiply(-1)));
+        built = BtcFormat.builder().pattern("''#0").scale(0).locale(US).build();
+        assertEquals("'-1.00", built.format(COIN.multiply(-1)));
+
+        // immutability check for fixed-denomination formatters, w/ & w/o custom pattern
+        BtcFormat a = BtcFormat.builder().scale(3).build();
+        BtcFormat b = BtcFormat.builder().scale(3).build();
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        a.format(COIN.multiply(1000000));
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        b.format(COIN.divide(1000000));
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        a = BtcFormat.builder().scale(3).pattern("¤#.#").build();
+        b = BtcFormat.builder().scale(3).pattern("¤#.#").build();
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        a.format(COIN.multiply(1000000));
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+        b.format(COIN.divide(1000000));
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+
+    }
+
+}
