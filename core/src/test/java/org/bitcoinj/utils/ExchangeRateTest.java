@@ -44,4 +44,39 @@ public class ExchangeRateTest {
 
     @Test
     public void smallRate() throws Exception {
-        ExchangeRate rate = new ExchangeRate(Coin.parseCoin("
+        ExchangeRate rate = new ExchangeRate(Coin.parseCoin("1000"), Fiat.parseFiat("XXX", "0.0001"));
+        assertEquals("0", rate.coinToFiat(Coin.COIN).toPlainString()); // Tiny value!
+        assertEquals("10000000", rate.fiatToCoin(Fiat.parseFiat("XXX", "1")).toPlainString());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void currencyCodeMismatch() throws Exception {
+        ExchangeRate rate = new ExchangeRate(Fiat.parseFiat("EUR", "500"));
+        rate.fiatToCoin(Fiat.parseFiat("USD", "1"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void constructMissingCurrencyCode() {
+        new ExchangeRate(Fiat.valueOf(null, 1));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void constructNegativeCoin() {
+        new ExchangeRate(Coin.valueOf(-1), Fiat.valueOf("EUR", 1));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void constructFiatCoin() {
+        new ExchangeRate(Fiat.valueOf("EUR", -1));
+    }
+
+    @Test
+    public void testJavaSerialization() throws Exception {
+        ExchangeRate rate = new ExchangeRate(Fiat.parseFiat("EUR", "500"));
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        new ObjectOutputStream(os).writeObject(rate);
+        ExchangeRate rateCopy = (ExchangeRate) new ObjectInputStream(
+                new ByteArrayInputStream(os.toByteArray())).readObject();
+        assertEquals(rate, rateCopy);
+    }
+}
