@@ -144,4 +144,61 @@ public class BasicKeyChainTest {
         assertTrue(keyCrypter instanceof KeyCrypterScrypt);
 
         assertTrue(chain.checkPassword(PASSWORD));
-        assertFalse(chain.che
+        assertFalse(chain.checkPassword("wrong"));
+        ECKey key = chain.findKeyFromPubKey(key1.getPubKey());
+        assertTrue(key.isEncrypted());
+        assertTrue(key.isPubKeyOnly());
+        assertFalse(key.isWatching());
+        assertNull(key.getSecretBytes());
+
+        try {
+            // Don't allow import of an unencrypted key.
+            chain.importKeys(new ECKey());
+            fail();
+        } catch (KeyCrypterException e) {
+        }
+
+        try {
+            chain.toDecrypted(keyCrypter.deriveKey("wrong"));
+            fail();
+        } catch (KeyCrypterException e) {}
+        chain = chain.toDecrypted(PASSWORD);
+        key = chain.findKeyFromPubKey(key1.getPubKey());
+        assertFalse(key.isEncrypted());
+        assertFalse(key.isPubKeyOnly());
+        assertFalse(key.isWatching());
+        key.getPrivKeyBytes();
+    }
+
+    @Test(expected = KeyCrypterException.class)
+    public void cannotImportEncryptedKey() {
+        final ECKey key1 = new ECKey();
+        chain.importKeys(ImmutableList.of(key1));
+        chain = chain.toEncrypted("foobar");
+        ECKey encryptedKey = chain.getKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertTrue(encryptedKey.isEncrypted());
+
+        BasicKeyChain chain2 = new BasicKeyChain();
+        chain2.importKeys(ImmutableList.of(encryptedKey));
+    }
+
+    @Test(expected = KeyCrypterException.class)
+    public void cannotMixParams() throws Exception {
+        chain = chain.toEncrypted("foobar");
+        KeyCrypterScrypt scrypter = new KeyCrypterScrypt(2);    // Some bogus params.
+        ECKey key1 = new ECKey().encrypt(scrypter, scrypter.deriveKey("other stuff"));
+        chain.importKeys(key1);
+    }
+
+    @Test
+    public void serializationUnencrypted() throws UnreadableWalletException {
+        Utils.setMockClock();
+        Date now = Utils.now();
+        final ECKey key1 = new ECKey();
+        Utils.rollMockClock(5000);
+        final ECKey key2 = new ECKey();
+        chain.importKeys(ImmutableList.of(key1, key2));
+        List<Protos.Key> keys = chain.serializeToProtobuf();
+        assertEquals(2, keys.size());
+        assertArrayEquals(key1.getPubKey(), keys.get(0).getPublicKey().toByteArray());
+        assertArrayEquals(key2.getPub
