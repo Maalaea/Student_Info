@@ -77,4 +77,37 @@ public class VersionTallyTest {
         }
         assertEquals(PARAMS.getMajorityWindow(), instance.getCountAtOrAbove(1).intValue());
 
-        // Check the count updates as we repla
+        // Check the count updates as we replace with 2s
+        for (int i = 0; i < PARAMS.getMajorityWindow(); i++) {
+            assertEquals(i, instance.getCountAtOrAbove(2).intValue());
+            instance.add(2);
+        }
+ 
+        // Inject a rogue 1
+        instance.add(1);
+        assertEquals(PARAMS.getMajorityWindow() - 1, instance.getCountAtOrAbove(2).intValue());
+
+        // Check we accept high values as well
+        instance.add(10);
+        assertEquals(PARAMS.getMajorityWindow() - 1, instance.getCountAtOrAbove(2).intValue());
+    }
+
+    @Test
+    public void testInitialize() throws BlockStoreException {
+        final BlockStore blockStore = new MemoryBlockStore(PARAMS);
+        final BlockChain chain = new BlockChain(PARAMS, blockStore);
+
+        // Build a historical chain of version 2 blocks
+        long timeSeconds = 1231006505;
+        StoredBlock chainHead = null;
+        for (int height = 0; height < PARAMS.getMajorityWindow(); height++) {
+            chainHead = FakeTxBuilder.createFakeBlock(blockStore, 2, timeSeconds, height).storedBlock;
+            assertEquals(2, chainHead.getHeader().getVersion());
+            timeSeconds += 60;
+        }
+
+        VersionTally instance = new VersionTally(PARAMS);
+        instance.initialize(blockStore, chainHead);
+        assertEquals(PARAMS.getMajorityWindow(), instance.getCountAtOrAbove(2).intValue());
+    }
+}
