@@ -83,4 +83,65 @@ public class BasicKeyChainTest {
         assertTrue(onKeysAddedRan.getAndSet(false));
         assertEquals(newKey, onKeysAdded.getAndSet(null).get(0));
         assertEquals(0, chain.importKeys(keys));
-        assert
+        assertFalse(onKeysAddedRan.getAndSet(false));
+        assertNull(onKeysAdded.get());
+
+        assertTrue(chain.hasKey(key1));
+        assertTrue(chain.hasKey(key2));
+        assertEquals(key1, chain.findKeyFromPubHash(key1.getPubKeyHash()));
+        assertEquals(key2, chain.findKeyFromPubKey(key2.getPubKey()));
+        assertNull(chain.findKeyFromPubKey(key2.getPubKeyHash()));
+    }
+
+    @Test
+    public void removeKey() {
+        ECKey key = new ECKey();
+        chain.importKeys(key);
+        assertEquals(1, chain.numKeys());
+        assertTrue(chain.removeKey(key));
+        assertEquals(0, chain.numKeys());
+        assertFalse(chain.removeKey(key));
+    }
+
+    @Test
+    public void getKey() {
+        ECKey key1 = chain.getKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertTrue(onKeysAddedRan.getAndSet(false));
+        assertEquals(key1, onKeysAdded.getAndSet(null).get(0));
+        ECKey key2 = chain.getKey(KeyChain.KeyPurpose.CHANGE);
+        assertFalse(onKeysAddedRan.getAndSet(false));
+        assertEquals(key2, key1);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void checkPasswordNoKeys() {
+        chain.checkPassword("test");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void checkPasswordNotEncrypted() {
+        final ArrayList<ECKey> keys = Lists.newArrayList(new ECKey(), new ECKey());
+        chain.importKeys(keys);
+        chain.checkPassword("test");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void doubleEncryptFails() {
+        final ArrayList<ECKey> keys = Lists.newArrayList(new ECKey(), new ECKey());
+        chain.importKeys(keys);
+        chain = chain.toEncrypted("foo");
+        chain.toEncrypted("foo");
+    }
+
+    @Test
+    public void encryptDecrypt() {
+        final ECKey key1 = new ECKey();
+        chain.importKeys(key1, new ECKey());
+        final String PASSWORD = "foobar";
+        chain = chain.toEncrypted(PASSWORD);
+        final KeyCrypter keyCrypter = chain.getKeyCrypter();
+        assertNotNull(keyCrypter);
+        assertTrue(keyCrypter instanceof KeyCrypterScrypt);
+
+        assertTrue(chain.checkPassword(PASSWORD));
+        assertFalse(chain.che
