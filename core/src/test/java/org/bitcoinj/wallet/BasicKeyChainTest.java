@@ -201,4 +201,51 @@ public class BasicKeyChainTest {
         List<Protos.Key> keys = chain.serializeToProtobuf();
         assertEquals(2, keys.size());
         assertArrayEquals(key1.getPubKey(), keys.get(0).getPublicKey().toByteArray());
-        assertArrayEquals(key2.getPub
+        assertArrayEquals(key2.getPubKey(), keys.get(1).getPublicKey().toByteArray());
+        assertArrayEquals(key1.getPrivKeyBytes(), keys.get(0).getSecretBytes().toByteArray());
+        assertArrayEquals(key2.getPrivKeyBytes(), keys.get(1).getSecretBytes().toByteArray());
+        long normTime = (long) (Math.floor(now.getTime() / 1000) * 1000);
+        assertEquals(normTime, keys.get(0).getCreationTimestamp());
+        assertEquals(normTime + 5000 * 1000, keys.get(1).getCreationTimestamp());
+
+        chain = BasicKeyChain.fromProtobufUnencrypted(keys);
+        assertEquals(2, chain.getKeys().size());
+        assertEquals(key1, chain.getKeys().get(0));
+        assertEquals(key2, chain.getKeys().get(1));
+    }
+
+    @Test
+    public void serializationEncrypted() throws UnreadableWalletException {
+        ECKey key1 = new ECKey();
+        chain.importKeys(key1);
+        chain = chain.toEncrypted("foo bar");
+        key1 = chain.getKeys().get(0);
+        List<Protos.Key> keys = chain.serializeToProtobuf();
+        assertEquals(1, keys.size());
+        assertArrayEquals(key1.getPubKey(), keys.get(0).getPublicKey().toByteArray());
+        assertFalse(keys.get(0).hasSecretBytes());
+        assertTrue(keys.get(0).hasEncryptedData());
+        chain = BasicKeyChain.fromProtobufEncrypted(keys, checkNotNull(chain.getKeyCrypter()));
+        assertEquals(key1.getEncryptedPrivateKey(), chain.getKeys().get(0).getEncryptedPrivateKey());
+        assertTrue(chain.checkPassword("foo bar"));
+    }
+
+    @Test
+    public void watching() throws UnreadableWalletException {
+        ECKey key1 = new ECKey();
+        ECKey pub = ECKey.fromPublicOnly(key1.getPubKeyPoint());
+        chain.importKeys(pub);
+        assertEquals(1, chain.numKeys());
+        List<Protos.Key> keys = chain.serializeToProtobuf();
+        assertEquals(1, keys.size());
+        assertTrue(keys.get(0).hasPublicKey());
+        assertFalse(keys.get(0).hasSecretBytes());
+        chain = BasicKeyChain.fromProtobufUnencrypted(keys);
+        assertEquals(1, chain.numKeys());
+        assertFalse(chain.findKeyFromPubKey(pub.getPubKey()).hasPrivKey());
+    }
+
+    @Test
+    public void bloom() throws Exception {
+        ECKey key1 = new ECKey();
+        ECKey key2 = new ECKey();
