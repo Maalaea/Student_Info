@@ -249,3 +249,34 @@ public class BasicKeyChainTest {
     public void bloom() throws Exception {
         ECKey key1 = new ECKey();
         ECKey key2 = new ECKey();
+        chain.importKeys(key1, key2);
+        assertEquals(2, chain.numKeys());
+        assertEquals(4, chain.numBloomFilterEntries());
+        BloomFilter filter = chain.getFilter(4, 0.001, 100);
+        assertTrue(filter.contains(key1.getPubKey()));
+        assertTrue(filter.contains(key1.getPubKeyHash()));
+        assertTrue(filter.contains(key2.getPubKey()));
+        assertTrue(filter.contains(key2.getPubKeyHash()));
+        ECKey key3 = new ECKey();
+        assertFalse(filter.contains(key3.getPubKey()));
+    }
+
+    @Test
+    public void keysBeforeAndAfter() throws Exception {
+        Utils.setMockClock();
+        long now = Utils.currentTimeSeconds();
+        final ECKey key1 = new ECKey();
+        Utils.rollMockClock(86400);
+        final ECKey key2 = new ECKey();
+        final List<ECKey> keys = Lists.newArrayList(key1, key2);
+        assertEquals(2, chain.importKeys(keys));
+
+        assertNull(chain.findOldestKeyAfter(now + 86400 * 2));
+        assertEquals(key1, chain.findOldestKeyAfter(now - 1));
+        assertEquals(key2, chain.findOldestKeyAfter(now + 86400 - 1));
+
+        assertEquals(2, chain.findKeysBefore(now + 86400 * 2).size());
+        assertEquals(1, chain.findKeysBefore(now + 1).size());
+        assertEquals(0, chain.findKeysBefore(now - 1).size());
+    }
+}
