@@ -77,4 +77,45 @@ public class DefaultCoinSelectorTest extends TestWithWallet {
         assertTrue(selection.gathered.contains(t1.getOutputs().get(0)));
         assertEquals(COIN, selection.valueGathered);
 
-        // Check we ordere
+        // Check we ordered them correctly (by depth).
+        ArrayList<TransactionOutput> candidates = new ArrayList<>();
+        candidates.add(t2.getOutput(0));
+        candidates.add(t1.getOutput(0));
+        DefaultCoinSelector.sortOutputs(candidates);
+        assertEquals(t1.getOutput(0), candidates.get(0));
+        assertEquals(t2.getOutput(0), candidates.get(1));
+    }
+
+    @Test
+    public void coinAgeOrdering() throws Exception {
+        // Send three transactions in four blocks on top of each other. Coin age of t1 is 1*4=4, coin age of t2 = 2*2=4
+        // and t3=0.01.
+        Transaction t1 = checkNotNull(sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN));
+        // Padding block.
+        wallet.notifyNewBestBlock(FakeTxBuilder.createFakeBlock(blockStore, Block.BLOCK_HEIGHT_GENESIS).storedBlock);
+        final Coin TWO_COINS = COIN.multiply(2);
+        Transaction t2 = checkNotNull(sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, TWO_COINS));
+        Transaction t3 = checkNotNull(sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT));
+
+        // Should be ordered t2, t1, t3.
+        ArrayList<TransactionOutput> candidates = new ArrayList<>();
+        candidates.add(t3.getOutput(0));
+        candidates.add(t2.getOutput(0));
+        candidates.add(t1.getOutput(0));
+        DefaultCoinSelector.sortOutputs(candidates);
+        assertEquals(t2.getOutput(0), candidates.get(0));
+        assertEquals(t1.getOutput(0), candidates.get(1));
+        assertEquals(t3.getOutput(0), candidates.get(2));
+    }
+
+    @Test
+    public void identicalInputs() throws Exception {
+        // Add four outputs to a transaction with same value and destination. Select them all.
+        Transaction t = new Transaction(PARAMS);
+        java.util.List<TransactionOutput> outputs = Arrays.asList(
+            new TransactionOutput(PARAMS, t, Coin.valueOf(30302787), myAddress),
+            new TransactionOutput(PARAMS, t, Coin.valueOf(30302787), myAddress),
+            new TransactionOutput(PARAMS, t, Coin.valueOf(30302787), myAddress),
+            new TransactionOutput(PARAMS, t, Coin.valueOf(30302787), myAddress)
+        );
+        t
