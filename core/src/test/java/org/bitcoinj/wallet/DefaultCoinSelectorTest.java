@@ -118,4 +118,11 @@ public class DefaultCoinSelectorTest extends TestWithWallet {
             new TransactionOutput(PARAMS, t, Coin.valueOf(30302787), myAddress),
             new TransactionOutput(PARAMS, t, Coin.valueOf(30302787), myAddress)
         );
-        t
+        t.getConfidence().setConfidenceType(TransactionConfidence.ConfidenceType.BUILDING);
+
+        DefaultCoinSelector selector = new DefaultCoinSelector();
+        CoinSelection selection = selector.select(COIN.multiply(2), outputs);
+
+        assertTrue(selection.gathered.size() == 4);
+    }
+}
