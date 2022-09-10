@@ -56,4 +56,48 @@ public class DefaultRiskAnalysisTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void a
+    public void analysisCantBeUsedTwice() {
+        Transaction tx = new Transaction(PARAMS);
+        DefaultRiskAnalysis analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx, NO_DEPS);
+        assertEquals(RiskAnalysis.Result.OK, analysis.analyze());
+        assertNull(analysis.getNonFinal());
+        // Verify we can't re-use a used up risk analysis.
+        analysis.analyze();
+    }
+
+    @Test
+    public void nonFinal() throws Exception {
+        // Verify that just having a lock time in the future is not enough to be considered risky (it's still final).
+        Transaction tx = new Transaction(PARAMS);
+        TransactionInput input = tx.addInput(PARAMS.getGenesisBlock().getTransactions().get(0).getOutput(0));
+        tx.addOutput(COIN, key1);
+        tx.setLockTime(TIMESTAMP + 86400);
+        DefaultRiskAnalysis analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx, NO_DEPS);
+        assertEquals(RiskAnalysis.Result.OK, analysis.analyze());
+        assertNull(analysis.getNonFinal());
+
+        // Set a sequence number on the input to make it genuinely non-final. Verify it's risky.
+        input.setSequenceNumber(TransactionInput.NO_SEQUENCE - 1);
+        analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx, NO_DEPS);
+        assertEquals(RiskAnalysis.Result.NON_FINAL, analysis.analyze());
+        assertEquals(tx, analysis.getNonFinal());
+
+        // If the lock time is the current block, it's about to become final and we consider it non-risky.
+        tx.setLockTime(1000);
+        analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx, NO_DEPS);
+        assertEquals(RiskAnalysis.Result.OK, analysis.analyze());
+    }
+
+    @Test
+    public void selfCreatedAreNotRisky() {
+        Transaction tx = new Transaction(PARAMS);
+        tx.addInput(PARAMS.getGenesisBlock().getTransactions().get(0).getOutput(0)).setSequenceNumber(1);
+        tx.addOutput(COIN, key1);
+        tx.setLockTime(TIMESTAMP + 86400);
+
+        {
+            // Is risky ...
+            DefaultRiskAnalysis analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx, NO_DEPS);
+            assertEquals(RiskAnalysis.Result.NON_FINAL, analysis.analyze());
+        }
+        tx.getConfidence().setSource(Trans
