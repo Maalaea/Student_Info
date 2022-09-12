@@ -144,4 +144,41 @@ public class DefaultRiskAnalysisTest {
 
     @Test
     public void nonShortestPossiblePushData() {
-        S
+        ScriptChunk nonStandardChunk = new ScriptChunk(OP_PUSHDATA1, new byte[75]);
+        byte[] nonStandardScript = new ScriptBuilder().addChunk(nonStandardChunk).build().getProgram();
+        // Test non-standard script as an input.
+        Transaction tx = new Transaction(PARAMS);
+        assertEquals(DefaultRiskAnalysis.RuleViolation.NONE, DefaultRiskAnalysis.isStandard(tx));
+        tx.addInput(new TransactionInput(PARAMS, null, nonStandardScript));
+        assertEquals(DefaultRiskAnalysis.RuleViolation.SHORTEST_POSSIBLE_PUSHDATA, DefaultRiskAnalysis.isStandard(tx));
+        // Test non-standard script as an output.
+        tx.clearInputs();
+        assertEquals(DefaultRiskAnalysis.RuleViolation.NONE, DefaultRiskAnalysis.isStandard(tx));
+        tx.addOutput(new TransactionOutput(PARAMS, null, COIN, nonStandardScript));
+        assertEquals(DefaultRiskAnalysis.RuleViolation.SHORTEST_POSSIBLE_PUSHDATA, DefaultRiskAnalysis.isStandard(tx));
+    }
+
+    @Test
+    public void canonicalSignature() {
+        TransactionSignature sig = TransactionSignature.dummy();
+        Script scriptOk = ScriptBuilder.createInputScript(sig);
+        assertEquals(RuleViolation.NONE,
+                DefaultRiskAnalysis.isInputStandard(new TransactionInput(PARAMS, null, scriptOk.getProgram())));
+
+        byte[] sigBytes = sig.encodeToBitcoin();
+        // Appending a zero byte makes the signature uncanonical without violating DER encoding.
+        Script scriptUncanonicalEncoding = new ScriptBuilder().data(Arrays.copyOf(sigBytes, sigBytes.length + 1))
+                .build();
+        assertEquals(RuleViolation.SIGNATURE_CANONICAL_ENCODING,
+                DefaultRiskAnalysis.isInputStandard(new TransactionInput(PARAMS, null, scriptUncanonicalEncoding
+                        .getProgram())));
+    }
+
+    @Test
+    public void canonicalSignatureLowS() {
+        // First, a synthetic test.
+        TransactionSignature sig = TransactionSignature.dummy();
+        Script scriptHighS = ScriptBuilder
+                .createInputScript(new TransactionSignature(sig.r, ECKey.CURVE.getN().subtract(sig.s)));
+        assertEquals(RuleViolation.SIGNATURE_CANONICAL_ENCODING,
+                DefaultRiskAnalysis.isInputStandard(new Transacti
