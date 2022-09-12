@@ -100,4 +100,48 @@ public class DefaultRiskAnalysisTest {
             DefaultRiskAnalysis analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx, NO_DEPS);
             assertEquals(RiskAnalysis.Result.NON_FINAL, analysis.analyze());
         }
-        tx.getConfidence().setSource(Trans
+        tx.getConfidence().setSource(TransactionConfidence.Source.SELF);
+        {
+            // Is no longer risky.
+            DefaultRiskAnalysis analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx, NO_DEPS);
+            assertEquals(RiskAnalysis.Result.OK, analysis.analyze());
+        }
+    }
+
+    @Test
+    public void nonFinalDependency() {
+        // Final tx has a dependency that is non-final.
+        Transaction tx1 = new Transaction(PARAMS);
+        tx1.addInput(PARAMS.getGenesisBlock().getTransactions().get(0).getOutput(0)).setSequenceNumber(1);
+        TransactionOutput output = tx1.addOutput(COIN, key1);
+        tx1.setLockTime(TIMESTAMP + 86400);
+        Transaction tx2 = new Transaction(PARAMS);
+        tx2.addInput(output);
+        tx2.addOutput(COIN, new ECKey());
+
+        DefaultRiskAnalysis analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx2, ImmutableList.of(tx1));
+        assertEquals(RiskAnalysis.Result.NON_FINAL, analysis.analyze());
+        assertEquals(tx1, analysis.getNonFinal());
+    }
+
+    @Test
+    public void nonStandardDust() {
+        Transaction standardTx = new Transaction(PARAMS);
+        standardTx.addInput(PARAMS.getGenesisBlock().getTransactions().get(0).getOutput(0));
+        standardTx.addOutput(COIN, key1);
+        assertEquals(RiskAnalysis.Result.OK, DefaultRiskAnalysis.FACTORY.create(wallet, standardTx, NO_DEPS).analyze());
+
+        Transaction dustTx = new Transaction(PARAMS);
+        dustTx.addInput(PARAMS.getGenesisBlock().getTransactions().get(0).getOutput(0));
+        dustTx.addOutput(Coin.SATOSHI, key1); // 1 Satoshi
+        assertEquals(RiskAnalysis.Result.NON_STANDARD, DefaultRiskAnalysis.FACTORY.create(wallet, dustTx, NO_DEPS).analyze());
+
+        Transaction edgeCaseTx = new Transaction(PARAMS);
+        edgeCaseTx.addInput(PARAMS.getGenesisBlock().getTransactions().get(0).getOutput(0));
+        edgeCaseTx.addOutput(DefaultRiskAnalysis.MIN_ANALYSIS_NONDUST_OUTPUT, key1); // Dust threshold
+        assertEquals(RiskAnalysis.Result.OK, DefaultRiskAnalysis.FACTORY.create(wallet, edgeCaseTx, NO_DEPS).analyze());
+    }
+
+    @Test
+    public void nonShortestPossiblePushData() {
+        S
