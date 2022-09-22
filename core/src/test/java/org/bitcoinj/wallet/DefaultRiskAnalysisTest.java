@@ -227,3 +227,8 @@ public class DefaultRiskAnalysisTest {
     public void optInFullRBF() throws Exception {
         Transaction tx = FakeTxBuilder.createFakeTx(PARAMS);
         tx.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE - 2);
+        DefaultRiskAnalysis analysis = DefaultRiskAnalysis.FACTORY.create(wallet, tx, NO_DEPS);
+        assertEquals(RiskAnalysis.Result.NON_FINAL, analysis.analyze());
+        assertEquals(tx, analysis.getNonFinal());
+    }
+}
