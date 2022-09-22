@@ -41,4 +41,55 @@ public class KeyChainGroupTest {
     private static final int INITIAL_KEYS = 4;
     private static final int LOOKAHEAD_SIZE = 5;
     private static final NetworkParameters PARAMS = MainNetParams.get();
-    private static final Strin
+    private static final String XPUB = "xpub68KFnj3bqUx1s7mHejLDBPywCAKdJEu1b49uniEEn2WSbHmZ7xbLqFTjJbtx1LUcAt1DwhoqWHmo2s5WMJp6wi38CiF2hYD49qVViKVvAoi";
+    private KeyChainGroup group;
+    private DeterministicKey watchingAccountKey;
+
+    @Before
+    public void setup() {
+        BriefLogFormatter.init();
+        Utils.setMockClock();
+        group = new KeyChainGroup(PARAMS);
+        group.setLookaheadSize(LOOKAHEAD_SIZE);   // Don't want slow tests.
+        group.getActiveKeyChain();  // Force create a chain.
+
+        watchingAccountKey = DeterministicKey.deserializeB58(null, XPUB, PARAMS);
+    }
+
+    private KeyChainGroup createMarriedKeyChainGroup() {
+        KeyChainGroup group = new KeyChainGroup(PARAMS);
+        DeterministicKeyChain chain = createMarriedKeyChain();
+        group.addAndActivateHDChain(chain);
+        group.setLookaheadSize(LOOKAHEAD_SIZE);
+        group.getActiveKeyChain();
+        return group;
+    }
+
+    private MarriedKeyChain createMarriedKeyChain() {
+        byte[] entropy = Sha256Hash.hash("don't use a seed like this in real life".getBytes());
+        DeterministicSeed seed = new DeterministicSeed(entropy, "", MnemonicCode.BIP39_STANDARDISATION_TIME_SECS);
+        MarriedKeyChain chain = MarriedKeyChain.builder()
+                .seed(seed)
+                .followingKeys(watchingAccountKey)
+                .threshold(2).build();
+        return chain;
+    }
+
+    @Test
+    public void freshCurrentKeys() throws Exception {
+        int numKeys = ((group.getLookaheadSize() + group.getLookaheadThreshold()) * 2)   // * 2 because of internal/external
+                + 1  // keys issued
+                + group.getActiveKeyChain().getAccountPath().size() + 2  /* account key + int/ext parent keys */;
+        assertEquals(numKeys, group.numKeys());
+        assertEquals(2 * numKeys, group.getBloomFilterElementCount());
+        ECKey r1 = group.currentKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(numKeys, group.numKeys());
+        assertEquals(2 * numKeys, group.getBloomFilterElementCount());
+
+        ECKey i1 = new ECKey();
+        group.importKeys(i1);
+        numKeys++;
+        assertEquals(numKeys, group.numKeys());
+        assertEquals(2 * numKeys, group.getBloomFilterElementCount());
+
+        E
