@@ -92,4 +92,60 @@ public class KeyChainGroupTest {
         assertEquals(numKeys, group.numKeys());
         assertEquals(2 * numKeys, group.getBloomFilterElementCount());
 
-        E
+        ECKey r2 = group.currentKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(r1, r2);
+        ECKey c1 = group.currentKey(KeyChain.KeyPurpose.CHANGE);
+        assertNotEquals(r1, c1);
+        ECKey r3 = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertNotEquals(r1, r3);
+        ECKey c2 = group.freshKey(KeyChain.KeyPurpose.CHANGE);
+        assertNotEquals(r3, c2);
+        // Current key has not moved and will not under marked as used.
+        ECKey r4 = group.currentKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(r2, r4);
+        ECKey c3 = group.currentKey(KeyChain.KeyPurpose.CHANGE);
+        assertEquals(c1, c3);
+        // Mark as used. Current key is now different.
+        group.markPubKeyAsUsed(r4.getPubKey());
+        ECKey r5 = group.currentKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertNotEquals(r4, r5);
+    }
+
+    @Test
+    public void freshCurrentKeysForMarriedKeychain() throws Exception {
+        group = createMarriedKeyChainGroup();
+
+        try {
+            group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+            fail();
+        } catch (UnsupportedOperationException e) {
+        }
+
+        try {
+            group.currentKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+            fail();
+        } catch (UnsupportedOperationException e) {
+        }
+    }
+
+    @Test
+    public void imports() throws Exception {
+        ECKey key1 = new ECKey();
+        int numKeys = group.numKeys();
+        assertFalse(group.removeImportedKey(key1));
+        assertEquals(1, group.importKeys(ImmutableList.of(key1)));
+        assertEquals(numKeys + 1, group.numKeys());   // Lookahead is triggered by requesting a key, so none yet.
+        group.removeImportedKey(key1);
+        assertEquals(numKeys, group.numKeys());
+    }
+
+    @Test
+    public void findKey() throws Exception {
+        ECKey a = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        ECKey b = group.freshKey(KeyChain.KeyPurpose.CHANGE);
+        ECKey c = new ECKey();
+        ECKey d = new ECKey();   // Not imported.
+        group.importKeys(c);
+        assertTrue(group.hasKey(a));
+        assertTrue(group.hasKey(b));
+        asse
