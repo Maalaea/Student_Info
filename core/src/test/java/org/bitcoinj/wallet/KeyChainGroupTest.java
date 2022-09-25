@@ -148,4 +148,54 @@ public class KeyChainGroupTest {
         group.importKeys(c);
         assertTrue(group.hasKey(a));
         assertTrue(group.hasKey(b));
-        asse
+        assertTrue(group.hasKey(c));
+        assertFalse(group.hasKey(d));
+        ECKey result = group.findKeyFromPubKey(a.getPubKey());
+        assertEquals(a, result);
+        result = group.findKeyFromPubKey(b.getPubKey());
+        assertEquals(b, result);
+        result = group.findKeyFromPubHash(a.getPubKeyHash());
+        assertEquals(a, result);
+        result = group.findKeyFromPubHash(b.getPubKeyHash());
+        assertEquals(b, result);
+        result = group.findKeyFromPubKey(c.getPubKey());
+        assertEquals(c, result);
+        result = group.findKeyFromPubHash(c.getPubKeyHash());
+        assertEquals(c, result);
+        assertNull(group.findKeyFromPubKey(d.getPubKey()));
+        assertNull(group.findKeyFromPubHash(d.getPubKeyHash()));
+    }
+
+    @Test
+    public void currentP2SHAddress() throws Exception {
+        group = createMarriedKeyChainGroup();
+        Address a1 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertTrue(a1.isP2SHAddress());
+        Address a2 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(a1, a2);
+        Address a3 = group.currentAddress(KeyChain.KeyPurpose.CHANGE);
+        assertNotEquals(a2, a3);
+    }
+
+    @Test
+    public void freshAddress() throws Exception {
+        group = createMarriedKeyChainGroup();
+        Address a1 = group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        Address a2 = group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertTrue(a1.isP2SHAddress());
+        assertNotEquals(a1, a2);
+        group.getBloomFilterElementCount();
+        assertEquals(((group.getLookaheadSize() + group.getLookaheadThreshold()) * 2)   // * 2 because of internal/external
+                + (2 - group.getLookaheadThreshold())  // keys issued
+                + group.getActiveKeyChain().getAccountPath().size() + 3  /* master, account, int, ext */, group.numKeys());
+
+        Address a3 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(a2, a3);
+    }
+
+    @Test
+    public void findRedeemData() throws Exception {
+        group = createMarriedKeyChainGroup();
+
+        // test script hash that we don't have
+        assertNull(group.findRed
