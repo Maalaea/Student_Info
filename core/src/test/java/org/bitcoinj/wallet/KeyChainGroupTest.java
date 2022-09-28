@@ -311,4 +311,42 @@ public class KeyChainGroupTest {
         ECKey key1 = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
         ECKey key2 = new ECKey();
         BloomFilter filter = group.getBloomFilter(group.getBloomFilterElementCount(), 0.001, (long)(Math.random() * Long.MAX_VALUE));
-        assertTrue(filter
+        assertTrue(filter.contains(key1.getPubKeyHash()));
+        assertTrue(filter.contains(key1.getPubKey()));
+        assertFalse(filter.contains(key2.getPubKey()));
+        // Check that the filter contains the lookahead buffer and threshold zone.
+        for (int i = 0; i < LOOKAHEAD_SIZE + group.getLookaheadThreshold(); i++) {
+            ECKey k = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+            assertTrue(filter.contains(k.getPubKeyHash()));
+        }
+        // We ran ahead of the lookahead buffer.
+        assertFalse(filter.contains(group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS).getPubKey()));
+        group.importKeys(key2);
+        filter = group.getBloomFilter(group.getBloomFilterElementCount(), 0.001, (long) (Math.random() * Long.MAX_VALUE));
+        assertTrue(filter.contains(key1.getPubKeyHash()));
+        assertTrue(filter.contains(key1.getPubKey()));
+        assertTrue(filter.contains(key2.getPubKey()));
+    }
+
+    @Test
+    public void findRedeemScriptFromPubHash() throws Exception {
+        group = createMarriedKeyChainGroup();
+        Address address = group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertTrue(group.findRedeemDataFromScriptHash(address.getHash160()) != null);
+        group.getBloomFilterElementCount();
+        KeyChainGroup group2 = createMarriedKeyChainGroup();
+        group2.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        group2.getBloomFilterElementCount();  // Force lookahead.
+        // test address from lookahead zone and lookahead threshold zone
+        for (int i = 0; i < group.getLookaheadSize() + group.getLookaheadThreshold(); i++) {
+            address = group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+            assertTrue(group2.findRedeemDataFromScriptHash(address.getHash160()) != null);
+        }
+        assertFalse(group2.findRedeemDataFromScriptHash(group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS).getHash160()) != null);
+    }
+
+    @Test
+    public void bloomFilterForMarriedChains() throws Exception {
+        group = createMarriedKeyChainGroup();
+        int bufferSize = group.getLookaheadSize() + group.getLookaheadThreshold();
+        int expected = bufferSize * 2 /* chains
