@@ -252,4 +252,63 @@ public class KeyChainGroupTest {
             assertTrue(checkNotNull(group.findKeyFromPubKey(b.getPubKey())).isEncrypted());
             assertEquals(yesterday, group.getEarliestKeyCreationTime());
         } else {
-            assertEquals(now, group.getEarlies
+            assertEquals(now, group.getEarliestKeyCreationTime());
+        }
+        try {
+            ea.sign(Sha256Hash.ZERO_HASH);
+            fail();
+        } catch (ECKey.KeyIsEncryptedException e) {
+            // Ignored.
+        }
+        if (withImported) {
+            ECKey c = new ECKey();
+            try {
+                group.importKeys(c);
+                fail();
+            } catch (KeyCrypterException e) {
+            }
+            group.importKeysAndEncrypt(ImmutableList.of(c), aesKey);
+            ECKey ec = group.findKeyFromPubKey(c.getPubKey());
+            try {
+                group.importKeysAndEncrypt(ImmutableList.of(ec), aesKey);
+                fail();
+            } catch (IllegalArgumentException e) {
+            }
+        }
+
+        try {
+            group.decrypt(scrypt.deriveKey("WRONG PASSWORD"));
+            fail();
+        } catch (KeyCrypterException e) {
+        }
+
+        group.decrypt(aesKey);
+        assertFalse(group.isEncrypted());
+        assertFalse(checkNotNull(group.findKeyFromPubKey(a.getPubKey())).isEncrypted());
+        if (withImported) {
+            assertFalse(checkNotNull(group.findKeyFromPubKey(b.getPubKey())).isEncrypted());
+            assertEquals(yesterday, group.getEarliestKeyCreationTime());
+        } else {
+            assertEquals(now, group.getEarliestKeyCreationTime());
+        }
+    }
+
+    @Test
+    public void encryptionWhilstEmpty() throws Exception {
+        group = new KeyChainGroup(PARAMS);
+        group.setLookaheadSize(5);
+        KeyCrypterScrypt scrypt = new KeyCrypterScrypt(2);
+        final KeyParameter aesKey = scrypt.deriveKey("password");
+        group.encrypt(scrypt, aesKey);
+        assertTrue(group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS).isEncrypted());
+        final ECKey key = group.currentKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        group.decrypt(aesKey);
+        assertFalse(checkNotNull(group.findKeyFromPubKey(key.getPubKey())).isEncrypted());
+    }
+
+    @Test
+    public void bloom() throws Exception {
+        ECKey key1 = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        ECKey key2 = new ECKey();
+        BloomFilter filter = group.getBloomFilter(group.getBloomFilterElementCount(), 0.001, (long)(Math.random() * Long.MAX_VALUE));
+        assertTrue(filter
