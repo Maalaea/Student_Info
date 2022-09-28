@@ -349,4 +349,50 @@ public class KeyChainGroupTest {
     public void bloomFilterForMarriedChains() throws Exception {
         group = createMarriedKeyChainGroup();
         int bufferSize = group.getLookaheadSize() + group.getLookaheadThreshold();
-        int expected = bufferSize * 2 /* chains
+        int expected = bufferSize * 2 /* chains */ * 2 /* elements */;
+        assertEquals(expected, group.getBloomFilterElementCount());
+        Address address1 = group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(expected, group.getBloomFilterElementCount());
+        BloomFilter filter = group.getBloomFilter(expected + 2, 0.001, (long)(Math.random() * Long.MAX_VALUE));
+        assertTrue(filter.contains(address1.getHash160()));
+
+        Address address2 = group.freshAddress(KeyChain.KeyPurpose.CHANGE);
+        assertTrue(filter.contains(address2.getHash160()));
+
+        // Check that the filter contains the lookahead buffer.
+        for (int i = 0; i < bufferSize - 1 /* issued address */; i++) {
+            Address address = group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+            assertTrue("key " + i, filter.contains(address.getHash160()));
+        }
+        // We ran ahead of the lookahead buffer.
+        assertFalse(filter.contains(group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS).getHash160()));
+    }
+
+    @Test
+    public void earliestKeyTime() throws Exception {
+        long now = Utils.currentTimeSeconds();   // mock
+        long yesterday = now - 86400;
+        assertEquals(now, group.getEarliestKeyCreationTime());
+        Utils.rollMockClock(10000);
+        group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        Utils.rollMockClock(10000);
+        group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        // Check that all keys are assumed to be created at the same instant the seed is.
+        assertEquals(now, group.getEarliestKeyCreationTime());
+        ECKey key = new ECKey();
+        key.setCreationTimeSeconds(yesterday);
+        group.importKeys(key);
+        assertEquals(yesterday, group.getEarliestKeyCreationTime());
+    }
+
+    @Test
+    public void events() throws Exception {
+        // Check that events are registered with the right chains and that if a chain is added, it gets the event
+        // listeners attached properly even post-hoc.
+        final AtomicReference<ECKey> ran = new AtomicReference<>(null);
+        final KeyChainEventListener listener = new KeyChainEventListener() {
+            @Override
+            public void onKeysAdded(List<ECKey> keys) {
+                ran.set(keys.get(0));
+            }
+    
