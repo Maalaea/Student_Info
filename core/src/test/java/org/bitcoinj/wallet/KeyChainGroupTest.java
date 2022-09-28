@@ -198,4 +198,58 @@ public class KeyChainGroupTest {
         group = createMarriedKeyChainGroup();
 
         // test script hash that we don't have
-        assertNull(group.findRed
+        assertNull(group.findRedeemDataFromScriptHash(new ECKey().getPubKey()));
+
+        // test our script hash
+        Address address = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        RedeemData redeemData = group.findRedeemDataFromScriptHash(address.getHash160());
+        assertNotNull(redeemData);
+        assertNotNull(redeemData.redeemScript);
+        assertEquals(2, redeemData.keys.size());
+    }
+
+    // Check encryption with and without a basic keychain.
+
+    @Test
+    public void encryptionWithoutImported() throws Exception {
+        encryption(false);
+    }
+
+    @Test
+    public void encryptionWithImported() throws Exception {
+        encryption(true);
+    }
+
+    public void encryption(boolean withImported) throws Exception {
+        Utils.rollMockClock(0);
+        long now = Utils.currentTimeSeconds();
+        ECKey a = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(now, group.getEarliestKeyCreationTime());
+        Utils.rollMockClock(-86400);
+        long yesterday = Utils.currentTimeSeconds();
+        ECKey b = new ECKey();
+
+        assertFalse(group.isEncrypted());
+        try {
+            group.checkPassword("foo");   // Cannot check password of an unencrypted group.
+            fail();
+        } catch (IllegalStateException e) {
+        }
+        if (withImported) {
+            assertEquals(now, group.getEarliestKeyCreationTime());
+            group.importKeys(b);
+            assertEquals(yesterday, group.getEarliestKeyCreationTime());
+        }
+        KeyCrypterScrypt scrypt = new KeyCrypterScrypt(2);
+        final KeyParameter aesKey = scrypt.deriveKey("password");
+        group.encrypt(scrypt, aesKey);
+        assertTrue(group.isEncrypted());
+        assertTrue(group.checkPassword("password"));
+        assertFalse(group.checkPassword("wrong password"));
+        final ECKey ea = group.findKeyFromPubKey(a.getPubKey());
+        assertTrue(checkNotNull(ea).isEncrypted());
+        if (withImported) {
+            assertTrue(checkNotNull(group.findKeyFromPubKey(b.getPubKey())).isEncrypted());
+            assertEquals(yesterday, group.getEarliestKeyCreationTime());
+        } else {
+            assertEquals(now, group.getEarlies
