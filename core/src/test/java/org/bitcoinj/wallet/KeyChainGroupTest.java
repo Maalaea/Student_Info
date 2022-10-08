@@ -526,4 +526,51 @@ public class KeyChainGroupTest {
         assertEquals(dkey1, dkey2);
 
         // Check we used the right (oldest) key despite backwards import order.
-        byte[] tr
+        byte[] truncatedBytes = Arrays.copyOfRange(key1.getSecretBytes(), 0, 16);
+        assertArrayEquals(seed1.getEntropyBytes(), truncatedBytes);
+    }
+
+    @Test
+    public void deterministicUpgradeRotating() throws Exception {
+        group = new KeyChainGroup(PARAMS);
+        group.setLookaheadSize(LOOKAHEAD_SIZE);   // Don't want slow tests.
+        long now = Utils.currentTimeSeconds();
+        ECKey key1 = new ECKey();
+        Utils.rollMockClock(86400);
+        ECKey key2 = new ECKey();
+        Utils.rollMockClock(86400);
+        ECKey key3 = new ECKey();
+        group.importKeys(key2, key1, key3);
+        group.upgradeToDeterministic(now + 10, null);
+        DeterministicSeed seed = group.getActiveKeyChain().getSeed();
+        assertNotNull(seed);
+        // Check we used the right key: oldest non rotating.
+        byte[] truncatedBytes = Arrays.copyOfRange(key2.getSecretBytes(), 0, 16);
+        assertArrayEquals(seed.getEntropyBytes(), truncatedBytes);
+    }
+
+    @Test
+    public void deterministicUpgradeEncrypted() throws Exception {
+        group = new KeyChainGroup(PARAMS);
+        final ECKey key = new ECKey();
+        group.importKeys(key);
+        final KeyCrypterScrypt crypter = new KeyCrypterScrypt();
+        final KeyParameter aesKey = crypter.deriveKey("abc");
+        assertTrue(group.isDeterministicUpgradeRequired());
+        group.encrypt(crypter, aesKey);
+        assertTrue(group.isDeterministicUpgradeRequired());
+        try {
+            group.upgradeToDeterministic(0, null);
+            fail();
+        } catch (DeterministicUpgradeRequiresPassword e) {
+            // Expected.
+        }
+        group.upgradeToDeterministic(0, aesKey);
+        assertFalse(group.isDeterministicUpgradeRequired());
+        final DeterministicSeed deterministicSeed = group.getActiveKeyChain().getSeed();
+        assertNotNull(deterministicSeed);
+        assertTrue(deterministicSeed.isEncrypted());
+        byte[] entropy = checkNotNull(group.getActiveKeyChain().toDecrypted(aesKey).getSeed()).getEntropyBytes();
+        // Check we used the right key: oldest non rotating.
+        byte[] truncatedBytes = Arrays.copyOfRange(key.getSecretBytes(), 0, 16);
+        assertArrayEquals(ent
