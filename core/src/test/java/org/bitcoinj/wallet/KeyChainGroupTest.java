@@ -482,4 +482,48 @@ public class KeyChainGroupTest {
     }
 
     @Test
-    public void const
+    public void constructFromSeed() throws Exception {
+        ECKey key1 = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        final DeterministicSeed seed = checkNotNull(group.getActiveKeyChain().getSeed());
+        KeyChainGroup group2 = new KeyChainGroup(PARAMS, seed);
+        group2.setLookaheadSize(5);
+        ECKey key2 = group2.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(key1, key2);
+    }
+
+    @Test(expected = DeterministicUpgradeRequiredException.class)
+    public void deterministicUpgradeRequired() throws Exception {
+        // Check that if we try to use HD features in a KCG that only has random keys, we get an exception.
+        group = new KeyChainGroup(PARAMS);
+        group.importKeys(new ECKey(), new ECKey());
+        assertTrue(group.isDeterministicUpgradeRequired());
+        group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);   // throws
+    }
+
+    @Test
+    public void deterministicUpgradeUnencrypted() throws Exception {
+        // Check that a group that contains only random keys has its HD chain created using the private key bytes of
+        // the oldest random key, so upgrading the same wallet twice gives the same outcome.
+        group = new KeyChainGroup(PARAMS);
+        group.setLookaheadSize(LOOKAHEAD_SIZE);   // Don't want slow tests.
+        ECKey key1 = new ECKey();
+        Utils.rollMockClock(86400);
+        ECKey key2 = new ECKey();
+        group.importKeys(key2, key1);
+
+        List<Protos.Key> protobufs = group.serializeToProtobuf();
+        group.upgradeToDeterministic(0, null);
+        assertFalse(group.isDeterministicUpgradeRequired());
+        DeterministicKey dkey1 = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        DeterministicSeed seed1 = group.getActiveKeyChain().getSeed();
+        assertNotNull(seed1);
+
+        group = KeyChainGroup.fromProtobufUnencrypted(PARAMS, protobufs);
+        group.upgradeToDeterministic(0, null);  // Should give same result as last time.
+        DeterministicKey dkey2 = group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        DeterministicSeed seed2 = group.getActiveKeyChain().getSeed();
+        assertEquals(seed1, seed2);
+        assertEquals(dkey1, dkey2);
+
+        // Check we used the right (oldest) key despite backwards import order.
+        byte[] tr
