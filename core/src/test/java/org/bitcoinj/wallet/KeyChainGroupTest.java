@@ -573,4 +573,56 @@ public class KeyChainGroupTest {
         byte[] entropy = checkNotNull(group.getActiveKeyChain().toDecrypted(aesKey).getSeed()).getEntropyBytes();
         // Check we used the right key: oldest non rotating.
         byte[] truncatedBytes = Arrays.copyOfRange(key.getSecretBytes(), 0, 16);
-        assertArrayEquals(ent
+        assertArrayEquals(entropy, truncatedBytes);
+    }
+
+    @Test
+    public void markAsUsed() throws Exception {
+        Address addr1 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        Address addr2 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(addr1, addr2);
+        group.markPubKeyHashAsUsed(addr1.getHash160());
+        Address addr3 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertNotEquals(addr2, addr3);
+    }
+
+    @Test
+    public void isNotWatching() {
+        group = new KeyChainGroup(PARAMS);
+        final ECKey key = ECKey.fromPrivate(BigInteger.TEN);
+        group.importKeys(key);
+        assertFalse(group.isWatching());
+    }
+
+    @Test
+    public void isWatching() {
+        group = new KeyChainGroup(
+                PARAMS,
+                DeterministicKey
+                        .deserializeB58(
+                                "xpub69bjfJ91ikC5ghsqsVDHNq2dRGaV2HHVx7Y9LXi27LN9BWWAXPTQr4u8U3wAtap8bLdHdkqPpAcZmhMS5SnrMQC4ccaoBccFhh315P4UYzo",
+                                PARAMS));
+        final ECKey watchingKey = ECKey.fromPublicOnly(new ECKey().getPubKeyPoint());
+        group.importKeys(watchingKey);
+        assertTrue(group.isWatching());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void isWatchingNoKeys() {
+        group = new KeyChainGroup(PARAMS);
+        group.isWatching();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void isWatchingMixedKeys() {
+        group = new KeyChainGroup(
+                PARAMS,
+                DeterministicKey
+                        .deserializeB58(
+                                "xpub69bjfJ91ikC5ghsqsVDHNq2dRGaV2HHVx7Y9LXi27LN9BWWAXPTQr4u8U3wAtap8bLdHdkqPpAcZmhMS5SnrMQC4ccaoBccFhh315P4UYzo",
+                                PARAMS));
+        final ECKey key = ECKey.fromPrivate(BigInteger.TEN);
+        group.importKeys(key);
+        group.isWatching();
+    }
+}
