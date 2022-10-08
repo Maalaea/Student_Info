@@ -434,4 +434,52 @@ public class KeyChainGroupTest {
         assertTrue(group.hasKey(key1));
         assertTrue(group.hasKey(key2));
 
-        KeyCrypter
+        KeyCrypterScrypt scrypt = new KeyCrypterScrypt(2);
+        final KeyParameter aesKey = scrypt.deriveKey("password");
+        group.encrypt(scrypt, aesKey);
+        List<Protos.Key> protoKeys3 = group.serializeToProtobuf();
+        group = KeyChainGroup.fromProtobufEncrypted(PARAMS, protoKeys3, scrypt);
+        assertTrue(group.isEncrypted());
+        assertTrue(group.checkPassword("password"));
+        group.decrypt(aesKey);
+
+        // No need for extensive contents testing here, as that's done in the keychain class tests.
+    }
+
+    @Test
+    public void serializeWatching() throws Exception {
+        group = new KeyChainGroup(PARAMS, watchingAccountKey);
+        group.setLookaheadSize(LOOKAHEAD_SIZE);
+        group.freshKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        group.freshKey(KeyChain.KeyPurpose.CHANGE);
+        group.getBloomFilterElementCount();  // Force lookahead.
+        List<Protos.Key> protoKeys1 = group.serializeToProtobuf();
+        assertEquals(3 + (group.getLookaheadSize() + group.getLookaheadThreshold() + 1) * 2, protoKeys1.size());
+        group = KeyChainGroup.fromProtobufUnencrypted(PARAMS, protoKeys1);
+        assertEquals(3 + (group.getLookaheadSize() + group.getLookaheadThreshold() + 1) * 2, group.serializeToProtobuf().size());
+    }
+
+    @Test
+    public void serializeMarried() throws Exception {
+        group = createMarriedKeyChainGroup();
+        Address address1 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertTrue(group.isMarried());
+        assertEquals(2, group.getActiveKeyChain().getSigsRequiredToSpend());
+
+        List<Protos.Key> protoKeys = group.serializeToProtobuf();
+        KeyChainGroup group2 = KeyChainGroup.fromProtobufUnencrypted(PARAMS, protoKeys);
+        assertTrue(group2.isMarried());
+        assertEquals(2, group.getActiveKeyChain().getSigsRequiredToSpend());
+        Address address2 = group2.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        assertEquals(address1, address2);
+    }
+
+    @Test
+    public void addFollowingAccounts() throws Exception {
+        assertFalse(group.isMarried());
+        group.addAndActivateHDChain(createMarriedKeyChain());
+        assertTrue(group.isMarried());
+    }
+
+    @Test
+    public void const
