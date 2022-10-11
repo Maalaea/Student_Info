@@ -119,3 +119,58 @@ public class WalletTest extends TestWithWallet {
         List<DeterministicKey> followingKeys = Lists.newArrayList();
         for (int i = 0; i < numKeys - 1; i++) {
             final DeterministicKeyChain keyChain = new DeterministicKeyChain(new SecureRandom());
+            DeterministicKey partnerKey = DeterministicKey.deserializeB58(null, keyChain.getWatchingKey().serializePubB58(PARAMS), PARAMS);
+            followingKeys.add(partnerKey);
+            if (addSigners && i < threshold - 1)
+                wallet.addTransactionSigner(new KeyChainTransactionSigner(keyChain));
+        }
+
+        MarriedKeyChain chain = MarriedKeyChain.builder()
+                .random(new SecureRandom())
+                .followingKeys(followingKeys)
+                .threshold(threshold).build();
+        wallet.addAndActivateHDChain(chain);
+    }
+
+    @Test
+    public void getSeedAsWords1() {
+        // Can't verify much here as the wallet is random each time. We could fix the RNG for the unit tests and solve.
+        assertEquals(12, wallet.getKeyChainSeed().getMnemonicCode().size());
+    }
+
+    @Test
+    public void checkSeed() throws MnemonicException {
+        wallet.getKeyChainSeed().check();
+    }
+
+    @Test
+    public void basicSpending() throws Exception {
+        basicSpendingCommon(wallet, myAddress, OTHER_ADDRESS, null);
+    }
+
+    @Test
+    public void basicSpendingToP2SH() throws Exception {
+        Address destination = new Address(PARAMS, PARAMS.getP2SHHeader(), HEX.decode("4a22c3c4cbb31e4d03b15550636762bda0baf85a"));
+        basicSpendingCommon(wallet, myAddress, destination, null);
+    }
+
+    @Test
+    public void basicSpendingWithEncryptedWallet() throws Exception {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+        Address myEncryptedAddress = encryptedWallet.freshReceiveKey().toAddress(PARAMS);
+        basicSpendingCommon(encryptedWallet, myEncryptedAddress, OTHER_ADDRESS, encryptedWallet);
+    }
+
+    @Test
+    public void basicSpendingFromP2SH() throws Exception {
+        createMarriedWallet(2, 2);
+        myAddress = wallet.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        basicSpendingCommon(wallet, myAddress, OTHER_ADDRESS, null);
+
+        createMarriedWallet(2, 3);
+        myAddress = wallet.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        basicSpendingCommon(wallet, myAddress, OTHER_ADDRESS, null);
+
+        createMarriedWallet(3, 3);
+        myAddress = wallet.currentAddre
