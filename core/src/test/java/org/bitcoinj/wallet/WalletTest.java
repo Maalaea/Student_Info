@@ -173,4 +173,72 @@ public class WalletTest extends TestWithWallet {
         basicSpendingCommon(wallet, myAddress, OTHER_ADDRESS, null);
 
         createMarriedWallet(3, 3);
-        myAddress = wallet.currentAddre
+        myAddress = wallet.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        basicSpendingCommon(wallet, myAddress, OTHER_ADDRESS, null);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void thresholdShouldNotExceedNumberOfKeys() throws Exception {
+        createMarriedWallet(3, 2);
+    }
+
+    @Test
+    public void spendingWithIncompatibleSigners() throws Exception {
+        wallet.addTransactionSigner(new NopTransactionSigner(true));
+        basicSpendingCommon(wallet, myAddress, OTHER_ADDRESS, null);
+    }
+
+    static class TestRiskAnalysis implements RiskAnalysis {
+        private final boolean risky;
+
+        public TestRiskAnalysis(boolean risky) {
+            this.risky = risky;
+        }
+
+        @Override
+        public Result analyze() {
+            return risky ? Result.NON_FINAL : Result.OK;
+        }
+
+        public static class Analyzer implements RiskAnalysis.Analyzer {
+            private final Transaction riskyTx;
+
+            Analyzer(Transaction riskyTx) {
+                this.riskyTx = riskyTx;
+            }
+
+            @Override
+            public RiskAnalysis create(Wallet wallet, Transaction tx, List<Transaction> dependencies) {
+                return new TestRiskAnalysis(tx == riskyTx);
+            }
+        }
+    }
+
+    static class TestCoinSelector extends DefaultCoinSelector {
+        @Override
+        protected boolean shouldSelect(Transaction tx) {
+            return true;
+        }
+    }
+
+    private Transaction cleanupCommon(Address destination) throws Exception {
+        receiveATransaction(wallet, myAddress);
+
+        Coin v2 = valueOf(0, 50);
+        SendRequest req = SendRequest.to(destination, v2);
+        wallet.completeTx(req);
+
+        Transaction t2 = req.tx;
+
+        // Broadcast the transaction and commit.
+        broadcastAndCommit(wallet, t2);
+
+        // At this point we have one pending and one spent
+
+        Coin v1 = valueOf(0, 10);
+        Transaction t = sendMoneyToWallet(null, v1, myAddress);
+        Threading.waitForUserCode();
+        sendMoneyToWallet(null, t);
+        assertEquals("Wrong number of PENDING", 2, wallet.getPoolSize(Pool.PENDING));
+        assertEquals("Wrong number of UNSPENT", 0, wallet.getPoolSize(Pool.UNSPENT));
+        asse
