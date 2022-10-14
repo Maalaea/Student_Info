@@ -241,4 +241,53 @@ public class WalletTest extends TestWithWallet {
         sendMoneyToWallet(null, t);
         assertEquals("Wrong number of PENDING", 2, wallet.getPoolSize(Pool.PENDING));
         assertEquals("Wrong number of UNSPENT", 0, wallet.getPoolSize(Pool.UNSPENT));
-        asse
+        assertEquals("Wrong number of ALL", 3, wallet.getTransactions(true).size());
+        assertEquals(valueOf(0, 60), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+
+        // Now we have another incoming pending
+        return t;
+    }
+
+    @Test
+    public void cleanup() throws Exception {
+        Transaction t = cleanupCommon(OTHER_ADDRESS);
+
+        // Consider the new pending as risky and remove it from the wallet
+        wallet.setRiskAnalyzer(new TestRiskAnalysis.Analyzer(t));
+
+        wallet.cleanup();
+        assertTrue(wallet.isConsistent());
+        assertEquals("Wrong number of PENDING", 1, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
+        assertEquals("Wrong number of UNSPENT", 0, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals("Wrong number of ALL", 2, wallet.getTransactions(true).size());
+        assertEquals(valueOf(0, 50), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+    }
+
+    @Test
+    public void cleanupFailsDueToSpend() throws Exception {
+        Transaction t = cleanupCommon(OTHER_ADDRESS);
+
+        // Now we have another incoming pending.  Spend everything.
+        Coin v3 = valueOf(0, 60);
+        SendRequest req = SendRequest.to(OTHER_ADDRESS, v3);
+
+        // Force selection of the incoming coin so that we can spend it
+        req.coinSelector = new TestCoinSelector();
+
+        wallet.completeTx(req);
+        wallet.commitTx(req.tx);
+
+        assertEquals("Wrong number of PENDING", 3, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
+        assertEquals("Wrong number of UNSPENT", 0, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals("Wrong number of ALL", 4, wallet.getTransactions(true).size());
+
+        // Consider the new pending as risky and try to remove it from the wallet
+        wallet.setRiskAnalyzer(new TestRiskAnalysis.Analyzer(t));
+
+        wallet.cleanup();
+        assertTrue(wallet.isConsistent());
+
+        // The removal should have failed
+        assertEquals("Wrong number of PENDING", 3, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
+        assertEquals("Wrong number of UNSPENT", 0, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        asser
