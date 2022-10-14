@@ -290,4 +290,50 @@ public class WalletTest extends TestWithWallet {
         // The removal should have failed
         assertEquals("Wrong number of PENDING", 3, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
         assertEquals("Wrong number of UNSPENT", 0, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
-        asser
+        assertEquals("Wrong number of ALL", 4, wallet.getTransactions(true).size());
+        assertEquals(ZERO, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+    }
+
+    private void basicSpendingCommon(Wallet wallet, Address toAddress, Address destination, Wallet encryptedWallet) throws Exception {
+        // We'll set up a wallet that receives a coin, then sends a coin of lesser value and keeps the change. We
+        // will attach a small fee. Because the Bitcoin protocol makes it difficult to determine the fee of an
+        // arbitrary transaction in isolation, we'll check that the fee was set by examining the size of the change.
+
+        // Receive some money as a pending transaction.
+        receiveATransaction(wallet, toAddress);
+
+        // Try to send too much and fail.
+        Coin vHuge = valueOf(10, 0);
+        SendRequest req = SendRequest.to(destination, vHuge);
+        try {
+            wallet.completeTx(req);
+            fail();
+        } catch (InsufficientMoneyException e) {
+            assertEquals(valueOf(9, 0), e.missing);
+        }
+
+        // Prepare to send.
+        Coin v2 = valueOf(0, 50);
+        req = SendRequest.to(destination, v2);
+
+        if (encryptedWallet != null) {
+            KeyCrypter keyCrypter = encryptedWallet.getKeyCrypter();
+            KeyParameter aesKey = keyCrypter.deriveKey(PASSWORD1);
+            KeyParameter wrongAesKey = keyCrypter.deriveKey(WRONG_PASSWORD);
+
+            // Try to create a send with a fee but no password (this should fail).
+            try {
+                wallet.completeTx(req);
+                fail();
+            } catch (ECKey.MissingPrivateKeyException kce) {
+            }
+            assertEquals("Wrong number of UNSPENT", 1, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+            assertEquals("Wrong number of ALL", 1, wallet.getTransactions(true).size());
+
+            // Try to create a send with a fee but the wrong password (this should fail).
+            req = SendRequest.to(destination, v2);
+            req.aesKey = wrongAesKey;
+
+            try {
+                wallet.completeTx(req);
+                fail("No exception wa
