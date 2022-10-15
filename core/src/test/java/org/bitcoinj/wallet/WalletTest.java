@@ -462,4 +462,50 @@ public class WalletTest extends TestWithWallet {
     @Test
     @SuppressWarnings("deprecation")
     // Having a test for deprecated method getFromAddress() is no evil so we suppress the warning here.
-    public void customTransactionSpending() 
+    public void customTransactionSpending() throws Exception {
+        // We'll set up a wallet that receives a coin, then sends a coin of lesser value and keeps the change.
+        Coin v1 = valueOf(3, 0);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, v1);
+        assertEquals(v1, wallet.getBalance());
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals(1, wallet.getTransactions(true).size());
+
+        Coin v2 = valueOf(0, 50);
+        Coin v3 = valueOf(0, 75);
+        Coin v4 = valueOf(1, 25);
+
+        Transaction t2 = new Transaction(PARAMS);
+        t2.addOutput(v2, OTHER_ADDRESS);
+        t2.addOutput(v3, OTHER_ADDRESS);
+        t2.addOutput(v4, OTHER_ADDRESS);
+        SendRequest req = SendRequest.forTx(t2);
+        wallet.completeTx(req);
+
+        // Do some basic sanity checks.
+        assertEquals(1, t2.getInputs().size());
+        assertEquals(myAddress, t2.getInput(0).getScriptSig().getFromAddress(PARAMS));
+        assertEquals(TransactionConfidence.ConfidenceType.UNKNOWN, t2.getConfidence().getConfidenceType());
+
+        // We have NOT proven that the signature is correct!
+        wallet.commitTx(t2);
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.SPENT));
+        assertEquals(2, wallet.getTransactions(true).size());
+    }
+
+    @Test
+    public void sideChain() throws Exception {
+        // The wallet receives a coin on the main chain, then on a side chain. Balance is equal to both added together
+        // as we assume the side chain tx is pending and will be included shortly.
+        Coin v1 = COIN;
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, v1);
+        assertEquals(v1, wallet.getBalance());
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals(1, wallet.getTransactions(true).size());
+
+        Coin v2 = valueOf(0, 50);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.SIDE_CHAIN, v2);
+        assertEquals(2, wallet.getTransactions(true).size());
+        assertEquals(v1, wallet.getBalance());
+        assertEquals(v1.add(v2), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+    }
