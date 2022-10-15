@@ -418,4 +418,48 @@ public class WalletTest extends TestWithWallet {
         t.getInputs().get(0).verify();
     }
 
-    private static void broadcastAndCommit(Wall
+    private static void broadcastAndCommit(Wallet wallet, Transaction t) throws Exception {
+        final LinkedList<Transaction> txns = Lists.newLinkedList();
+        wallet.addCoinsSentEventListener(new WalletCoinsSentEventListener() {
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                txns.add(tx);
+            }
+        });
+
+        t.getConfidence().markBroadcastBy(new PeerAddress(PARAMS, InetAddress.getByAddress(new byte[]{1,2,3,4})));
+        t.getConfidence().markBroadcastBy(new PeerAddress(PARAMS, InetAddress.getByAddress(new byte[]{10,2,3,4})));
+        wallet.commitTx(t);
+        Threading.waitForUserCode();
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.SPENT));
+        assertEquals(2, wallet.getTransactions(true).size());
+        assertEquals(t, txns.getFirst());
+        assertEquals(1, txns.size());
+    }
+
+    private Wallet spendUnconfirmedChange(Wallet wallet, Transaction t2, KeyParameter aesKey) throws Exception {
+        if (wallet.getTransactionSigners().size() == 1)   // don't bother reconfiguring the p2sh wallet
+            wallet = roundTrip(wallet);
+        Coin v3 = valueOf(0, 50);
+        assertEquals(v3, wallet.getBalance());
+        SendRequest req = SendRequest.to(OTHER_ADDRESS, valueOf(0, 48));
+        req.aesKey = aesKey;
+        req.shuffleOutputs = false;
+        wallet.completeTx(req);
+        Transaction t3 = req.tx;
+        assertNotEquals(t2.getOutput(1).getScriptPubKey().getToAddress(PARAMS),
+                        t3.getOutput(1).getScriptPubKey().getToAddress(PARAMS));
+        assertNotNull(t3);
+        wallet.commitTx(t3);
+        assertTrue(wallet.isConsistent());
+        // t2 and t3 gets confirmed in the same block.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, t2, t3);
+        assertTrue(wallet.isConsistent());
+        return wallet;
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    // Having a test for deprecated method getFromAddress() is no evil so we suppress the warning here.
+    public void customTransactionSpending() 
