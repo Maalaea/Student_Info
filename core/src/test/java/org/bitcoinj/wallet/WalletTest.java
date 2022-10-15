@@ -380,4 +380,42 @@ public class WalletTest extends TestWithWallet {
     }
 
     private void receiveATransactionAmount(Wallet wallet, Address toAddress, Coin amount) {
-        final ListenableFuture<Coin> availFuture = wallet.getBalanceFuture(amount, Wallet.BalanceType.AVAIL
+        final ListenableFuture<Coin> availFuture = wallet.getBalanceFuture(amount, Wallet.BalanceType.AVAILABLE);
+        final ListenableFuture<Coin> estimatedFuture = wallet.getBalanceFuture(amount, Wallet.BalanceType.ESTIMATED);
+        assertFalse(availFuture.isDone());
+        assertFalse(estimatedFuture.isDone());
+        // Send some pending coins to the wallet.
+        Transaction t1 = sendMoneyToWallet(wallet, null, amount, toAddress);
+        Threading.waitForUserCode();
+        final ListenableFuture<TransactionConfidence> depthFuture = t1.getConfidence().getDepthFuture(1);
+        assertFalse(depthFuture.isDone());
+        assertEquals(ZERO, wallet.getBalance());
+        assertEquals(amount, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        assertFalse(availFuture.isDone());
+        // Our estimated balance has reached the requested level.
+        assertTrue(estimatedFuture.isDone());
+        assertEquals(1, wallet.getPoolSize(Pool.PENDING));
+        assertEquals(0, wallet.getPoolSize(Pool.UNSPENT));
+        // Confirm the coins.
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, t1);
+        assertEquals("Incorrect confirmed tx balance", amount, wallet.getBalance());
+        assertEquals("Incorrect confirmed tx PENDING pool size", 0, wallet.getPoolSize(Pool.PENDING));
+        assertEquals("Incorrect confirmed tx UNSPENT pool size", 1, wallet.getPoolSize(Pool.UNSPENT));
+        assertEquals("Incorrect confirmed tx ALL pool size", 1, wallet.getTransactions(true).size());
+        Threading.waitForUserCode();
+        assertTrue(availFuture.isDone());
+        assertTrue(estimatedFuture.isDone());
+        assertTrue(depthFuture.isDone());
+    }
+
+    private void basicSanityChecks(Wallet wallet, Transaction t, Address destination) throws VerificationException {
+        assertEquals("Wrong number of tx inputs", 1, t.getInputs().size());
+        assertEquals("Wrong number of tx outputs",2, t.getOutputs().size());
+        assertEquals(destination, t.getOutput(0).getScriptPubKey().getToAddress(PARAMS));
+        assertEquals(wallet.currentChangeAddress(), t.getOutputs().get(1).getScriptPubKey().getToAddress(PARAMS));
+        assertEquals(valueOf(0, 50), t.getOutputs().get(1).getValue());
+        // Check the script runs and signatures verify.
+        t.getInputs().get(0).verify();
+    }
+
+    private static void broadcastAndCommit(Wall
