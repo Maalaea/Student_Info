@@ -336,4 +336,48 @@ public class WalletTest extends TestWithWallet {
 
             try {
                 wallet.completeTx(req);
-                fail("No exception wa
+                fail("No exception was thrown trying to sign an encrypted key with the wrong password supplied.");
+            } catch (KeyCrypterException kce) {
+                assertEquals("Could not decrypt bytes", kce.getMessage());
+            }
+
+            assertEquals("Wrong number of UNSPENT", 1, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+            assertEquals("Wrong number of ALL", 1, wallet.getTransactions(true).size());
+
+            // Create a send with a fee with the correct password (this should succeed).
+            req = SendRequest.to(destination, v2);
+            req.aesKey = aesKey;
+        }
+
+        // Complete the transaction successfully.
+        req.shuffleOutputs = false;
+        wallet.completeTx(req);
+
+        Transaction t2 = req.tx;
+        assertEquals("Wrong number of UNSPENT", 1, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals("Wrong number of ALL", 1, wallet.getTransactions(true).size());
+        assertEquals(TransactionConfidence.Source.SELF, t2.getConfidence().getSource());
+        assertEquals(Transaction.Purpose.USER_PAYMENT, t2.getPurpose());
+
+        // Do some basic sanity checks.
+        basicSanityChecks(wallet, t2, destination);
+
+        // Broadcast the transaction and commit.
+        List<TransactionOutput> unspents1 = wallet.getUnspents();
+        assertEquals(1, unspents1.size());
+        broadcastAndCommit(wallet, t2);
+        List<TransactionOutput> unspents2 = wallet.getUnspents();
+        assertNotEquals(unspents1, unspents2.size());
+
+        // Now check that we can spend the unconfirmed change, with a new change address of our own selection.
+        // (req.aesKey is null for unencrypted / the correct aesKey for encrypted.)
+        wallet = spendUnconfirmedChange(wallet, t2, req.aesKey);
+        assertNotEquals(unspents2, wallet.getUnspents());
+    }
+
+    private void receiveATransaction(Wallet wallet, Address toAddress) throws Exception {
+        receiveATransactionAmount(wallet, toAddress, COIN);
+    }
+
+    private void receiveATransactionAmount(Wallet wallet, Address toAddress, Coin amount) {
+        final ListenableFuture<Coin> availFuture = wallet.getBalanceFuture(amount, Wallet.BalanceType.AVAIL
