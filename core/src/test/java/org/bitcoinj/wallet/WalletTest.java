@@ -509,3 +509,48 @@ public class WalletTest extends TestWithWallet {
         assertEquals(v1, wallet.getBalance());
         assertEquals(v1.add(v2), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
     }
+
+    @Test
+    public void balance() throws Exception {
+        // Receive 5 coins then half a coin.
+        Coin v1 = valueOf(5, 0);
+        Coin v2 = valueOf(0, 50);
+        Coin expected = valueOf(5, 50);
+        assertEquals(0, wallet.getTransactions(true).size());
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, v1);
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, v2);
+        assertEquals(2, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals(expected, wallet.getBalance());
+
+        // Now spend one coin.
+        Coin v3 = COIN;
+        Transaction spend = wallet.createSend(OTHER_ADDRESS, v3);
+        wallet.commitTx(spend);
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
+
+        // Available and estimated balances should not be the same. We don't check the exact available balance here
+        // because it depends on the coin selection algorithm.
+        assertEquals(valueOf(4, 50), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        assertFalse(wallet.getBalance(Wallet.BalanceType.AVAILABLE).equals(
+                    wallet.getBalance(Wallet.BalanceType.ESTIMATED)));
+
+        // Now confirm the transaction by including it into a block.
+        sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN, spend);
+
+        // Change is confirmed. We started with 5.50 so we should have 4.50 left.
+        Coin v4 = valueOf(4, 50);
+        assertEquals(v4, wallet.getBalance(Wallet.BalanceType.AVAILABLE));
+    }
+
+    @Test
+    public void balanceWithIdenticalOutputs() {
+        assertEquals(Coin.ZERO, wallet.getBalance(BalanceType.ESTIMATED));
+        Transaction tx = new Transaction(PARAMS);
+        tx.addOutput(Coin.COIN, myAddress);
+        tx.addOutput(Coin.COIN, myAddress); // identical to the above
+        wallet.addWalletTransaction(new WalletTransaction(Pool.UNSPENT, tx));
+        assertEquals(Coin.COIN.plus(Coin.COIN), wallet.getBalance(BalanceType.ESTIMATED));
+    }
+
+    // Intuitively you'd expect to be able to create a transaction with identical inputs and outputs and g
