@@ -598,4 +598,46 @@ public class WalletTest extends TestWithWallet {
         assertEquals(txn[0].getHash(), tx1.getHash());
         assertEquals(ZERO, bigints[0]);
         assertEquals(oneCoin, bigints[1]);
-        assertEquals(TransactionConfidence.ConfidenceType.BUILDING, tx1.getConfidence().getConfi
+        assertEquals(TransactionConfidence.ConfidenceType.BUILDING, tx1.getConfidence().getConfidenceType());
+        assertEquals(1, tx1.getConfidence().getAppearedAtChainHeight());
+        // Send 0.10 to somebody else.
+        Transaction send1 = wallet.createSend(OTHER_ADDRESS, valueOf(0, 10));
+        // Pretend it makes it into the block chain, our wallet state is cleared but we still have the keys, and we
+        // want to get back to our previous state. We can do this by just not confirming the transaction as
+        // createSend is stateless.
+        txn[0] = txn[1] = null;
+        confTxns.clear();
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, send1);
+        Threading.waitForUserCode();
+        assertEquals(Coin.valueOf(0, 90), wallet.getBalance());
+        assertEquals(null, txn[0]);
+        assertEquals(2, confTxns.size());
+        assertEquals(txn[1].getHash(), send1.getHash());
+        assertEquals(Coin.COIN, bigints[2]);
+        assertEquals(Coin.valueOf(0, 90), bigints[3]);
+        // And we do it again after the catchup.
+        Transaction send2 = wallet.createSend(OTHER_ADDRESS, valueOf(0, 10));
+        // What we'd really like to do is prove Bitcoin Core would accept it .... no such luck unfortunately.
+        wallet.commitTx(send2);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, send2);
+        assertEquals(Coin.valueOf(0, 80), wallet.getBalance());
+        Threading.waitForUserCode();
+        FakeTxBuilder.BlockPair b4 = createFakeBlock(blockStore, Block.BLOCK_HEIGHT_GENESIS);
+        confTxns.clear();
+        wallet.notifyNewBestBlock(b4.storedBlock);
+        Threading.waitForUserCode();
+        assertEquals(3, confTxns.size());
+    }
+
+    @Test
+    public void balances() throws Exception {
+        Coin nanos = COIN;
+        Transaction tx1 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, nanos);
+        assertEquals(nanos, tx1.getValueSentToMe(wallet));
+        assertTrue(tx1.getWalletOutputs(wallet).size() >= 1);
+        // Send 0.10 to somebody else.
+        Transaction send1 = wallet.createSend(OTHER_ADDRESS, valueOf(0, 10));
+        // Reserialize.
+        Transaction send2 = PARAMS.getDefaultSerializer().makeTransaction(send1.bitcoinSerialize());
+        assertEquals(nanos, send2.getValueSentFromMe(wallet));
+  
