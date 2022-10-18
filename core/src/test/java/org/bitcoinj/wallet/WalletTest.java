@@ -553,4 +553,49 @@ public class WalletTest extends TestWithWallet {
         assertEquals(Coin.COIN.plus(Coin.COIN), wallet.getBalance(BalanceType.ESTIMATED));
     }
 
-    // Intuitively you'd expect to be able to create a transaction with identical inputs and outputs and g
+    // Intuitively you'd expect to be able to create a transaction with identical inputs and outputs and get an
+    // identical result to Bitcoin Core. However the signatures are not deterministic - signing the same data
+    // with the same key twice gives two different outputs. So we cannot prove bit-for-bit compatibility in this test
+    // suite.
+
+    @Test
+    public void blockChainCatchup() throws Exception {
+        // Test that we correctly process transactions arriving from the chain, with callbacks for inbound and outbound.
+        final Coin[] bigints = new Coin[4];
+        final Transaction[] txn = new Transaction[2];
+        final LinkedList<Transaction> confTxns = new LinkedList<>();
+        wallet.addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                bigints[0] = prevBalance;
+                bigints[1] = newBalance;
+                txn[0] = tx;
+            }
+        });
+
+        wallet.addCoinsSentEventListener(new WalletCoinsSentEventListener() {
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                bigints[2] = prevBalance;
+                bigints[3] = newBalance;
+                txn[1] = tx;
+            }
+        });
+
+        wallet.addTransactionConfidenceEventListener(new TransactionConfidenceEventListener() {
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                confTxns.add(tx);
+            }
+        });
+
+        // Receive some money.
+        Coin oneCoin = COIN;
+        Transaction tx1 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, oneCoin);
+        Threading.waitForUserCode();
+        assertEquals(null, txn[1]);  // onCoinsSent not called.
+        assertEquals(tx1, confTxns.getFirst());   // onTransactionConfidenceChanged called
+        assertEquals(txn[0].getHash(), tx1.getHash());
+        assertEquals(ZERO, bigints[0]);
+        assertEquals(oneCoin, bigints[1]);
+        assertEquals(TransactionConfidence.ConfidenceType.BUILDING, tx1.getConfidence().getConfi
