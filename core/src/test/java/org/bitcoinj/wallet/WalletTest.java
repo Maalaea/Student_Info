@@ -777,4 +777,37 @@ public class WalletTest extends TestWithWallet {
         Transaction send1 = wallet.createSend(OTHER_ADDRESS, valueOf(2, 90));
         // Create a double spend of just the first one.
         Address BAD_GUY = new ECKey().toAddress(PARAMS);
-        Transaction send2 = wa
+        Transaction send2 = wallet.createSend(BAD_GUY, COIN);
+        send2 = PARAMS.getDefaultSerializer().makeTransaction(send2.bitcoinSerialize());
+        // Broadcast send1, it's now pending.
+        wallet.commitTx(send1);
+        assertEquals(ZERO, wallet.getBalance()); // change of 10 cents is not yet mined so not included in the balance.
+        // Receive a block that overrides the send1 using send2.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, send2);
+        // send1 got rolled back and replaced with a smaller send that only used one of our received coins, thus ...
+        assertEquals(valueOf(2, 0), wallet.getBalance());
+        assertTrue(wallet.isConsistent());
+    }
+
+    @Test
+    public void doubleSpends() throws Exception {
+        // Test the case where two semantically identical but bitwise different transactions double spend each other.
+        // We call the second transaction a "mutant" of the first.
+        //
+        // This can (and has!) happened when a wallet is cloned between devices, and both devices decide to make the
+        // same spend simultaneously - for example due a re-keying operation. It can also happen if there are malicious
+        // nodes in the P2P network that are mutating transactions on the fly as occurred during Feb 2014.
+        final Coin value = COIN;
+        final Coin value2 = valueOf(2, 0);
+        // Give us three coins and make sure we have some change.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, value.add(value2));
+        Transaction send1 = checkNotNull(wallet.createSend(OTHER_ADDRESS, value2));
+        Transaction send2 = checkNotNull(wallet.createSend(OTHER_ADDRESS, value2));
+        byte[] buf = send1.bitcoinSerialize();
+        buf[43] = 0;  // Break the signature: bitcoinj won't check in SPV mode and this is easier than other mutations.
+        send1 = PARAMS.getDefaultSerializer().makeTransaction(buf);
+        wallet.commitTx(send2);
+        wallet.allowSpendingUnconfirmedTransactions();
+        assertEquals(value, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        // Now spend the change. This transaction should die permanently when the mutant appears in the chain.
+        Transaction send3 =
