@@ -640,4 +640,57 @@ public class WalletTest extends TestWithWallet {
         // Reserialize.
         Transaction send2 = PARAMS.getDefaultSerializer().makeTransaction(send1.bitcoinSerialize());
         assertEquals(nanos, send2.getValueSentFromMe(wallet));
-  
+        assertEquals(ZERO.subtract(valueOf(0, 10)), send2.getValue(wallet));
+    }
+
+    @Test
+    public void isConsistent_duplicates() throws Exception {
+        // This test ensures that isConsistent catches duplicate transactions, eg, because we submitted the same block
+        // twice (this is not allowed).
+        Transaction tx = createFakeTx(PARAMS, COIN, myAddress);
+        TransactionOutput output = new TransactionOutput(PARAMS, tx, valueOf(0, 5), OTHER_ADDRESS);
+        tx.addOutput(output);
+        wallet.receiveFromBlock(tx, null, BlockChain.NewBlockType.BEST_CHAIN, 0);
+
+        assertTrue(wallet.isConsistent());
+
+        Transaction txClone = PARAMS.getDefaultSerializer().makeTransaction(tx.bitcoinSerialize());
+        try {
+            wallet.receiveFromBlock(txClone, null, BlockChain.NewBlockType.BEST_CHAIN, 0);
+            fail("Illegal argument not thrown when it should have been.");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
+    }
+
+    @Test
+    public void isConsistent_pools() throws Exception {
+        // This test ensures that isConsistent catches transactions that are in incompatible pools.
+        Transaction tx = createFakeTx(PARAMS, COIN, myAddress);
+        TransactionOutput output = new TransactionOutput(PARAMS, tx, valueOf(0, 5), OTHER_ADDRESS);
+        tx.addOutput(output);
+        wallet.receiveFromBlock(tx, null, BlockChain.NewBlockType.BEST_CHAIN, 0);
+
+        assertTrue(wallet.isConsistent());
+
+        wallet.addWalletTransaction(new WalletTransaction(Pool.PENDING, tx));
+        assertFalse(wallet.isConsistent());
+    }
+
+    @Test
+    public void isConsistent_spent() throws Exception {
+        // This test ensures that isConsistent catches transactions that are marked spent when
+        // they aren't.
+        Transaction tx = createFakeTx(PARAMS, COIN, myAddress);
+        TransactionOutput output = new TransactionOutput(PARAMS, tx, valueOf(0, 5), OTHER_ADDRESS);
+        tx.addOutput(output);
+        assertTrue(wallet.isConsistent());
+
+        wallet.addWalletTransaction(new WalletTransaction(Pool.SPENT, tx));
+        assertFalse(wallet.isConsistent());
+    }
+
+    @Test
+    public void isTxConsistentReturnsFalseAsExpected() {
+        Wallet wallet = new Wallet(PARAMS);
+        
