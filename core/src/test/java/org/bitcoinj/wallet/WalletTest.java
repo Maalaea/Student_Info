@@ -693,4 +693,48 @@ public class WalletTest extends TestWithWallet {
     @Test
     public void isTxConsistentReturnsFalseAsExpected() {
         Wallet wallet = new Wallet(PARAMS);
-        
+        TransactionOutput to = createMock(TransactionOutput.class);
+        EasyMock.expect(to.isAvailableForSpending()).andReturn(true);
+        EasyMock.expect(to.isMineOrWatched(wallet)).andReturn(true);
+        EasyMock.expect(to.getSpentBy()).andReturn(new TransactionInput(PARAMS, null, new byte[0]));
+
+        Transaction tx = FakeTxBuilder.createFakeTxWithoutChange(PARAMS, to);
+
+        replay(to);
+
+        boolean isConsistent = wallet.isTxConsistent(tx, false);
+        assertFalse(isConsistent);
+    }
+
+    @Test
+    public void isTxConsistentReturnsFalseAsExpected_WhenAvailableForSpendingEqualsFalse() {
+        Wallet wallet = new Wallet(PARAMS);
+        TransactionOutput to = createMock(TransactionOutput.class);
+        EasyMock.expect(to.isAvailableForSpending()).andReturn(false);
+        EasyMock.expect(to.getSpentBy()).andReturn(null);
+
+        Transaction tx = FakeTxBuilder.createFakeTxWithoutChange(PARAMS, to);
+
+        replay(to);
+
+        boolean isConsistent = wallet.isTxConsistent(tx, false);
+        assertFalse(isConsistent);
+    }
+
+    @Test
+    public void transactions() throws Exception {
+        // This test covers a bug in which Transaction.getValueSentFromMe was calculating incorrectly.
+        Transaction tx = createFakeTx(PARAMS, COIN, myAddress);
+        // Now add another output (ie, change) that goes to some other address.
+        TransactionOutput output = new TransactionOutput(PARAMS, tx, valueOf(0, 5), OTHER_ADDRESS);
+        tx.addOutput(output);
+        // Note that tx is no longer valid: it spends more than it imports. However checking transactions balance
+        // correctly isn't possible in SPV mode because value is a property of outputs not inputs. Without all
+        // transactions you can't check they add up.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, tx);
+        // Now the other guy creates a transaction which spends that change.
+        Transaction tx2 = new Transaction(PARAMS);
+        tx2.addInput(output);
+        tx2.addOutput(new TransactionOutput(PARAMS, tx2, valueOf(0, 5), myAddress));
+        // tx2 doesn't send any coins from us, even though the output is in the wallet.
+        assertEquals(ZERO, tx2.getValueSentFromMe
