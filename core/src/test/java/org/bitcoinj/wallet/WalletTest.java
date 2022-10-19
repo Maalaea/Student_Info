@@ -737,4 +737,44 @@ public class WalletTest extends TestWithWallet {
         tx2.addInput(output);
         tx2.addOutput(new TransactionOutput(PARAMS, tx2, valueOf(0, 5), myAddress));
         // tx2 doesn't send any coins from us, even though the output is in the wallet.
-        assertEquals(ZERO, tx2.getValueSentFromMe
+        assertEquals(ZERO, tx2.getValueSentFromMe(wallet));
+    }
+
+    @Test
+    public void bounce() throws Exception {
+        // This test covers bug 64 (False double spends). Check that if we create a spend and it's immediately sent
+        // back to us, this isn't considered as a double spend.
+        Coin coin1 = COIN;
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, coin1);
+        // Send half to some other guy. Sending only half then waiting for a confirm is important to ensure the tx is
+        // in the unspent pool, not pending or spent.
+        Coin coinHalf = valueOf(0, 50);
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals(1, wallet.getTransactions(true).size());
+        Transaction outbound1 = wallet.createSend(OTHER_ADDRESS, coinHalf);
+        wallet.commitTx(outbound1);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, outbound1);
+        assertTrue(outbound1.getWalletOutputs(wallet).size() <= 1); //the change address at most
+        // That other guy gives us the coins right back.
+        Transaction inbound2 = new Transaction(PARAMS);
+        inbound2.addOutput(new TransactionOutput(PARAMS, inbound2, coinHalf, myAddress));
+        assertTrue(outbound1.getWalletOutputs(wallet).size() >= 1);
+        inbound2.addInput(outbound1.getOutputs().get(0));
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, inbound2);
+        assertEquals(coin1, wallet.getBalance());
+    }
+
+    @Test
+    public void doubleSpendUnspendsOtherInputs() throws Exception {
+        // Test another Finney attack, but this time the killed transaction was also spending some other outputs in
+        // our wallet which were not themselves double spent. This test ensures the death of the pending transaction
+        // frees up the other outputs and makes them spendable again.
+
+        // Receive 1 coin and then 2 coins in separate transactions.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(2, 0));
+        // Create a send to a merchant of all our coins.
+        Transaction send1 = wallet.createSend(OTHER_ADDRESS, valueOf(2, 90));
+        // Create a double spend of just the first one.
+        Address BAD_GUY = new ECKey().toAddress(PARAMS);
+        Transaction send2 = wa
