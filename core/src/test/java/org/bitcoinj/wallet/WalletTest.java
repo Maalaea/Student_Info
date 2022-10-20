@@ -844,4 +844,48 @@ public class WalletTest extends TestWithWallet {
         // This needs to work both for transactions we create, and that we receive from others.
         final Transaction[] eventDead = new Transaction[1];
         final Transaction[] eventReplacement = new Transaction[1];
-        final int[] eventWalletC
+        final int[] eventWalletChanged = new int[1];
+        wallet.addTransactionConfidenceEventListener(new TransactionConfidenceEventListener() {
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                if (tx.getConfidence().getConfidenceType() ==
+                        TransactionConfidence.ConfidenceType.DEAD) {
+                    eventDead[0] = tx;
+                    eventReplacement[0] = tx.getConfidence().getOverridingTransaction();
+                }
+            }
+        });
+
+        wallet.addChangeEventListener(new WalletChangeEventListener() {
+            @Override
+            public void onWalletChanged(Wallet wallet) {
+                eventWalletChanged[0]++;
+            }
+        });
+
+        // Receive 1 BTC.
+        Coin nanos = COIN;
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, nanos);
+        Transaction received = wallet.getTransactions(false).iterator().next();
+        // Create a send to a merchant.
+        Transaction send1 = wallet.createSend(OTHER_ADDRESS, valueOf(0, 50));
+        // Create a double spend.
+        Address BAD_GUY = new ECKey().toAddress(PARAMS);
+        Transaction send2 = wallet.createSend(BAD_GUY, valueOf(0, 50));
+        send2 = PARAMS.getDefaultSerializer().makeTransaction(send2.bitcoinSerialize());
+        // Broadcast send1.
+        wallet.commitTx(send1);
+        assertEquals(send1, received.getOutput(0).getSpentBy().getParentTransaction());
+        // Receive a block that overrides it.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, send2);
+        Threading.waitForUserCode();
+        assertEquals(send1, eventDead[0]);
+        assertEquals(send2, eventReplacement[0]);
+        assertEquals(TransactionConfidence.ConfidenceType.DEAD,
+                send1.getConfidence().getConfidenceType());
+        assertEquals(send2, received.getOutput(0).getSpentBy().getParentTransaction());
+
+        FakeTxBuilder.DoubleSpends doubleSpends = FakeTxBuilder.createFakeDoubleSpendTxns(PARAMS, myAddress);
+        // t1 spends to our wallet. t2 double spends somewhere else.
+        wallet.receivePending(doubleSpends.t1, null);
+        assertEquals(TransactionC
