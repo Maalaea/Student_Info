@@ -888,4 +888,48 @@ public class WalletTest extends TestWithWallet {
         FakeTxBuilder.DoubleSpends doubleSpends = FakeTxBuilder.createFakeDoubleSpendTxns(PARAMS, myAddress);
         // t1 spends to our wallet. t2 double spends somewhere else.
         wallet.receivePending(doubleSpends.t1, null);
-        assertEquals(TransactionC
+        assertEquals(TransactionConfidence.ConfidenceType.PENDING,
+                doubleSpends.t1.getConfidence().getConfidenceType());
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, doubleSpends.t2);
+        Threading.waitForUserCode();
+        assertEquals(TransactionConfidence.ConfidenceType.DEAD,
+                doubleSpends.t1.getConfidence().getConfidenceType());
+        assertEquals(doubleSpends.t2, doubleSpends.t1.getConfidence().getOverridingTransaction());
+        assertEquals(5, eventWalletChanged[0]);
+    }
+
+    @Test
+    public void doubleSpendWeCreate() throws Exception {
+        // Test we keep pending double spends in IN_CONFLICT until one of them is included in a block
+        // and we handle reorgs and dependency chains properly.
+        // The following graph shows the txns we use in this test and how they are related
+        // (Eg txA1 spends txARoot outputs, txC1 spends txA1 and txB1 outputs, etc).
+        // txARoot (10)  -> txA1 (1)  -+
+        //                             |--> txC1 (0.10) -> txD1 (0.01)
+        // txBRoot (100) -> txB1 (11) -+
+        //
+        // txARoot (10)  -> txA2 (2)  -+
+        //                             |--> txC2 (0.20) -> txD2 (0.02)
+        // txBRoot (100) -> txB2 (22) -+
+        //
+        // txARoot (10)  -> txA3 (3)
+        //
+        // txA1 is in conflict with txA2 and txA3. txB1 is in conflict with txB2.
+
+        CoinSelector originalCoinSelector = wallet.getCoinSelector();
+        try {
+            wallet.allowSpendingUnconfirmedTransactions();
+
+            Transaction txARoot = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(10, 0));
+            SendRequest a1Req = SendRequest.to(OTHER_ADDRESS, valueOf(1, 0));
+            a1Req.tx.addInput(txARoot.getOutput(0));
+            a1Req.shuffleOutputs = false;
+            wallet.completeTx(a1Req);
+            Transaction txA1 = a1Req.tx;
+            SendRequest a2Req = SendRequest.to(OTHER_ADDRESS, valueOf(2, 0));
+            a2Req.tx.addInput(txARoot.getOutput(0));
+            a2Req.shuffleOutputs = false;
+            wallet.completeTx(a2Req);
+            Transaction txA2 = a2Req.tx;
+            SendRequest a3Req = SendRequest.to(OTHER_ADDRESS, valueOf(3, 0));
+            a3Req.tx.addInput(txARoot.
