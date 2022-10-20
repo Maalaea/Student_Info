@@ -810,4 +810,38 @@ public class WalletTest extends TestWithWallet {
         wallet.allowSpendingUnconfirmedTransactions();
         assertEquals(value, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
         // Now spend the change. This transaction should die permanently when the mutant appears in the chain.
-        Transaction send3 =
+        Transaction send3 = checkNotNull(wallet.createSend(OTHER_ADDRESS, value));
+        wallet.commitTx(send3);
+        assertEquals(ZERO, wallet.getBalance());
+        final LinkedList<TransactionConfidence> dead = new LinkedList<>();
+        final TransactionConfidence.Listener listener = new TransactionConfidence.Listener() {
+            @Override
+            public void onConfidenceChanged(TransactionConfidence confidence, ChangeReason reason) {
+                final TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+                if (reason == ChangeReason.TYPE && type == TransactionConfidence.ConfidenceType.DEAD)
+                    dead.add(confidence);
+            }
+        };
+        send2.getConfidence().addEventListener(Threading.SAME_THREAD, listener);
+        send3.getConfidence().addEventListener(Threading.SAME_THREAD, listener);
+        // Double spend!
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, send1);
+        // Back to having one coin.
+        assertEquals(value, wallet.getBalance());
+        assertEquals(send2.getHash(), dead.poll().getTransactionHash());
+        assertEquals(send3.getHash(), dead.poll().getTransactionHash());
+    }
+
+    @Test
+    public void doubleSpendFinneyAttack() throws Exception {
+        // A Finney attack is where a miner includes a transaction spending coins to themselves but does not
+        // broadcast it. When they find a solved block, they hold it back temporarily whilst they buy something with
+        // those same coins. After purchasing, they broadcast the block thus reversing the transaction. It can be
+        // done by any miner for products that can be bought at a chosen time and very quickly (as every second you
+        // withold your block means somebody else might find it first, invalidating your work).
+        //
+        // Test that we handle the attack correctly: a double spend on the chain moves transactions from pending to dead.
+        // This needs to work both for transactions we create, and that we receive from others.
+        final Transaction[] eventDead = new Transaction[1];
+        final Transaction[] eventReplacement = new Transaction[1];
+        final int[] eventWalletC
