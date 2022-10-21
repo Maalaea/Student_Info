@@ -1028,4 +1028,47 @@ public class WalletTest extends TestWithWallet {
             // A reorg: previous block "replaced" by new block containing txA1, txB1 and txC1
             FakeTxBuilder.BlockPair blockPair3 = createFakeBlock(blockStore, blockPair0.storedBlock, 2, txA1, txB1,
                     txC1);
-            wallet.receiveFromBlock(txA1, blockPair3.storedBlock, AbstractBlockChain.NewBlockType.SIDE_CH
+            wallet.receiveFromBlock(txA1, blockPair3.storedBlock, AbstractBlockChain.NewBlockType.SIDE_CHAIN, 0);
+            wallet.receiveFromBlock(txB1, blockPair3.storedBlock, AbstractBlockChain.NewBlockType.SIDE_CHAIN, 1);
+            wallet.receiveFromBlock(txC1, blockPair3.storedBlock, AbstractBlockChain.NewBlockType.SIDE_CHAIN, 2);
+            wallet.reorganize(blockPair0.storedBlock, Lists.newArrayList(blockPair2.storedBlock),
+                    Lists.newArrayList(blockPair3.storedBlock));
+            assertSpent(txA1);
+            assertDead(txA2);
+            assertDead(txA3);
+            assertSpent(txB1);
+            assertDead(txB2);
+            assertSpent(txC1);
+            assertDead(txC2);
+            assertPending(txD1);
+            assertDead(txD2);
+
+            // A reorg: previous block "replaced" by new block containing txB1
+            FakeTxBuilder.BlockPair blockPair4 = createFakeBlock(blockStore, blockPair0.storedBlock, 2, txB1);
+            wallet.receiveFromBlock(txB1, blockPair4.storedBlock, AbstractBlockChain.NewBlockType.SIDE_CHAIN, 0);
+            wallet.reorganize(blockPair0.storedBlock, Lists.newArrayList(blockPair3.storedBlock),
+                    Lists.newArrayList(blockPair4.storedBlock));
+            assertPending(txA1);
+            assertDead(txA2);
+            assertDead(txA3);
+            assertSpent(txB1);
+            assertDead(txB2);
+            assertPending(txC1);
+            assertDead(txC2);
+            assertPending(txD1);
+            assertDead(txD2);
+
+            // A reorg: previous block "replaced" by new block containing txA2
+            FakeTxBuilder.BlockPair blockPair5 = createFakeBlock(blockStore, blockPair0.storedBlock, 2, txA2);
+            wallet.receiveFromBlock(txA2, blockPair5.storedBlock, AbstractBlockChain.NewBlockType.SIDE_CHAIN, 0);
+            wallet.reorganize(blockPair0.storedBlock, Lists.newArrayList(blockPair4.storedBlock),
+                    Lists.newArrayList(blockPair5.storedBlock));
+            assertDead(txA1);
+            assertUnspent(txA2);
+            assertDead(txA3);
+            assertPending(txB1);
+            assertDead(txB2);
+            assertDead(txC1);
+            assertDead(txC2);
+            assertDead(txD1);
+            assertDea
