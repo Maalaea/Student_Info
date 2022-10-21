@@ -932,4 +932,55 @@ public class WalletTest extends TestWithWallet {
             wallet.completeTx(a2Req);
             Transaction txA2 = a2Req.tx;
             SendRequest a3Req = SendRequest.to(OTHER_ADDRESS, valueOf(3, 0));
-            a3Req.tx.addInput(txARoot.
+            a3Req.tx.addInput(txARoot.getOutput(0));
+            a3Req.shuffleOutputs = false;
+            wallet.completeTx(a3Req);
+            Transaction txA3 = a3Req.tx;
+            wallet.commitTx(txA1);
+            wallet.commitTx(txA2);
+            wallet.commitTx(txA3);
+
+            Transaction txBRoot = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(100, 0));
+            SendRequest b1Req = SendRequest.to(OTHER_ADDRESS, valueOf(11, 0));
+            b1Req.tx.addInput(txBRoot.getOutput(0));
+            b1Req.shuffleOutputs = false;
+            wallet.completeTx(b1Req);
+            Transaction txB1 = b1Req.tx;
+            SendRequest b2Req = SendRequest.to(OTHER_ADDRESS, valueOf(22, 0));
+            b2Req.tx.addInput(txBRoot.getOutput(0));
+            b2Req.shuffleOutputs = false;
+            wallet.completeTx(b2Req);
+            Transaction txB2 = b2Req.tx;
+            wallet.commitTx(txB1);
+            wallet.commitTx(txB2);
+
+            SendRequest c1Req = SendRequest.to(OTHER_ADDRESS, valueOf(0, 10));
+            c1Req.tx.addInput(txA1.getOutput(1));
+            c1Req.tx.addInput(txB1.getOutput(1));
+            c1Req.shuffleOutputs = false;
+            wallet.completeTx(c1Req);
+            Transaction txC1 = c1Req.tx;
+            SendRequest c2Req = SendRequest.to(OTHER_ADDRESS, valueOf(0, 20));
+            c2Req.tx.addInput(txA2.getOutput(1));
+            c2Req.tx.addInput(txB2.getOutput(1));
+            c2Req.shuffleOutputs = false;
+            wallet.completeTx(c2Req);
+            Transaction txC2 = c2Req.tx;
+            wallet.commitTx(txC1);
+            wallet.commitTx(txC2);
+
+            SendRequest d1Req = SendRequest.to(OTHER_ADDRESS, valueOf(0, 1));
+            d1Req.tx.addInput(txC1.getOutput(1));
+            d1Req.shuffleOutputs = false;
+            wallet.completeTx(d1Req);
+            Transaction txD1 = d1Req.tx;
+            SendRequest d2Req = SendRequest.to(OTHER_ADDRESS, valueOf(0, 2));
+            d2Req.tx.addInput(txC2.getOutput(1));
+            d2Req.shuffleOutputs = false;
+            wallet.completeTx(d2Req);
+            Transaction txD2 = d2Req.tx;
+            wallet.commitTx(txD1);
+            wallet.commitTx(txD2);
+
+            assertInConflict(txA1);
+            assert
