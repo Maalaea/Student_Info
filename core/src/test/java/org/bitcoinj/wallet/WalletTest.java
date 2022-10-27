@@ -1071,4 +1071,54 @@ public class WalletTest extends TestWithWallet {
             assertDead(txC1);
             assertDead(txC2);
             assertDead(txD1);
-            assertDea
+            assertDead(txD2);
+
+            // A reorg: previous block "replaced" by new empty block
+            FakeTxBuilder.BlockPair blockPair6 = createFakeBlock(blockStore, blockPair0.storedBlock, 2);
+            wallet.reorganize(blockPair0.storedBlock, Lists.newArrayList(blockPair5.storedBlock),
+                    Lists.newArrayList(blockPair6.storedBlock));
+            assertDead(txA1);
+            assertPending(txA2);
+            assertDead(txA3);
+            assertPending(txB1);
+            assertDead(txB2);
+            assertDead(txC1);
+            assertDead(txC2);
+            assertDead(txD1);
+            assertDead(txD2);
+        } finally {
+            wallet.setCoinSelector(originalCoinSelector);
+        }
+
+    }
+
+    @Test
+    public void doubleSpendWeReceive() throws Exception {
+        FakeTxBuilder.DoubleSpends doubleSpends = FakeTxBuilder.createFakeDoubleSpendTxns(PARAMS, myAddress);
+        // doubleSpends.t1 spends to our wallet. doubleSpends.t2 double spends somewhere else.
+
+        Transaction t1b = new Transaction(PARAMS);
+        TransactionOutput t1bo = new TransactionOutput(PARAMS, t1b, valueOf(0, 50), OTHER_ADDRESS);
+        t1b.addOutput(t1bo);
+        t1b.addInput(doubleSpends.t1.getOutput(0));
+
+        wallet.receivePending(doubleSpends.t1, null);
+        wallet.receivePending(doubleSpends.t2, null);
+        wallet.receivePending(t1b, null);
+        assertInConflict(doubleSpends.t1);
+        assertInConflict(doubleSpends.t1);
+        assertInConflict(t1b);
+
+        // Add a block to the block store. The rest of the blocks in this test will be on top of this one.
+        FakeTxBuilder.BlockPair blockPair0 = createFakeBlock(blockStore, 1);
+
+        // A block was mined including doubleSpends.t1
+        FakeTxBuilder.BlockPair blockPair1 = createFakeBlock(blockStore, 2, doubleSpends.t1);
+        wallet.receiveFromBlock(doubleSpends.t1, blockPair1.storedBlock, AbstractBlockChain.NewBlockType.BEST_CHAIN, 0);
+        wallet.notifyNewBestBlock(blockPair1.storedBlock);
+        assertSpent(doubleSpends.t1);
+        assertDead(doubleSpends.t2);
+        assertPending(t1b);
+
+        // A reorg: previous block "replaced" by new block containing doubleSpends.t2
+        FakeTxBuilder.BlockPair blockPair2 = createFakeBlock(blockStore,
