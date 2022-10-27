@@ -1121,4 +1121,54 @@ public class WalletTest extends TestWithWallet {
         assertPending(t1b);
 
         // A reorg: previous block "replaced" by new block containing doubleSpends.t2
-        FakeTxBuilder.BlockPair blockPair2 = createFakeBlock(blockStore,
+        FakeTxBuilder.BlockPair blockPair2 = createFakeBlock(blockStore, blockPair0.storedBlock, 2, doubleSpends.t2);
+        wallet.receiveFromBlock(doubleSpends.t2, blockPair2.storedBlock, AbstractBlockChain.NewBlockType.SIDE_CHAIN, 0);
+        wallet.reorganize(blockPair0.storedBlock, Lists.newArrayList(blockPair1.storedBlock),
+                Lists.newArrayList(blockPair2.storedBlock));
+        assertDead(doubleSpends.t1);
+        assertSpent(doubleSpends.t2);
+        assertDead(t1b);
+    }
+
+    @Test
+    public void doubleSpendForBuildingTx() throws Exception {
+        CoinSelector originalCoinSelector = wallet.getCoinSelector();
+        try {
+            wallet.allowSpendingUnconfirmedTransactions();
+
+            sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(2, 0));
+            Transaction send1 = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(1, 0)));
+            Transaction send2 = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(1, 20)));
+
+            sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, send1);
+            assertUnspent(send1);
+
+            wallet.receivePending(send2, null);
+            assertUnspent(send1);
+            assertDead(send2);
+
+        } finally {
+            wallet.setCoinSelector(originalCoinSelector);
+        }
+    }
+
+    @Test
+    public void txSpendingDeadTx() throws Exception {
+        CoinSelector originalCoinSelector = wallet.getCoinSelector();
+        try {
+            wallet.allowSpendingUnconfirmedTransactions();
+
+            sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(2, 0));
+            Transaction send1 = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(1, 0)));
+            Transaction send2 = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(1, 20)));
+            wallet.commitTx(send1);
+            assertPending(send1);
+            Transaction send1b = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(0, 50)));
+
+            sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, send2);
+            assertDead(send1);
+            assertUnspent(send2);
+
+            wallet.receivePending(send1b, null);
+            assertDead(send1);
+            assertUnspent(sen
