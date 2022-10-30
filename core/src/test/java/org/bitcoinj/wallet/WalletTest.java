@@ -1171,4 +1171,53 @@ public class WalletTest extends TestWithWallet {
 
             wallet.receivePending(send1b, null);
             assertDead(send1);
-            assertUnspent(sen
+            assertUnspent(send2);
+            assertDead(send1b);
+
+        } finally {
+            wallet.setCoinSelector(originalCoinSelector);
+        }
+    }
+
+    private void assertInConflict(Transaction tx) {
+        assertEquals(ConfidenceType.IN_CONFLICT, tx.getConfidence().getConfidenceType());
+        assertTrue(wallet.poolContainsTxHash(WalletTransaction.Pool.PENDING, tx.getHash()));
+    }
+
+    private void assertPending(Transaction tx) {
+        assertEquals(ConfidenceType.PENDING, tx.getConfidence().getConfidenceType());
+        assertTrue(wallet.poolContainsTxHash(WalletTransaction.Pool.PENDING, tx.getHash()));
+    }
+
+    private void assertSpent(Transaction tx) {
+        assertEquals(ConfidenceType.BUILDING, tx.getConfidence().getConfidenceType());
+        assertTrue(wallet.poolContainsTxHash(WalletTransaction.Pool.SPENT, tx.getHash()));
+    }
+
+    private void assertUnspent(Transaction tx) {
+        assertEquals(ConfidenceType.BUILDING, tx.getConfidence().getConfidenceType());
+        assertTrue(wallet.poolContainsTxHash(WalletTransaction.Pool.UNSPENT, tx.getHash()));
+    }
+
+    private void assertDead(Transaction tx) {
+        assertEquals(ConfidenceType.DEAD, tx.getConfidence().getConfidenceType());
+        assertTrue(wallet.poolContainsTxHash(WalletTransaction.Pool.DEAD, tx.getHash()));
+    }
+
+    @Test
+    public void testAddTransactionsDependingOn() throws Exception {
+        CoinSelector originalCoinSelector = wallet.getCoinSelector();
+        try {
+            wallet.allowSpendingUnconfirmedTransactions();
+            sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(2, 0));
+            Transaction send1 = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(1, 0)));
+            Transaction send2 = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(1, 20)));
+            wallet.commitTx(send1);
+            Transaction send1b = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(0, 50)));
+            wallet.commitTx(send1b);
+            Transaction send1c = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(0, 25)));
+            wallet.commitTx(send1c);
+            wallet.commitTx(send2);
+            Set<Transaction> txns = new HashSet<>();
+            txns.add(send1);
+            wal
