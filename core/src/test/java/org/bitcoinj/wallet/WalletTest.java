@@ -1265,4 +1265,51 @@ public class WalletTest extends TestWithWallet {
             req2c.tx.addInput(send2b.getOutput(1));
             req2c.shuffleOutputs = false;
             wallet.completeTx(req2c);
-            Tra
+            Transaction send2c = req2c.tx;
+
+            Set<Transaction> unsortedTxns = new HashSet<>();
+            unsortedTxns.add(send1a);
+            unsortedTxns.add(send1b);
+            unsortedTxns.add(send1c);
+            unsortedTxns.add(send1d);
+            unsortedTxns.add(send1e);
+            unsortedTxns.add(send2a);
+            unsortedTxns.add(send2b);
+            unsortedTxns.add(send2c);
+            List<Transaction> sortedTxns = wallet.sortTxnsByDependency(unsortedTxns);
+
+            assertEquals(8, sortedTxns.size());
+            assertTrue(sortedTxns.indexOf(send1a) < sortedTxns.indexOf(send1b));
+            assertTrue(sortedTxns.indexOf(send1b) < sortedTxns.indexOf(send1c));
+            assertTrue(sortedTxns.indexOf(send1c) < sortedTxns.indexOf(send1d));
+            assertTrue(sortedTxns.indexOf(send1d) < sortedTxns.indexOf(send1e));
+            assertTrue(sortedTxns.indexOf(send2a) < sortedTxns.indexOf(send2b));
+            assertTrue(sortedTxns.indexOf(send2b) < sortedTxns.indexOf(send2c));
+        } finally {
+            wallet.setCoinSelector(originalCoinSelector);
+        }
+    }
+
+    @Test
+    public void pending1() throws Exception {
+        // Check that if we receive a pending transaction that is then confirmed, we are notified as appropriate.
+        final Coin nanos = COIN;
+        final Transaction t1 = createFakeTx(PARAMS, nanos, myAddress);
+
+        // First one is "called" second is "pending".
+        final boolean[] flags = new boolean[2];
+        final Transaction[] notifiedTx = new Transaction[1];
+        final int[] walletChanged = new int[1];
+        wallet.addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                // Check we got the expected transaction.
+                assertEquals(tx, t1);
+                // Check that it's considered to be pending inclusion in the block chain.
+                assertEquals(prevBalance, ZERO);
+                assertEquals(newBalance, nanos);
+                flags[0] = true;
+                flags[1] = tx.isPending();
+                notifiedTx[0] = tx;
+            }
+        
