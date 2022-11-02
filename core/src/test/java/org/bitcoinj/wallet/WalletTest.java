@@ -1355,4 +1355,51 @@ public class WalletTest extends TestWithWallet {
         assertTrue(flags[1]);
         assertEquals(TransactionConfidence.ConfidenceType.BUILDING, notifiedTx[0].getConfidence().getConfidenceType());
         // Check we don't get notified about an irrelevant transaction.
-        flags[0] =
+        flags[0] = false;
+        flags[1] = false;
+        Transaction irrelevant = createFakeTx(PARAMS, nanos, OTHER_ADDRESS);
+        if (wallet.isPendingTransactionRelevant(irrelevant))
+            wallet.receivePending(irrelevant, null);
+        Threading.waitForUserCode();
+        assertFalse(flags[0]);
+        assertEquals(3, walletChanged[0]);
+    }
+
+    @Test
+    public void pending2() throws Exception {
+        // Check that if we receive a pending tx we did not send, it updates our spent flags correctly.
+        final Transaction[] txn = new Transaction[1];
+        final Coin[] bigints = new Coin[2];
+        wallet.addCoinsSentEventListener(new WalletCoinsSentEventListener() {
+            @Override
+            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                txn[0] = tx;
+                bigints[0] = prevBalance;
+                bigints[1] = newBalance;
+            }
+        });
+        // Receive some coins.
+        Coin nanos = COIN;
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, nanos);
+        // Create a spend with them, but don't commit it (ie it's from somewhere else but using our keys). This TX
+        // will have change as we don't spend our entire balance.
+        Coin halfNanos = valueOf(0, 50);
+        Transaction t2 = wallet.createSend(OTHER_ADDRESS, halfNanos);
+        // Now receive it as pending.
+        if (wallet.isPendingTransactionRelevant(t2))
+            wallet.receivePending(t2, null);
+        // We received an onCoinsSent() callback.
+        Threading.waitForUserCode();
+        assertEquals(t2, txn[0]);
+        assertEquals(nanos, bigints[0]);
+        assertEquals(halfNanos, bigints[1]);
+        // Our balance is now 0.50 BTC
+        assertEquals(halfNanos, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+    }
+
+    @Test
+    public void pending3() throws Exception {
+        // Check that if we receive a pending tx, and it's overridden by a double spend from the main chain, we
+        // are notified that it's dead. This should work even if the pending tx inputs are NOT ours, ie, they don't
+        // connect to anything.
+        Coin nanos = COI
