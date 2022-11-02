@@ -1220,4 +1220,49 @@ public class WalletTest extends TestWithWallet {
             wallet.commitTx(send2);
             Set<Transaction> txns = new HashSet<>();
             txns.add(send1);
-            wal
+            wallet.addTransactionsDependingOn(txns, wallet.getTransactions(true));
+            assertEquals(3, txns.size());
+            assertTrue(txns.contains(send1));
+            assertTrue(txns.contains(send1b));
+            assertTrue(txns.contains(send1c));
+        } finally {
+            wallet.setCoinSelector(originalCoinSelector);
+        }
+    }
+
+    @Test
+    public void sortTxnsByDependency() throws Exception {
+        CoinSelector originalCoinSelector = wallet.getCoinSelector();
+        try {
+            wallet.allowSpendingUnconfirmedTransactions();
+            Transaction send1 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(2, 0));
+            Transaction send1a = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(1, 0)));
+            wallet.commitTx(send1a);
+            Transaction send1b = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(0, 50)));
+            wallet.commitTx(send1b);
+            Transaction send1c = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(0, 25)));
+            wallet.commitTx(send1c);
+            Transaction send1d = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(0, 12)));
+            wallet.commitTx(send1d);
+            Transaction send1e = checkNotNull(wallet.createSend(OTHER_ADDRESS, valueOf(0, 06)));
+            wallet.commitTx(send1e);
+
+            Transaction send2 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(200, 0));
+
+            SendRequest req2a = SendRequest.to(OTHER_ADDRESS, valueOf(100, 0));
+            req2a.tx.addInput(send2.getOutput(0));
+            req2a.shuffleOutputs = false;
+            wallet.completeTx(req2a);
+            Transaction send2a = req2a.tx;
+
+            SendRequest req2b = SendRequest.to(OTHER_ADDRESS, valueOf(50, 0));
+            req2b.tx.addInput(send2a.getOutput(1));
+            req2b.shuffleOutputs = false;
+            wallet.completeTx(req2b);
+            Transaction send2b = req2b.tx;
+
+            SendRequest req2c = SendRequest.to(OTHER_ADDRESS, valueOf(25, 0));
+            req2c.tx.addInput(send2b.getOutput(1));
+            req2c.shuffleOutputs = false;
+            wallet.completeTx(req2c);
+            Tra
