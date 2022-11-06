@@ -1453,4 +1453,56 @@ public class WalletTest extends TestWithWallet {
     }
 
     @Test
-    public void tran
+    public void transactionsList() throws Exception {
+        // Check the wallet can give us an ordered list of all received transactions.
+        Utils.setMockClock();
+        Transaction tx1 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN);
+        Utils.rollMockClock(60 * 10);
+        Transaction tx2 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(0, 5));
+        // Check we got them back in order.
+        List<Transaction> transactions = wallet.getTransactionsByTime();
+        assertEquals(tx2, transactions.get(0));
+        assertEquals(tx1, transactions.get(1));
+        assertEquals(2, transactions.size());
+        // Check we get only the last transaction if we request a subrage.
+        transactions = wallet.getRecentTransactions(1, false);
+        assertEquals(1, transactions.size());
+        assertEquals(tx2,  transactions.get(0));
+
+        // Create a spend five minutes later.
+        Utils.rollMockClock(60 * 5);
+        Transaction tx3 = wallet.createSend(OTHER_ADDRESS, valueOf(0, 5));
+        // Does not appear in list yet.
+        assertEquals(2, wallet.getTransactionsByTime().size());
+        wallet.commitTx(tx3);
+        // Now it does.
+        transactions = wallet.getTransactionsByTime();
+        assertEquals(3, transactions.size());
+        assertEquals(tx3, transactions.get(0));
+
+        // Verify we can handle the case of older wallets in which the timestamp is null (guessed from the
+        // block appearances list).
+        tx1.setUpdateTime(null);
+        tx3.setUpdateTime(null);
+        // Check we got them back in order.
+        transactions = wallet.getTransactionsByTime();
+        assertEquals(tx2,  transactions.get(0));
+        assertEquals(3, transactions.size());
+    }
+
+    @Test
+    public void keyCreationTime() throws Exception {
+        Utils.setMockClock();
+        long now = Utils.currentTimeSeconds();
+        wallet = new Wallet(PARAMS);
+        assertEquals(now, wallet.getEarliestKeyCreationTime());
+        Utils.rollMockClock(60);
+        wallet.freshReceiveKey();
+        assertEquals(now, wallet.getEarliestKeyCreationTime());
+    }
+
+    @Test
+    public void scriptCreationTime() throws Exception {
+        Utils.setMockClock();
+        long now = Utils.currentTimeSeconds();
+        wallet = n
