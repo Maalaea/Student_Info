@@ -1505,4 +1505,51 @@ public class WalletTest extends TestWithWallet {
     public void scriptCreationTime() throws Exception {
         Utils.setMockClock();
         long now = Utils.currentTimeSeconds();
-        wallet = n
+        wallet = new Wallet(PARAMS);
+        assertEquals(now, wallet.getEarliestKeyCreationTime());
+        Utils.rollMockClock(-120);
+        wallet.addWatchedAddress(OTHER_ADDRESS);
+        wallet.freshReceiveKey();
+        assertEquals(now - 120, wallet.getEarliestKeyCreationTime());
+    }
+
+    @Test
+    public void spendToSameWallet() throws Exception {
+        // Test that a spend to the same wallet is dealt with correctly.
+        // It should appear in the wallet and confirm.
+        // This is a bit of a silly thing to do in the real world as all it does is burn a fee but it is perfectly valid.
+        Coin coin1 = COIN;
+        Coin coinHalf = valueOf(0, 50);
+        // Start by giving us 1 coin.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, coin1);
+        // Send half to ourselves. We should then have a balance available to spend of zero.
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals(1, wallet.getTransactions(true).size());
+        Transaction outbound1 = wallet.createSend(myAddress, coinHalf);
+        wallet.commitTx(outbound1);
+        // We should have a zero available balance before the next block.
+        assertEquals(ZERO, wallet.getBalance());
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, outbound1);
+        // We should have a balance of 1 BTC after the block is received.
+        assertEquals(coin1, wallet.getBalance());
+    }
+
+    @Test
+    public void lastBlockSeen() throws Exception {
+        Coin v1 = valueOf(5, 0);
+        Coin v2 = valueOf(0, 50);
+        Coin v3 = valueOf(0, 25);
+        Transaction t1 = createFakeTx(PARAMS, v1, myAddress);
+        Transaction t2 = createFakeTx(PARAMS, v2, myAddress);
+        Transaction t3 = createFakeTx(PARAMS, v3, myAddress);
+
+        Block genesis = blockStore.getChainHead().getHeader();
+        Block b10 = makeSolvedTestBlock(genesis, t1);
+        Block b11 = makeSolvedTestBlock(genesis, t2);
+        Block b2 = makeSolvedTestBlock(b10, t3);
+        Block b3 = makeSolvedTestBlock(b2);
+
+        // Receive a block on the best chain - this should set the last block seen hash.
+        chain.add(b10);
+        assertEquals(b10.getHash(), wallet.getLastBlockSeenHash());
+        assertEquals(b10.getTimeSeconds(),
