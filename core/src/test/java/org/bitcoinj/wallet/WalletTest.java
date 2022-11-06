@@ -1402,4 +1402,55 @@ public class WalletTest extends TestWithWallet {
         // Check that if we receive a pending tx, and it's overridden by a double spend from the main chain, we
         // are notified that it's dead. This should work even if the pending tx inputs are NOT ours, ie, they don't
         // connect to anything.
-        Coin nanos = COI
+        Coin nanos = COIN;
+
+        // Create two transactions that share the same input tx.
+        Address badGuy = new ECKey().toAddress(PARAMS);
+        Transaction doubleSpentTx = new Transaction(PARAMS);
+        TransactionOutput doubleSpentOut = new TransactionOutput(PARAMS, doubleSpentTx, nanos, badGuy);
+        doubleSpentTx.addOutput(doubleSpentOut);
+        Transaction t1 = new Transaction(PARAMS);
+        TransactionOutput o1 = new TransactionOutput(PARAMS, t1, nanos, myAddress);
+        t1.addOutput(o1);
+        t1.addInput(doubleSpentOut);
+        Transaction t2 = new Transaction(PARAMS);
+        TransactionOutput o2 = new TransactionOutput(PARAMS, t2, nanos, badGuy);
+        t2.addOutput(o2);
+        t2.addInput(doubleSpentOut);
+
+        final Transaction[] called = new Transaction[2];
+        wallet.addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                called[0] = tx;
+            }
+        });
+
+        wallet.addTransactionConfidenceEventListener(new TransactionConfidenceEventListener() {
+            @Override
+            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                if (tx.getConfidence().getConfidenceType() ==
+                        TransactionConfidence.ConfidenceType.DEAD) {
+                    called[0] = tx;
+                    called[1] = tx.getConfidence().getOverridingTransaction();
+                }
+            }
+        });
+
+        assertEquals(ZERO, wallet.getBalance());
+        if (wallet.isPendingTransactionRelevant(t1))
+            wallet.receivePending(t1, null);
+        Threading.waitForUserCode();
+        assertEquals(t1, called[0]);
+        assertEquals(nanos, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        // Now receive a double spend on the main chain.
+        called[0] = called[1] = null;
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, t2);
+        Threading.waitForUserCode();
+        assertEquals(ZERO, wallet.getBalance());
+        assertEquals(t1, called[0]); // dead
+        assertEquals(t2, called[1]); // replacement
+    }
+
+    @Test
+    public void tran
