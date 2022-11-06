@@ -1552,4 +1552,48 @@ public class WalletTest extends TestWithWallet {
         // Receive a block on the best chain - this should set the last block seen hash.
         chain.add(b10);
         assertEquals(b10.getHash(), wallet.getLastBlockSeenHash());
-        assertEquals(b10.getTimeSeconds(),
+        assertEquals(b10.getTimeSeconds(), wallet.getLastBlockSeenTimeSecs());
+        assertEquals(1, wallet.getLastBlockSeenHeight());
+        // Receive a block on the side chain - this should not change the last block seen hash.
+        chain.add(b11);
+        assertEquals(b10.getHash(), wallet.getLastBlockSeenHash());
+        // Receive block 2 on the best chain - this should change the last block seen hash.
+        chain.add(b2);
+        assertEquals(b2.getHash(), wallet.getLastBlockSeenHash());
+        // Receive block 3 on the best chain - this should change the last block seen hash despite having no txns.
+        chain.add(b3);
+        assertEquals(b3.getHash(), wallet.getLastBlockSeenHash());
+    }
+
+    @Test
+    public void pubkeyOnlyScripts() throws Exception {
+        // Verify that we support outputs like OP_PUBKEY and the corresponding inputs.
+        ECKey key1 = wallet.freshReceiveKey();
+        Coin value = valueOf(5, 0);
+        Transaction t1 = createFakeTx(PARAMS, value, key1);
+        if (wallet.isPendingTransactionRelevant(t1))
+            wallet.receivePending(t1, null);
+        // TX should have been seen as relevant.
+        assertEquals(value, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        assertEquals(ZERO, wallet.getBalance(Wallet.BalanceType.AVAILABLE));
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, t1);
+        // TX should have been seen as relevant, extracted and processed.
+        assertEquals(value, wallet.getBalance(Wallet.BalanceType.AVAILABLE));
+        // Spend it and ensure we can spend the <key> OP_CHECKSIG output correctly.
+        Transaction t2 = wallet.createSend(OTHER_ADDRESS, value);
+        assertNotNull(t2);
+        // TODO: This code is messy, improve the Script class and fixinate!
+        assertEquals(t2.toString(), 1, t2.getInputs().get(0).getScriptSig().getChunks().size());
+        assertTrue(t2.getInputs().get(0).getScriptSig().getChunks().get(0).data.length > 50);
+    }
+
+    @Test
+    public void isWatching() {
+        assertFalse(wallet.isWatching());
+        Wallet watchingWallet = Wallet.fromWatchingKey(PARAMS, wallet.getWatchingKey().dropPrivateBytes().dropParent());
+        assertTrue(watchingWallet.isWatching());
+        wallet.encrypt(PASSWORD1);
+        assertFalse(wallet.isWatching());
+    }
+
+   
