@@ -1596,4 +1596,54 @@ public class WalletTest extends TestWithWallet {
         assertFalse(wallet.isWatching());
     }
 
-   
+    @Test
+    public void watchingWallet() throws Exception {
+        DeterministicKey watchKey = wallet.getWatchingKey();
+        String serialized = watchKey.serializePubB58(PARAMS);
+
+        // Construct watching wallet.
+        Wallet watchingWallet = Wallet.fromWatchingKey(PARAMS, DeterministicKey.deserializeB58(null, serialized, PARAMS));
+        DeterministicKey key2 = watchingWallet.freshReceiveKey();
+        assertEquals(myKey, key2);
+
+        ECKey key = wallet.freshKey(KeyChain.KeyPurpose.CHANGE);
+        key2 = watchingWallet.freshKey(KeyChain.KeyPurpose.CHANGE);
+        assertEquals(key, key2);
+        key.sign(Sha256Hash.ZERO_HASH);
+        try {
+            key2.sign(Sha256Hash.ZERO_HASH);
+            fail();
+        } catch (ECKey.MissingPrivateKeyException e) {
+            // Expected
+        }
+
+        receiveATransaction(watchingWallet, myKey.toAddress(PARAMS));
+        assertEquals(COIN, watchingWallet.getBalance());
+        assertEquals(COIN, watchingWallet.getBalance(Wallet.BalanceType.AVAILABLE));
+        assertEquals(ZERO, watchingWallet.getBalance(Wallet.BalanceType.AVAILABLE_SPENDABLE));
+    }
+
+    @Test(expected = ECKey.MissingPrivateKeyException.class)
+    public void watchingWalletWithCreationTime() throws Exception {
+        DeterministicKey watchKey = wallet.getWatchingKey();
+        String serialized = watchKey.serializePubB58(PARAMS);
+        Wallet watchingWallet = Wallet.fromWatchingKeyB58(PARAMS, serialized, 1415282801);
+        DeterministicKey key2 = watchingWallet.freshReceiveKey();
+        assertEquals(myKey, key2);
+
+        ECKey key = wallet.freshKey(KeyChain.KeyPurpose.CHANGE);
+        key2 = watchingWallet.freshKey(KeyChain.KeyPurpose.CHANGE);
+        assertEquals(key, key2);
+        key.sign(Sha256Hash.ZERO_HASH);
+        key2.sign(Sha256Hash.ZERO_HASH);
+    }
+
+    @Test
+    public void watchingScripts() throws Exception {
+        // Verify that pending transactions to watched addresses are relevant
+        Address watchedAddress = new ECKey().toAddress(PARAMS);
+        wallet.addWatchedAddress(watchedAddress);
+        Coin value = valueOf(5, 0);
+        Transaction t1 = createFakeTx(PARAMS, value, watchedAddress);
+        assertTrue(t1.getWalletOutputs(wallet).size() >= 1);
+        assertTrue(wallet.is
