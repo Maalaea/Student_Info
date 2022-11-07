@@ -1646,4 +1646,53 @@ public class WalletTest extends TestWithWallet {
         Coin value = valueOf(5, 0);
         Transaction t1 = createFakeTx(PARAMS, value, watchedAddress);
         assertTrue(t1.getWalletOutputs(wallet).size() >= 1);
-        assertTrue(wallet.is
+        assertTrue(wallet.isPendingTransactionRelevant(t1));
+    }
+
+    @Test(expected = InsufficientMoneyException.class)
+    public void watchingScriptsConfirmed() throws Exception {
+        Address watchedAddress = new ECKey().toAddress(PARAMS);
+        wallet.addWatchedAddress(watchedAddress);
+        sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN, CENT, watchedAddress);
+        assertEquals(CENT, wallet.getBalance());
+
+        // We can't spend watched balances
+        wallet.createSend(OTHER_ADDRESS, CENT);
+    }
+
+    @Test
+    public void watchingScriptsSentFrom() throws Exception {
+        int baseElements = wallet.getBloomFilterElementCount();
+
+        Address watchedAddress = new ECKey().toAddress(PARAMS);
+        wallet.addWatchedAddress(watchedAddress);
+        assertEquals(baseElements + 1, wallet.getBloomFilterElementCount());
+
+        Transaction t1 = createFakeTx(PARAMS, CENT, watchedAddress);
+        Transaction t2 = createFakeTx(PARAMS, COIN, OTHER_ADDRESS);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, t1);
+        assertEquals(baseElements + 2, wallet.getBloomFilterElementCount());
+        Transaction st2 = new Transaction(PARAMS);
+        st2.addOutput(CENT, OTHER_ADDRESS);
+        st2.addOutput(COIN, OTHER_ADDRESS);
+        st2.addInput(t1.getOutput(0));
+        st2.addInput(t2.getOutput(0));
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, st2);
+        assertEquals(baseElements + 2, wallet.getBloomFilterElementCount());
+        assertEquals(CENT, st2.getValueSentFromMe(wallet));
+    }
+
+    @Test
+    public void watchingScriptsBloomFilter() throws Exception {
+        assertFalse(wallet.isRequiringUpdateAllBloomFilter());
+
+        Address watchedAddress = new ECKey().toAddress(PARAMS);
+        Transaction t1 = createFakeTx(PARAMS, CENT, watchedAddress);
+        TransactionOutPoint outPoint = new TransactionOutPoint(PARAMS, 0, t1);
+        wallet.addWatchedAddress(watchedAddress);
+
+        assertTrue(wallet.isRequiringUpdateAllBloomFilter());
+        // Note that this has a 1e-12 chance of failing this unit test due to a false positive
+        assertFalse(wallet.getBloomFilter(1e-12).contains(outPoint.unsafeBitcoinSerialize()));
+
+        sendMoneyToWa
