@@ -1695,4 +1695,58 @@ public class WalletTest extends TestWithWallet {
         // Note that this has a 1e-12 chance of failing this unit test due to a false positive
         assertFalse(wallet.getBloomFilter(1e-12).contains(outPoint.unsafeBitcoinSerialize()));
 
-        sendMoneyToWa
+        sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN, t1);
+        assertTrue(wallet.getBloomFilter(1e-12).contains(outPoint.unsafeBitcoinSerialize()));
+    }
+
+    @Test
+    public void getWatchedAddresses() throws Exception {
+        Address watchedAddress = new ECKey().toAddress(PARAMS);
+        wallet.addWatchedAddress(watchedAddress);
+        List<Address> watchedAddresses = wallet.getWatchedAddresses();
+        assertEquals(1, watchedAddresses.size());
+        assertEquals(watchedAddress, watchedAddresses.get(0));
+    }
+
+    @Test
+    public void removeWatchedAddresses() {
+        List<Address> addressesForRemoval = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            Address watchedAddress = new ECKey().toAddress(PARAMS);
+            addressesForRemoval.add(watchedAddress);
+            wallet.addWatchedAddress(watchedAddress);
+        }
+
+        wallet.removeWatchedAddresses(addressesForRemoval);
+        for (Address addr : addressesForRemoval)
+            assertFalse(wallet.isAddressWatched(addr));
+
+        assertFalse(wallet.isRequiringUpdateAllBloomFilter());
+    }
+
+    @Test
+    public void removeWatchedAddress() {
+        Address watchedAddress = new ECKey().toAddress(PARAMS);
+        wallet.addWatchedAddress(watchedAddress);
+        wallet.removeWatchedAddress(watchedAddress);
+        assertFalse(wallet.isAddressWatched(watchedAddress));
+        assertFalse(wallet.isRequiringUpdateAllBloomFilter());
+    }
+
+    @Test
+    public void removeScriptsBloomFilter() throws Exception {
+        List<Address> addressesForRemoval = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            Address watchedAddress = new ECKey().toAddress(PARAMS);
+            addressesForRemoval.add(watchedAddress);
+            wallet.addWatchedAddress(watchedAddress);
+        }
+
+        wallet.removeWatchedAddresses(addressesForRemoval);
+
+        for (Address addr : addressesForRemoval) {
+            Transaction t1 = createFakeTx(PARAMS, CENT, addr);
+            TransactionOutPoint outPoint = new TransactionOutPoint(PARAMS, 0, t1);
+
+            // Note that this has a 1e-12 chance of failing this unit test due to a false positive
+            assertFalse(wallet.g
