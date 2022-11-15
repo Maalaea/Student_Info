@@ -1796,4 +1796,56 @@ public class WalletTest extends TestWithWallet {
         // updates are coalesced together. This test is a bit racy, it assumes we can complete the unit test within
         // an auto-save cycle of 1 second.
         final File[] results = new File[2];
-        final CountD
+        final CountDownLatch latch = new CountDownLatch(3);
+        File f = File.createTempFile("bitcoinj-unit-test", null);
+        Sha256Hash hash1 = Sha256Hash.of(f);
+        wallet.autosaveToFile(f, 1, TimeUnit.SECONDS,
+                new WalletFiles.Listener() {
+                    @Override
+                    public void onBeforeAutoSave(File tempFile) {
+                        results[0] = tempFile;
+                    }
+
+                    @Override
+                    public void onAfterAutoSave(File newlySavedFile) {
+                        results[1] = newlySavedFile;
+                        latch.countDown();
+                    }
+                }
+        );
+        ECKey key = wallet.freshReceiveKey();
+        Sha256Hash hash2 = Sha256Hash.of(f);
+        assertFalse(hash1.equals(hash2));  // File has changed immediately despite the delay, as keys are important.
+        assertNotNull(results[0]);
+        assertEquals(f, results[1]);
+        results[0] = results[1] = null;
+
+        sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN);
+        Sha256Hash hash3 = Sha256Hash.of(f);
+        assertEquals(hash2, hash3);  // File has NOT changed yet. Just new blocks with no txns - delayed.
+        assertNull(results[0]);
+        assertNull(results[1]);
+
+        sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN, valueOf(5, 0), key);
+        Sha256Hash hash4 = Sha256Hash.of(f);
+        assertFalse(hash3.equals(hash4));  // File HAS changed.
+        results[0] = results[1] = null;
+
+        // A block that contains some random tx we don't care about.
+        sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN, Coin.COIN, OTHER_ADDRESS);
+        assertEquals(hash4, Sha256Hash.of(f));  // File has NOT changed.
+        assertNull(results[0]);
+        assertNull(results[1]);
+
+        // Wait for an auto-save to occur.
+        latch.await();
+        Sha256Hash hash5 = Sha256Hash.of(f);
+        assertFalse(hash4.equals(hash5));  // File has now changed.
+        assertNotNull(results[0]);
+        assertEquals(f, results[1]);
+
+        // Now we shutdown auto-saving and expect wallet changes to remain unsaved, even "important" changes.
+        wallet.shutdownAutosaveAndWait();
+        results[0] = results[1] = null;
+        ECKey key2 = new ECKey();
+        wallet.imp
