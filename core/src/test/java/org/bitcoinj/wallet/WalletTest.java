@@ -1749,4 +1749,51 @@ public class WalletTest extends TestWithWallet {
             TransactionOutPoint outPoint = new TransactionOutPoint(PARAMS, 0, t1);
 
             // Note that this has a 1e-12 chance of failing this unit test due to a false positive
-            assertFalse(wallet.g
+            assertFalse(wallet.getBloomFilter(1e-12).contains(outPoint.unsafeBitcoinSerialize()));
+
+            sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN, t1);
+            assertFalse(wallet.getBloomFilter(1e-12).contains(outPoint.unsafeBitcoinSerialize()));
+        }
+    }
+
+    @Test
+    public void marriedKeychainBloomFilter() throws Exception {
+        createMarriedWallet(2, 2);
+        Address address = wallet.currentReceiveAddress();
+
+        assertTrue(wallet.getBloomFilter(0.001).contains(address.getHash160()));
+
+        Transaction t1 = createFakeTx(PARAMS, CENT, address);
+        TransactionOutPoint outPoint = new TransactionOutPoint(PARAMS, 0, t1);
+
+        assertFalse(wallet.getBloomFilter(0.001).contains(outPoint.unsafeBitcoinSerialize()));
+
+        sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN, t1);
+        assertTrue(wallet.getBloomFilter(0.001).contains(outPoint.unsafeBitcoinSerialize()));
+    }
+
+    @Test
+    public void autosaveImmediate() throws Exception {
+        // Test that the wallet will save itself automatically when it changes.
+        File f = File.createTempFile("bitcoinj-unit-test", null);
+        Sha256Hash hash1 = Sha256Hash.of(f);
+        // Start with zero delay and ensure the wallet file changes after adding a key.
+        wallet.autosaveToFile(f, 0, TimeUnit.SECONDS, null);
+        ECKey key = wallet.freshReceiveKey();
+        Sha256Hash hash2 = Sha256Hash.of(f);
+        assertFalse("Wallet not saved after generating fresh key", hash1.equals(hash2));  // File has changed.
+
+        Transaction t1 = createFakeTx(PARAMS, valueOf(5, 0), key);
+        if (wallet.isPendingTransactionRelevant(t1))
+            wallet.receivePending(t1, null);
+        Sha256Hash hash3 = Sha256Hash.of(f);
+        assertFalse("Wallet not saved after receivePending", hash2.equals(hash3));  // File has changed again.
+    }
+
+    @Test
+    public void autosaveDelayed() throws Exception {
+        // Test that the wallet will save itself automatically when it changes, but not immediately and near-by
+        // updates are coalesced together. This test is a bit racy, it assumes we can complete the unit test within
+        // an auto-save cycle of 1 second.
+        final File[] results = new File[2];
+        final CountD
