@@ -1848,4 +1848,53 @@ public class WalletTest extends TestWithWallet {
         wallet.shutdownAutosaveAndWait();
         results[0] = results[1] = null;
         ECKey key2 = new ECKey();
-        wallet.imp
+        wallet.importKey(key2);
+        assertEquals(hash5, Sha256Hash.of(f)); // File has NOT changed.
+        sendMoneyToWallet(BlockChain.NewBlockType.BEST_CHAIN, valueOf(5, 0), key2);
+        Thread.sleep(2000); // Wait longer than autosave delay. TODO Fix the racyness.
+        assertEquals(hash5, Sha256Hash.of(f)); // File has still NOT changed.
+        assertNull(results[0]);
+        assertNull(results[1]);
+    }
+
+    @Test
+    public void spendOutputFromPendingTransaction() throws Exception {
+        // We'll set up a wallet that receives a coin, then sends a coin of lesser value and keeps the change.
+        Coin v1 = COIN;
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, v1);
+        // First create our current transaction
+        ECKey k2 = wallet.freshReceiveKey();
+        Coin v2 = valueOf(0, 50);
+        Transaction t2 = new Transaction(PARAMS);
+        TransactionOutput o2 = new TransactionOutput(PARAMS, t2, v2, k2.toAddress(PARAMS));
+        t2.addOutput(o2);
+        SendRequest req = SendRequest.forTx(t2);
+        wallet.completeTx(req);
+
+        // Commit t2, so it is placed in the pending pool
+        wallet.commitTx(t2);
+        assertEquals(0, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals(1, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
+        assertEquals(2, wallet.getTransactions(true).size());
+
+        // Now try to the spend the output.
+        ECKey k3 = new ECKey();
+        Coin v3 = valueOf(0, 25);
+        Transaction t3 = new Transaction(PARAMS);
+        t3.addOutput(v3, k3.toAddress(PARAMS));
+        t3.addInput(o2);
+        wallet.signTransaction(SendRequest.forTx(t3));
+
+        // Commit t3, so the coins from the pending t2 are spent
+        wallet.commitTx(t3);
+        assertEquals(0, wallet.getPoolSize(WalletTransaction.Pool.UNSPENT));
+        assertEquals(2, wallet.getPoolSize(WalletTransaction.Pool.PENDING));
+        assertEquals(3, wallet.getTransactions(true).size());
+
+        // Now the output of t2 must not be available for spending
+        assertFalse(o2.isAvailableForSpending());
+    }
+
+    @Test
+    public void replayWhilstPending() throws Exception {
+        // Check that if a pending transaction spends outputs of 
