@@ -1897,4 +1897,47 @@ public class WalletTest extends TestWithWallet {
 
     @Test
     public void replayWhilstPending() throws Exception {
-        // Check that if a pending transaction spends outputs of 
+        // Check that if a pending transaction spends outputs of chain-included transactions, we mark them as spent.
+        // See bug 345. This can happen if there is a pending transaction floating around and then you replay the
+        // chain without emptying the memory pool (or refilling it from a peer).
+        Coin value = COIN;
+        Transaction tx1 = createFakeTx(PARAMS, value, myAddress);
+        Transaction tx2 = new Transaction(PARAMS);
+        tx2.addInput(tx1.getOutput(0));
+        tx2.addOutput(valueOf(0, 9), OTHER_ADDRESS);
+        // Add a change address to ensure this tx is relevant.
+        tx2.addOutput(CENT, wallet.currentChangeAddress());
+        wallet.receivePending(tx2, null);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, tx1);
+        assertEquals(ZERO, wallet.getBalance());
+        assertEquals(1, wallet.getPoolSize(Pool.SPENT));
+        assertEquals(1, wallet.getPoolSize(Pool.PENDING));
+        assertEquals(0, wallet.getPoolSize(Pool.UNSPENT));
+    }
+
+    @Test
+    public void outOfOrderPendingTxns() throws Exception {
+        // Check that if there are two pending transactions which we receive out of order, they are marked as spent
+        // correctly. For instance, we are watching a wallet, someone pays us (A) and we then pay someone else (B)
+        // with a change address but the network delivers the transactions to us in order B then A.
+        Coin value = COIN;
+        Transaction a = createFakeTx(PARAMS, value, myAddress);
+        Transaction b = new Transaction(PARAMS);
+        b.addInput(a.getOutput(0));
+        b.addOutput(CENT, OTHER_ADDRESS);
+        Coin v = COIN.subtract(CENT);
+        b.addOutput(v, wallet.currentChangeAddress());
+        a = roundTripTransaction(PARAMS, a);
+        b = roundTripTransaction(PARAMS, b);
+        wallet.receivePending(b, null);
+        assertEquals(v, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        wallet.receivePending(a, null);
+        assertEquals(v, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+    }
+
+    @Test
+    public void encryptionDecryptionAESBasic() throws Exception {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+        KeyCrypter keyCrypter = encryptedWallet.getKeyCrypter();
+        KeyParameter aesKey = keyCrypter.deriveKey(PASSWORD1)
