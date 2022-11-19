@@ -1940,4 +1940,61 @@ public class WalletTest extends TestWithWallet {
         Wallet encryptedWallet = new Wallet(PARAMS);
         encryptedWallet.encrypt(PASSWORD1);
         KeyCrypter keyCrypter = encryptedWallet.getKeyCrypter();
-        KeyParameter aesKey = keyCrypter.deriveKey(PASSWORD1)
+        KeyParameter aesKey = keyCrypter.deriveKey(PASSWORD1);
+
+        assertEquals(EncryptionType.ENCRYPTED_SCRYPT_AES, encryptedWallet.getEncryptionType());
+        assertTrue(encryptedWallet.checkPassword(PASSWORD1));
+        assertTrue(encryptedWallet.checkAESKey(aesKey));
+        assertFalse(encryptedWallet.checkPassword(WRONG_PASSWORD));
+        assertNotNull("The keyCrypter is missing but should not be", keyCrypter);
+        encryptedWallet.decrypt(aesKey);
+
+        // Wallet should now be unencrypted.
+        assertNull("Wallet is not an unencrypted wallet", encryptedWallet.getKeyCrypter());
+        try {
+            encryptedWallet.checkPassword(PASSWORD1);
+            fail();
+        } catch (IllegalStateException e) {
+        }
+    }
+
+    @Test
+    public void encryptionDecryptionPasswordBasic() throws Exception {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+
+        assertTrue(encryptedWallet.isEncrypted());
+        encryptedWallet.decrypt(PASSWORD1);
+        assertFalse(encryptedWallet.isEncrypted());
+
+        // Wallet should now be unencrypted.
+        assertNull("Wallet is not an unencrypted wallet", encryptedWallet.getKeyCrypter());
+        try {
+            encryptedWallet.checkPassword(PASSWORD1);
+            fail();
+        } catch (IllegalStateException e) {
+        }
+    }
+
+    @Test
+    public void encryptionDecryptionBadPassword() throws Exception {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+        KeyCrypter keyCrypter = encryptedWallet.getKeyCrypter();
+        KeyParameter wrongAesKey = keyCrypter.deriveKey(WRONG_PASSWORD);
+
+        // Check the wallet is currently encrypted
+        assertEquals("Wallet is not an encrypted wallet", EncryptionType.ENCRYPTED_SCRYPT_AES, encryptedWallet.getEncryptionType());
+        assertFalse(encryptedWallet.checkAESKey(wrongAesKey));
+
+        // Check that the wrong password does not decrypt the wallet.
+        try {
+            encryptedWallet.decrypt(wrongAesKey);
+            fail("Incorrectly decoded wallet with wrong password");
+        } catch (KeyCrypterException ede) {
+            // Expected.
+        }
+    }
+
+    @Test
+    public void changePasswo
