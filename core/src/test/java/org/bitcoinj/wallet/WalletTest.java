@@ -1997,4 +1997,57 @@ public class WalletTest extends TestWithWallet {
     }
 
     @Test
-    public void changePasswo
+    public void changePasswordTest() {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+        CharSequence newPassword = "My name is Tom";
+        encryptedWallet.changeEncryptionPassword(PASSWORD1, newPassword);
+        assertTrue(encryptedWallet.checkPassword(newPassword));
+        assertFalse(encryptedWallet.checkPassword(WRONG_PASSWORD));
+    }
+
+    @Test
+    public void changeAesKeyTest() {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+
+        KeyCrypter keyCrypter = encryptedWallet.getKeyCrypter();
+        KeyParameter aesKey = keyCrypter.deriveKey(PASSWORD1);
+
+        CharSequence newPassword = "My name is Tom";
+        KeyParameter newAesKey = keyCrypter.deriveKey(newPassword);
+
+        encryptedWallet.changeEncryptionKey(keyCrypter, aesKey, newAesKey);
+
+        assertTrue(encryptedWallet.checkAESKey(newAesKey));
+        assertFalse(encryptedWallet.checkAESKey(aesKey));
+    }
+
+    @Test
+    public void encryptionDecryptionCheckExceptions() throws Exception {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+        KeyCrypter keyCrypter = encryptedWallet.getKeyCrypter();
+        KeyParameter aesKey = keyCrypter.deriveKey(PASSWORD1);
+
+        // Check the wallet is currently encrypted
+        assertEquals("Wallet is not an encrypted wallet", EncryptionType.ENCRYPTED_SCRYPT_AES, encryptedWallet.getEncryptionType());
+
+        // Decrypt wallet.
+        assertNotNull("The keyCrypter is missing but should not be", keyCrypter);
+        encryptedWallet.decrypt(aesKey);
+
+        // Try decrypting it again
+        try {
+            assertNotNull("The keyCrypter is missing but should not be", keyCrypter);
+            encryptedWallet.decrypt(aesKey);
+            fail("Should not be able to decrypt a decrypted wallet");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+        assertNull("Wallet is not an unencrypted wallet", encryptedWallet.getKeyCrypter());
+
+        // Encrypt wallet.
+        encryptedWallet.encrypt(keyCrypter, aesKey);
+
+        assertEquals("Wallet is not an encrypted wallet", Encryption
