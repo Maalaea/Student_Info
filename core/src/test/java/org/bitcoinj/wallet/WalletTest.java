@@ -2050,4 +2050,50 @@ public class WalletTest extends TestWithWallet {
         // Encrypt wallet.
         encryptedWallet.encrypt(keyCrypter, aesKey);
 
-        assertEquals("Wallet is not an encrypted wallet", Encryption
+        assertEquals("Wallet is not an encrypted wallet", EncryptionType.ENCRYPTED_SCRYPT_AES, encryptedWallet.getEncryptionType());
+
+        // Try encrypting it again
+        try {
+            encryptedWallet.encrypt(keyCrypter, aesKey);
+            fail("Should not be able to encrypt an encrypted wallet");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+        assertEquals("Wallet is not an encrypted wallet", EncryptionType.ENCRYPTED_SCRYPT_AES, encryptedWallet.getEncryptionType());
+    }
+
+    @Test(expected = KeyCrypterException.class)
+    public void addUnencryptedKeyToEncryptedWallet() throws Exception {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+
+        ECKey key1 = new ECKey();
+        encryptedWallet.importKey(key1);
+    }
+
+    @Test(expected = KeyCrypterException.class)
+    public void addEncryptedKeyToUnencryptedWallet() throws Exception {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+        KeyCrypter keyCrypter = encryptedWallet.getKeyCrypter();
+
+        ECKey key1 = new ECKey();
+        key1 = key1.encrypt(keyCrypter, keyCrypter.deriveKey("PASSWORD!"));
+        wallet.importKey(key1);
+    }
+
+    @Test(expected = KeyCrypterException.class)
+    public void mismatchedCrypter() throws Exception {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+        KeyCrypter keyCrypter = encryptedWallet.getKeyCrypter();
+        KeyParameter aesKey = keyCrypter.deriveKey(PASSWORD1);
+
+        // Try added an ECKey that was encrypted with a differenct ScryptParameters (i.e. a non-homogenous key).
+        // This is not allowed as the ScryptParameters is stored at the Wallet level.
+        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder()
+                .setSalt(ByteString.copyFrom(KeyCrypterScrypt.randomSalt()));
+        Protos.ScryptParameters scryptParameters = scryptParametersBuilder.build();
+        KeyCrypter keyCrypterDifferent = new KeyCrypterScrypt(scryptParameters);
+        ECKey ecKeyDifferent = new ECKey();
+        ecKeyDifferent = ecKeyDifferent.encrypt(keyCrypterDifferent, aesKey);
