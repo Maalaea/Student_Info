@@ -2138,4 +2138,57 @@ public class WalletTest extends TestWithWallet {
     public void respectMaxStandardSize() throws Exception {
         // Check that we won't create txns > 100kb. Average tx size is ~220 bytes so this would have to be enormous.
         sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(100, 0));
-        Transact
+        Transaction tx = new Transaction(PARAMS);
+        byte[] bits = new byte[20];
+        new Random().nextBytes(bits);
+        Coin v = CENT;
+        // 3100 outputs to a random address.
+        for (int i = 0; i < 3100; i++) {
+            tx.addOutput(v, new Address(PARAMS, bits));
+        }
+        SendRequest req = SendRequest.forTx(tx);
+        wallet.completeTx(req);
+    }
+
+    @Test
+    public void opReturnOneOutputTest() throws Exception {
+        // Tests basic send of transaction with one output that doesn't transfer any value but just writes OP_RETURN.
+        receiveATransaction(wallet, myAddress);
+        Transaction tx = new Transaction(PARAMS);
+        Coin messagePrice = Coin.ZERO;
+        Script script = ScriptBuilder.createOpReturnScript("hello world!".getBytes());
+        tx.addOutput(messagePrice, script);
+        SendRequest request = SendRequest.forTx(tx);
+        request.ensureMinRequiredFee = true;
+        wallet.completeTx(request);
+    }
+
+    @Test
+    public void opReturnMaxBytes() throws Exception {
+        receiveATransaction(wallet, myAddress);
+        Transaction tx = new Transaction(PARAMS);
+        Script script = ScriptBuilder.createOpReturnScript(new byte[80]);
+        tx.addOutput(Coin.ZERO, script);
+        SendRequest request = SendRequest.forTx(tx);
+        request.ensureMinRequiredFee = true;
+        wallet.completeTx(request);
+    }
+
+    @Test
+    public void opReturnOneOutputWithValueTest() throws Exception {
+        // Tests basic send of transaction with one output that destroys coins and has an OP_RETURN.
+        receiveATransaction(wallet, myAddress);
+        Transaction tx = new Transaction(PARAMS);
+        Coin messagePrice = CENT;
+        Script script = ScriptBuilder.createOpReturnScript("hello world!".getBytes());
+        tx.addOutput(messagePrice, script);
+        SendRequest request = SendRequest.forTx(tx);
+        wallet.completeTx(request);
+    }
+
+    @Test
+    public void opReturnTwoOutputsTest() throws Exception {
+        // Tests sending transaction where one output transfers BTC, the other one writes OP_RETURN.
+        receiveATransaction(wallet, myAddress);
+        Transaction tx = new Transaction(PARAMS);
+        Coin messageP
