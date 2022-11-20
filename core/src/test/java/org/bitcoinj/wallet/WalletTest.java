@@ -2097,3 +2097,45 @@ public class WalletTest extends TestWithWallet {
         KeyCrypter keyCrypterDifferent = new KeyCrypterScrypt(scryptParameters);
         ECKey ecKeyDifferent = new ECKey();
         ecKeyDifferent = ecKeyDifferent.encrypt(keyCrypterDifferent, aesKey);
+        encryptedWallet.importKey(ecKeyDifferent);
+    }
+
+    @Test
+    public void importAndEncrypt() throws InsufficientMoneyException {
+        Wallet encryptedWallet = new Wallet(PARAMS);
+        encryptedWallet.encrypt(PASSWORD1);
+
+        final ECKey key = new ECKey();
+        encryptedWallet.importKeysAndEncrypt(ImmutableList.of(key), PASSWORD1);
+        assertEquals(1, encryptedWallet.getImportedKeys().size());
+        assertEquals(key.getPubKeyPoint(), encryptedWallet.getImportedKeys().get(0).getPubKeyPoint());
+        sendMoneyToWallet(encryptedWallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, Coin.COIN, key.toAddress(PARAMS));
+        assertEquals(Coin.COIN, encryptedWallet.getBalance());
+        SendRequest req = SendRequest.emptyWallet(OTHER_ADDRESS);
+        req.aesKey = checkNotNull(encryptedWallet.getKeyCrypter()).deriveKey(PASSWORD1);
+        encryptedWallet.sendCoinsOffline(req);
+    }
+
+    @Test
+    public void ageMattersDuringSelection() throws Exception {
+        // Test that we prefer older coins to newer coins when building spends. This reduces required fees and improves
+        // time to confirmation as the transaction will appear less spammy.
+        final int ITERATIONS = 10;
+        Transaction[] txns = new Transaction[ITERATIONS];
+        for (int i = 0; i < ITERATIONS; i++) {
+            txns[i] = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN);
+        }
+        // Check that we spend transactions in order of reception.
+        for (int i = 0; i < ITERATIONS; i++) {
+            Transaction spend = wallet.createSend(OTHER_ADDRESS, COIN);
+            assertEquals(spend.getInputs().size(), 1);
+            assertEquals("Failed on iteration " + i, spend.getInput(0).getOutpoint().getHash(), txns[i].getHash());
+            wallet.commitTx(spend);
+        }
+    }
+
+    @Test(expected = Wallet.ExceededMaxTransactionSize.class)
+    public void respectMaxStandardSize() throws Exception {
+        // Check that we won't create txns > 100kb. Average tx size is ~220 bytes so this would have to be enormous.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, valueOf(100, 0));
+        Transact
