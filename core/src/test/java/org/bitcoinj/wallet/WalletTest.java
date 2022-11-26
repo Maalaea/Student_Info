@@ -2238,4 +2238,47 @@ public class WalletTest extends TestWithWallet {
     }
 
     @Test(expected = Wallet.DustySendRequested.class)
-    public void sendDustAndOpReturnWithoutValu
+    public void sendDustAndOpReturnWithoutValueTest() throws Exception {
+        // Tests sending dust and OP_RETURN without value, should throw DustySendRequested because sending sending dust is not allowed in any case.
+        receiveATransactionAmount(wallet, myAddress, Coin.COIN);
+        Transaction tx = new Transaction(PARAMS);
+        tx.addOutput(Coin.ZERO, ScriptBuilder.createOpReturnScript("hello world!".getBytes()));
+        tx.addOutput(Coin.SATOSHI, OTHER_ADDRESS);
+        SendRequest request = SendRequest.forTx(tx);
+        request.ensureMinRequiredFee = true;
+        wallet.completeTx(request);
+    }
+
+    @Test(expected = Wallet.DustySendRequested.class)
+    public void sendDustAndMessageWithValueTest() throws Exception {
+        // Tests sending dust and OP_RETURN with value, should throw DustySendRequested
+        receiveATransaction(wallet, myAddress);
+        Transaction tx = new Transaction(PARAMS);
+        tx.addOutput(Coin.CENT, ScriptBuilder.createOpReturnScript("hello world!".getBytes()));
+        tx.addOutput(Transaction.MIN_NONDUST_OUTPUT.subtract(SATOSHI), OTHER_ADDRESS);
+        SendRequest request = SendRequest.forTx(tx);
+        request.ensureMinRequiredFee = true;
+        wallet.completeTx(request);
+    }
+
+    @Test
+    public void sendRequestP2PKTest() {
+        ECKey key = new ECKey();
+        SendRequest req = SendRequest.to(PARAMS, key, SATOSHI.multiply(12));
+        assertArrayEquals(key.getPubKey(), req.tx.getOutputs().get(0).getScriptPubKey().getPubKey());
+    }
+
+    @Test
+    public void sendRequestP2PKHTest() {
+        SendRequest req = SendRequest.to(OTHER_ADDRESS, SATOSHI.multiply(12));
+        assertEquals(OTHER_ADDRESS, req.tx.getOutputs().get(0).getScriptPubKey().getToAddress(PARAMS));
+    }
+
+    @Test
+    public void feeSolverAndCoinSelectionTest_dustySendRequested() throws Exception {
+        // Generate a few outputs to us that are far too small to spend reasonably
+        Transaction tx1 = createFakeTx(PARAMS, SATOSHI, myAddress);
+        Transaction tx2 = createFakeTx(PARAMS, SATOSHI, myAddress);
+        assertNotEquals(tx1.getHash(), tx2.getHash());
+        Transaction tx3 = createFakeTx(PARAMS, SATOSHI.multiply(10), myAddress);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, tx1, tx2
