@@ -2191,4 +2191,51 @@ public class WalletTest extends TestWithWallet {
         // Tests sending transaction where one output transfers BTC, the other one writes OP_RETURN.
         receiveATransaction(wallet, myAddress);
         Transaction tx = new Transaction(PARAMS);
-        Coin messageP
+        Coin messagePrice = Coin.ZERO;
+        Script script = ScriptBuilder.createOpReturnScript("hello world!".getBytes());
+        tx.addOutput(CENT, OTHER_ADDRESS);
+        tx.addOutput(messagePrice, script);
+        SendRequest request = SendRequest.forTx(tx);
+        wallet.completeTx(request);
+    }
+
+    @Test(expected = Wallet.MultipleOpReturnRequested.class)
+    public void twoOpReturnsPerTransactionTest() throws Exception {
+        // Tests sending transaction where there are 2 attempts to write OP_RETURN scripts - this should fail and throw MultipleOpReturnRequested.
+        receiveATransaction(wallet, myAddress);
+        Transaction tx = new Transaction(PARAMS);
+        Coin messagePrice = Coin.ZERO;
+        Script script1 = ScriptBuilder.createOpReturnScript("hello world 1!".getBytes());
+        Script script2 = ScriptBuilder.createOpReturnScript("hello world 2!".getBytes());
+        tx.addOutput(messagePrice, script1);
+        tx.addOutput(messagePrice, script2);
+        SendRequest request = SendRequest.forTx(tx);
+        request.ensureMinRequiredFee = true;
+        wallet.completeTx(request);
+    }
+
+    @Test(expected = Wallet.DustySendRequested.class)
+    public void sendDustTest() throws InsufficientMoneyException {
+        // Tests sending dust, should throw DustySendRequested.
+        Transaction tx = new Transaction(PARAMS);
+        tx.addOutput(Transaction.MIN_NONDUST_OUTPUT.subtract(SATOSHI), OTHER_ADDRESS);
+        SendRequest request = SendRequest.forTx(tx);
+        request.ensureMinRequiredFee = true;
+        wallet.completeTx(request);
+    }
+
+    @Test
+    public void sendMultipleCentsTest() throws Exception {
+        receiveATransactionAmount(wallet, myAddress, Coin.COIN);
+        Transaction tx = new Transaction(PARAMS);
+        Coin c = CENT.subtract(SATOSHI);
+        tx.addOutput(c, OTHER_ADDRESS);
+        tx.addOutput(c, OTHER_ADDRESS);
+        tx.addOutput(c, OTHER_ADDRESS);
+        tx.addOutput(c, OTHER_ADDRESS);
+        SendRequest request = SendRequest.forTx(tx);
+        wallet.completeTx(request);
+    }
+
+    @Test(expected = Wallet.DustySendRequested.class)
+    public void sendDustAndOpReturnWithoutValu
