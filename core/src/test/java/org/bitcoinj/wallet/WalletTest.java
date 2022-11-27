@@ -2327,4 +2327,36 @@ public class WalletTest extends TestWithWallet {
         assertEquals(2, request4.tx.getOutputs().size());
 
         // If we would have a change output < 0.01, it should add the fee
-        SendRequest reques
+        SendRequest request5 = SendRequest.to(OTHER_ADDRESS, Coin.COIN.subtract(CENT.subtract(SATOSHI)));
+        request5.ensureMinRequiredFee = true;
+        wallet.completeTx(request5);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request5.tx.getFee());
+        assertEquals(2, request5.tx.getOutputs().size());
+
+        // If change is 0.1-satoshi and we already have a 0.1-satoshi output, fee should be reference fee
+        SendRequest request7 = SendRequest.to(OTHER_ADDRESS, Coin.COIN.subtract(CENT.subtract(SATOSHI.multiply(2)).multiply(2)));
+        request7.ensureMinRequiredFee = true;
+        request7.tx.addOutput(CENT.subtract(SATOSHI), OTHER_ADDRESS);
+        wallet.completeTx(request7);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request7.tx.getFee());
+        assertEquals(3, request7.tx.getOutputs().size());
+
+        // If we would have a change output == REFERENCE_DEFAULT_MIN_TX_FEE that would cause a fee, throw it away and make it fee
+        SendRequest request8 = SendRequest.to(OTHER_ADDRESS, COIN.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE));
+        request8.ensureMinRequiredFee = true;
+        wallet.completeTx(request8);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request8.tx.getFee());
+        assertEquals(1, request8.tx.getOutputs().size());
+
+        // ...in fact, also add fee if we would get back less than MIN_NONDUST_OUTPUT
+        SendRequest request9 = SendRequest.to(OTHER_ADDRESS, COIN.subtract(
+                Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).subtract(SATOSHI)));
+        request9.ensureMinRequiredFee = true;
+        wallet.completeTx(request9);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).subtract(SATOSHI), request9.tx.getFee());
+        assertEquals(1, request9.tx.getOutputs().size());
+
+        // ...but if we get back any more than that, we should get a refund (but still pay fee)
+        SendRequest request10 = SendRequest.to(OTHER_ADDRESS, COIN.subtract(
+                Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)));
+        request10.ensureMinRequiredFee 
