@@ -2359,4 +2359,41 @@ public class WalletTest extends TestWithWallet {
         // ...but if we get back any more than that, we should get a refund (but still pay fee)
         SendRequest request10 = SendRequest.to(OTHER_ADDRESS, COIN.subtract(
                 Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT)));
-        request10.ensureMinRequiredFee 
+        request10.ensureMinRequiredFee = true;
+        wallet.completeTx(request10);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request10.tx.getFee());
+        assertEquals(2, request10.tx.getOutputs().size());
+
+        // ...of course fee should be min(request.fee, MIN_TX_FEE) so we should get MIN_TX_FEE.add(SATOSHI) here
+        SendRequest request11 = SendRequest.to(OTHER_ADDRESS, COIN.subtract(
+                Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).add(SATOSHI.multiply(2))));
+        request11.feePerKb = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(SATOSHI);
+        request11.ensureMinRequiredFee = true;
+        wallet.completeTx(request11);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request11.tx.getFee());
+        assertEquals(2, request11.tx.getOutputs().size());
+    }
+
+    @Test
+    public void coinSelection_coinTimesDepth() throws Exception {
+        Transaction txCent = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT);
+        for (int i = 0; i < 197; i++)
+            sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN);
+        Transaction txCoin = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN);
+        assertEquals(COIN.add(CENT), wallet.getBalance());
+
+        assertTrue(txCent.getOutput(0).isMine(wallet));
+        assertTrue(txCent.getOutput(0).isAvailableForSpending());
+        assertEquals(199, txCent.getConfidence().getDepthInBlocks());
+        assertTrue(txCoin.getOutput(0).isMine(wallet));
+        assertTrue(txCoin.getOutput(0).isAvailableForSpending());
+        assertEquals(1, txCoin.getConfidence().getDepthInBlocks());
+        // txCent has higher coin*depth than txCoin...
+        assertTrue(txCent.getOutput(0).getValue().multiply(txCent.getConfidence().getDepthInBlocks())
+                .isGreaterThan(txCoin.getOutput(0).getValue().multiply(txCoin.getConfidence().getDepthInBlocks())));
+        // ...so txCent should be selected
+        Transaction spend1 = wallet.createSend(OTHER_ADDRESS, CENT);
+        assertEquals(1, spend1.getInputs().size());
+        assertEquals(CENT, spend1.getInput(0).getValue());
+
+        sendMoneyToWallet(AbstractBloc
