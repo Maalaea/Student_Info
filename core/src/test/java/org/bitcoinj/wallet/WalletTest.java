@@ -2281,4 +2281,50 @@ public class WalletTest extends TestWithWallet {
         Transaction tx2 = createFakeTx(PARAMS, SATOSHI, myAddress);
         assertNotEquals(tx1.getHash(), tx2.getHash());
         Transaction tx3 = createFakeTx(PARAMS, SATOSHI.multiply(10), myAddress);
-        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, tx1, tx2
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, tx1, tx2, tx3);
+
+        // Not allowed to send dust.
+        try {
+            SendRequest request = SendRequest.to(OTHER_ADDRESS, SATOSHI);
+            request.ensureMinRequiredFee = true;
+            wallet.completeTx(request);
+            fail();
+        } catch (Wallet.DustySendRequested e) {
+            // Expected.
+        }
+        // Spend it all without fee enforcement
+        SendRequest req = SendRequest.to(OTHER_ADDRESS, SATOSHI.multiply(12));
+        assertNotNull(wallet.sendCoinsOffline(req));
+        assertEquals(ZERO, wallet.getBalance());
+    }
+
+    @Test
+    public void basicFeeSolverTests() throws Exception {
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, Coin.COIN);
+
+        // Simple test to make sure if we have an ouput < 0.01 we get a fee
+        SendRequest request1 = SendRequest.to(OTHER_ADDRESS, CENT.subtract(SATOSHI));
+        request1.ensureMinRequiredFee = true;
+        wallet.completeTx(request1);
+        Transaction spend1 = request1.tx;
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request1.tx.getFee());
+        assertEquals(2, spend1.getOutputs().size());
+
+        // ...but not more fee than what we request
+        SendRequest request3 = SendRequest.to(OTHER_ADDRESS, CENT.subtract(SATOSHI));
+        request3.feePerKb = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(SATOSHI);
+        request3.ensureMinRequiredFee = true;
+        wallet.completeTx(request3);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request3.tx.getFee());
+        assertEquals(2, request3.tx.getOutputs().size());
+
+        // ...unless we need it
+        SendRequest request4 = SendRequest.to(OTHER_ADDRESS, CENT.subtract(SATOSHI));
+        request4.feePerKb = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.subtract(SATOSHI);
+        request4.ensureMinRequiredFee = true;
+        wallet.completeTx(request4);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request4.tx.getFee());
+        assertEquals(2, request4.tx.getOutputs().size());
+
+        // If we would have a change output < 0.01, it should add the fee
+        SendRequest reques
