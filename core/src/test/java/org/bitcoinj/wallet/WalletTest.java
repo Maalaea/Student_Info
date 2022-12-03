@@ -2396,4 +2396,41 @@ public class WalletTest extends TestWithWallet {
         assertEquals(1, spend1.getInputs().size());
         assertEquals(CENT, spend1.getInput(0).getValue());
 
-        sendMoneyToWallet(AbstractBloc
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN);
+        assertTrue(txCent.getOutput(0).isMine(wallet));
+        assertTrue(txCent.getOutput(0).isAvailableForSpending());
+        assertEquals(200, txCent.getConfidence().getDepthInBlocks());
+        assertTrue(txCoin.getOutput(0).isMine(wallet));
+        assertTrue(txCoin.getOutput(0).isAvailableForSpending());
+        assertEquals(2, txCoin.getConfidence().getDepthInBlocks());
+        // Now txCent and txCoin have exactly the same coin*depth...
+        assertEquals(txCent.getOutput(0).getValue().multiply(txCent.getConfidence().getDepthInBlocks()),
+                txCoin.getOutput(0).getValue().multiply(txCoin.getConfidence().getDepthInBlocks()));
+        // ...so the larger txCoin should be selected
+        Transaction spend2 = wallet.createSend(OTHER_ADDRESS, COIN);
+        assertEquals(1, spend2.getInputs().size());
+        assertEquals(COIN, spend2.getInput(0).getValue());
+
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN);
+        assertTrue(txCent.getOutput(0).isMine(wallet));
+        assertTrue(txCent.getOutput(0).isAvailableForSpending());
+        assertEquals(201, txCent.getConfidence().getDepthInBlocks());
+        assertTrue(txCoin.getOutput(0).isMine(wallet));
+        assertTrue(txCoin.getOutput(0).isAvailableForSpending());
+        assertEquals(3, txCoin.getConfidence().getDepthInBlocks());
+        // Now txCent has lower coin*depth than txCoin...
+        assertTrue(txCent.getOutput(0).getValue().multiply(txCent.getConfidence().getDepthInBlocks())
+                .isLessThan(txCoin.getOutput(0).getValue().multiply(txCoin.getConfidence().getDepthInBlocks())));
+        // ...so txCoin should be selected
+        Transaction spend3 = wallet.createSend(OTHER_ADDRESS, COIN);
+        assertEquals(1, spend3.getInputs().size());
+        assertEquals(COIN, spend3.getInput(0).getValue());
+    }
+
+    @Test
+    public void feeSolverAndCoinSelectionTests2() throws Exception {
+        Transaction tx5 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN);
+
+        // Now test feePerKb
+        SendRequest request15 = SendRequest.to(OTH
