@@ -2433,4 +2433,44 @@ public class WalletTest extends TestWithWallet {
         sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN);
 
         // Now test feePerKb
-        SendRequest request15 = SendRequest.to(OTH
+        SendRequest request15 = SendRequest.to(OTHER_ADDRESS, CENT);
+        for (int i = 0; i < 29; i++)
+            request15.tx.addOutput(CENT, OTHER_ADDRESS);
+        assertTrue(request15.tx.unsafeBitcoinSerialize().length > 1000);
+        request15.feePerKb = Transaction.DEFAULT_TX_FEE;
+        request15.ensureMinRequiredFee = true;
+        wallet.completeTx(request15);
+        assertEquals(Coin.valueOf(60650), request15.tx.getFee());
+        Transaction spend15 = request15.tx;
+        // If a transaction is over 1kb, 2 satoshis should be added.
+        assertEquals(31, spend15.getOutputs().size());
+        // We optimize for priority, so the output selected should be the largest one
+        assertEquals(1, spend15.getInputs().size());
+        assertEquals(COIN, spend15.getInput(0).getValue());
+
+        // Test ensureMinRequiredFee
+        SendRequest request16 = SendRequest.to(OTHER_ADDRESS, CENT);
+        request16.feePerKb = ZERO;
+        request16.ensureMinRequiredFee = true;
+        for (int i = 0; i < 29; i++)
+            request16.tx.addOutput(CENT, OTHER_ADDRESS);
+        assertTrue(request16.tx.unsafeBitcoinSerialize().length > 1000);
+        wallet.completeTx(request16);
+        // Just the reference fee should be added if feePerKb == 0
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request16.tx.getFee());
+        Transaction spend16 = request16.tx;
+        assertEquals(31, spend16.getOutputs().size());
+        // We optimize for priority, so the output selected should be the largest one
+        assertEquals(1, spend16.getInputs().size());
+        assertEquals(COIN, spend16.getInput(0).getValue());
+
+        // Create a transaction whose max size could be up to 999 (if signatures were maximum size)
+        SendRequest request17 = SendRequest.to(OTHER_ADDRESS, CENT);
+        for (int i = 0; i < 22; i++)
+            request17.tx.addOutput(CENT, OTHER_ADDRESS);
+        request17.tx.addOutput(new TransactionOutput(PARAMS, request17.tx, CENT, new byte[15]));
+        request17.feePerKb = Transaction.DEFAULT_TX_FEE;
+        request17.ensureMinRequiredFee = true;
+        wallet.completeTx(request17);
+        assertEquals(Coin.valueOf(49950), request17.tx.getFee());
+        assertEquals(1, request17.tx.ge
