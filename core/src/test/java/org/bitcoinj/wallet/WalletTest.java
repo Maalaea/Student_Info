@@ -2473,4 +2473,40 @@ public class WalletTest extends TestWithWallet {
         request17.ensureMinRequiredFee = true;
         wallet.completeTx(request17);
         assertEquals(Coin.valueOf(49950), request17.tx.getFee());
-        assertEquals(1, request17.tx.ge
+        assertEquals(1, request17.tx.getInputs().size());
+        // Calculate its max length to make sure it is indeed 999
+        int theoreticalMaxLength17 = request17.tx.unsafeBitcoinSerialize().length + myKey.getPubKey().length + 75;
+        for (TransactionInput in : request17.tx.getInputs())
+            theoreticalMaxLength17 -= in.getScriptBytes().length;
+        assertEquals(999, theoreticalMaxLength17);
+        Transaction spend17 = request17.tx;
+        {
+            // Its actual size must be between 996 and 999 (inclusive) as signatures have a 3-byte size range (almost always)
+            final int length = spend17.unsafeBitcoinSerialize().length;
+            assertTrue(Integer.toString(length), length >= 996 && length <= 999);
+        }
+        // Now check that it got a fee of 1 since its max size is 999 (1kb).
+        assertEquals(25, spend17.getOutputs().size());
+        // We optimize for priority, so the output selected should be the largest one
+        assertEquals(1, spend17.getInputs().size());
+        assertEquals(COIN, spend17.getInput(0).getValue());
+
+        // Create a transaction who's max size could be up to 1001 (if signatures were maximum size)
+        SendRequest request18 = SendRequest.to(OTHER_ADDRESS, CENT);
+        for (int i = 0; i < 22; i++)
+            request18.tx.addOutput(CENT, OTHER_ADDRESS);
+        request18.tx.addOutput(new TransactionOutput(PARAMS, request18.tx, CENT, new byte[17]));
+        request18.feePerKb = Transaction.DEFAULT_TX_FEE;
+        request18.ensureMinRequiredFee = true;
+        wallet.completeTx(request18);
+        assertEquals(Coin.valueOf(50050), request18.tx.getFee());
+        assertEquals(1, request18.tx.getInputs().size());
+        // Calculate its max length to make sure it is indeed 1001
+        Transaction spend18 = request18.tx;
+        int theoreticalMaxLength18 = spend18.unsafeBitcoinSerialize().length + myKey.getPubKey().length + 75;
+        for (TransactionInput in : spend18.getInputs())
+            theoreticalMaxLength18 -= in.getScriptBytes().length;
+        assertEquals(1001, theoreticalMaxLength18);
+        // Its actual size must be between 998 and 1000 (inclusive) as signatures have a 3-byte size range (almost always)
+        assertTrue(spend18.unsafeBitcoinSerialize().length >= 998);
+        
