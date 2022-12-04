@@ -2509,4 +2509,43 @@ public class WalletTest extends TestWithWallet {
         assertEquals(1001, theoreticalMaxLength18);
         // Its actual size must be between 998 and 1000 (inclusive) as signatures have a 3-byte size range (almost always)
         assertTrue(spend18.unsafeBitcoinSerialize().length >= 998);
-        
+        assertTrue(spend18.unsafeBitcoinSerialize().length <= 1001);
+        // Now check that it did get a fee since its max size is 1000
+        assertEquals(25, spend18.getOutputs().size());
+        // We optimize for priority, so the output selected should be the largest one
+        assertEquals(1, spend18.getInputs().size());
+        assertEquals(COIN, spend18.getInput(0).getValue());
+
+        // Now create a transaction that will spend COIN + fee, which makes it require both inputs
+        assertEquals(wallet.getBalance(), CENT.add(COIN));
+        SendRequest request19 = SendRequest.to(OTHER_ADDRESS, CENT);
+        request19.feePerKb = ZERO;
+        for (int i = 0; i < 99; i++)
+            request19.tx.addOutput(CENT, OTHER_ADDRESS);
+        // If we send now, we should only have to spend our COIN
+        wallet.completeTx(request19);
+        assertEquals(Coin.ZERO, request19.tx.getFee());
+        assertEquals(1, request19.tx.getInputs().size());
+        assertEquals(100, request19.tx.getOutputs().size());
+        // Now reset request19 and give it a fee per kb
+        request19.tx.clearInputs();
+        request19 = SendRequest.forTx(request19.tx);
+        request19.feePerKb = Transaction.DEFAULT_TX_FEE;
+        request19.shuffleOutputs = false;
+        wallet.completeTx(request19);
+        assertEquals(Coin.valueOf(187100), request19.tx.getFee());
+        assertEquals(2, request19.tx.getInputs().size());
+        assertEquals(COIN, request19.tx.getInput(0).getValue());
+        assertEquals(CENT, request19.tx.getInput(1).getValue());
+
+        // Create another transaction that will spend COIN + fee, which makes it require both inputs
+        SendRequest request20 = SendRequest.to(OTHER_ADDRESS, CENT);
+        request20.feePerKb = ZERO;
+        for (int i = 0; i < 99; i++)
+            request20.tx.addOutput(CENT, OTHER_ADDRESS);
+        // If we send now, we shouldn't have a fee and should only have to spend our COIN
+        wallet.completeTx(request20);
+        assertEquals(ZERO, request20.tx.getFee());
+        assertEquals(1, request20.tx.getInputs().size());
+        assertEquals(100, request20.tx.getOutputs().size());
+        // Now reset request19 and give 
