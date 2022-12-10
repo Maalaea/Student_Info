@@ -2548,4 +2548,45 @@ public class WalletTest extends TestWithWallet {
         assertEquals(ZERO, request20.tx.getFee());
         assertEquals(1, request20.tx.getInputs().size());
         assertEquals(100, request20.tx.getOutputs().size());
-        // Now reset request19 and give 
+        // Now reset request19 and give it a fee per kb
+        request20.tx.clearInputs();
+        request20 = SendRequest.forTx(request20.tx);
+        request20.feePerKb = Transaction.DEFAULT_TX_FEE;
+        wallet.completeTx(request20);
+        // 4kb tx.
+        assertEquals(Coin.valueOf(187100), request20.tx.getFee());
+        assertEquals(2, request20.tx.getInputs().size());
+        assertEquals(COIN, request20.tx.getInput(0).getValue());
+        assertEquals(CENT, request20.tx.getInput(1).getValue());
+
+        // Same as request 19, but make the change 0 (so it doesnt force fee) and make us require min fee as a
+        // result of an output < CENT.
+        SendRequest request21 = SendRequest.to(OTHER_ADDRESS, CENT);
+        request21.feePerKb = ZERO;
+        request21.ensureMinRequiredFee = true;
+        for (int i = 0; i < 99; i++)
+            request21.tx.addOutput(CENT, OTHER_ADDRESS);
+        request21.tx.addOutput(CENT.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE), OTHER_ADDRESS);
+        // If we send without a feePerKb, we should still require REFERENCE_DEFAULT_MIN_TX_FEE because we have an output < 0.01
+        wallet.completeTx(request21);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request21.tx.getFee());
+        assertEquals(2, request21.tx.getInputs().size());
+        assertEquals(COIN, request21.tx.getInput(0).getValue());
+        assertEquals(CENT, request21.tx.getInput(1).getValue());
+
+        // Test feePerKb when we aren't using ensureMinRequiredFee
+        SendRequest request25 = SendRequest.to(OTHER_ADDRESS, CENT);
+        request25.feePerKb = ZERO;
+        for (int i = 0; i < 70; i++)
+            request25.tx.addOutput(CENT, OTHER_ADDRESS);
+        // If we send now, we shouldn't need a fee and should only have to spend our COIN
+        wallet.completeTx(request25);
+        assertEquals(ZERO, request25.tx.getFee());
+        assertEquals(1, request25.tx.getInputs().size());
+        assertEquals(72, request25.tx.getOutputs().size());
+        // Now reset request25 and give it a fee per kb
+        request25.tx.clearInputs();
+        request25 = SendRequest.forTx(request25.tx);
+        request25.feePerKb = Transaction.DEFAULT_TX_FEE;
+        request25.shuffleOutputs = false;
+ 
