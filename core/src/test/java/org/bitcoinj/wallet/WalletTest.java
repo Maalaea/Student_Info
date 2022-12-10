@@ -2589,4 +2589,47 @@ public class WalletTest extends TestWithWallet {
         request25 = SendRequest.forTx(request25.tx);
         request25.feePerKb = Transaction.DEFAULT_TX_FEE;
         request25.shuffleOutputs = false;
- 
+        wallet.completeTx(request25);
+        assertEquals(Coin.valueOf(139500), request25.tx.getFee());
+        assertEquals(2, request25.tx.getInputs().size());
+        assertEquals(COIN, request25.tx.getInput(0).getValue());
+        assertEquals(CENT, request25.tx.getInput(1).getValue());
+
+        // Spend our CENT output.
+        Transaction spendTx5 = new Transaction(PARAMS);
+        spendTx5.addOutput(CENT, OTHER_ADDRESS);
+        spendTx5.addInput(tx5.getOutput(0));
+        wallet.signTransaction(SendRequest.forTx(spendTx5));
+
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, spendTx5);
+        assertEquals(COIN, wallet.getBalance());
+
+        // Ensure change is discarded if it results in a fee larger than the chain (same as 8 and 9 but with feePerKb)
+        SendRequest request26 = SendRequest.to(OTHER_ADDRESS, CENT);
+        for (int i = 0; i < 98; i++)
+            request26.tx.addOutput(CENT, OTHER_ADDRESS);
+        request26.tx.addOutput(CENT.subtract(
+                Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).subtract(SATOSHI)),
+                OTHER_ADDRESS);
+        assertTrue(request26.tx.unsafeBitcoinSerialize().length > 1000);
+        request26.feePerKb = SATOSHI;
+        request26.ensureMinRequiredFee = true;
+        wallet.completeTx(request26);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.add(Transaction.MIN_NONDUST_OUTPUT).subtract(SATOSHI),
+                request26.tx.getFee());
+        Transaction spend26 = request26.tx;
+        // If a transaction is over 1kb, the set fee should be added
+        assertEquals(100, spend26.getOutputs().size());
+        // We optimize for priority, so the output selected should be the largest one
+        assertEquals(1, spend26.getInputs().size());
+        assertEquals(COIN, spend26.getInput(0).getValue());
+    }
+
+    @Test
+    @Ignore("disabled for now as this test is not maintainable")
+    public void basicCategoryStepTest() throws Exception {
+        // Creates spends that step through the possible fee solver categories
+
+        // Generate a ton of small outputs
+        StoredBlock block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 1);
+        
