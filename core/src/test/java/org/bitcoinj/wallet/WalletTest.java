@@ -2632,4 +2632,38 @@ public class WalletTest extends TestWithWallet {
 
         // Generate a ton of small outputs
         StoredBlock block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 1);
-        
+        int i = 0;
+        Coin tenThousand = Coin.valueOf(10000);
+        while (i <= 100) {
+            Transaction tx = createFakeTxWithChangeAddress(PARAMS, tenThousand, myAddress, OTHER_ADDRESS);
+            tx.getInput(0).setSequenceNumber(i++); // Keep every transaction unique
+            wallet.receiveFromBlock(tx, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, i);
+        }
+        Coin balance = wallet.getBalance();
+
+        // Create a spend that will throw away change (category 3 type 2 in which the change causes fee which is worth more than change)
+        SendRequest request1 = SendRequest.to(OTHER_ADDRESS, balance.subtract(SATOSHI));
+        request1.ensureMinRequiredFee = true;
+        wallet.completeTx(request1);
+        assertEquals(SATOSHI, request1.tx.getFee());
+        assertEquals(request1.tx.getInputs().size(), i); // We should have spent all inputs
+
+        // Give us one more input...
+        Transaction tx1 = createFakeTxWithChangeAddress(PARAMS, tenThousand, myAddress, OTHER_ADDRESS);
+        tx1.getInput(0).setSequenceNumber(i++); // Keep every transaction unique
+        wallet.receiveFromBlock(tx1, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, i);
+
+        // ... and create a spend that will throw away change (category 3 type 1 in which the change causes dust output)
+        SendRequest request2 = SendRequest.to(OTHER_ADDRESS, balance.subtract(SATOSHI));
+        request2.ensureMinRequiredFee = true;
+        wallet.completeTx(request2);
+        assertEquals(SATOSHI, request2.tx.getFee());
+        assertEquals(request2.tx.getInputs().size(), i - 1); // We should have spent all inputs - 1
+
+        // Give us one more input...
+        Transaction tx2 = createFakeTxWithChangeAddress(PARAMS, tenThousand, myAddress, OTHER_ADDRESS);
+        tx2.getInput(0).setSequenceNumber(i++); // Keep every transaction unique
+        wallet.receiveFromBlock(tx2, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, i);
+
+        // ... and create a spend that will throw away change (category 3 type 1 in which the change causes dust output)
+        // but that also could have been catego
