@@ -2666,4 +2666,41 @@ public class WalletTest extends TestWithWallet {
         wallet.receiveFromBlock(tx2, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, i);
 
         // ... and create a spend that will throw away change (category 3 type 1 in which the change causes dust output)
-        // but that also could have been catego
+        // but that also could have been category 2 if it wanted
+        SendRequest request3 = SendRequest.to(OTHER_ADDRESS, CENT.add(tenThousand).subtract(SATOSHI));
+        request3.ensureMinRequiredFee = true;
+        wallet.completeTx(request3);
+        assertEquals(SATOSHI, request3.tx.getFee());
+        assertEquals(request3.tx.getInputs().size(), i - 2); // We should have spent all inputs - 2
+
+        //
+        SendRequest request4 = SendRequest.to(OTHER_ADDRESS, balance.subtract(SATOSHI));
+        request4.feePerKb = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.divide(request3.tx.unsafeBitcoinSerialize().length);
+        request4.ensureMinRequiredFee = true;
+        wallet.completeTx(request4);
+        assertEquals(SATOSHI, request4.tx.getFee());
+        assertEquals(request4.tx.getInputs().size(), i - 2); // We should have spent all inputs - 2
+
+        // Give us a few more inputs...
+        while (wallet.getBalance().compareTo(CENT.multiply(2)) < 0) {
+            Transaction tx3 = createFakeTxWithChangeAddress(PARAMS, tenThousand, myAddress, OTHER_ADDRESS);
+            tx3.getInput(0).setSequenceNumber(i++); // Keep every transaction unique
+            wallet.receiveFromBlock(tx3, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, i);
+        }
+
+        // ...that is just slightly less than is needed for category 1
+        SendRequest request5 = SendRequest.to(OTHER_ADDRESS, CENT.add(tenThousand).subtract(SATOSHI));
+        request5.ensureMinRequiredFee = true;
+        wallet.completeTx(request5);
+        assertEquals(SATOSHI, request5.tx.getFee());
+        assertEquals(1, request5.tx.getOutputs().size()); // We should have no change output
+
+        // Give us one more input...
+        Transaction tx4 = createFakeTxWithChangeAddress(PARAMS, tenThousand, myAddress, OTHER_ADDRESS);
+        tx4.getInput(0).setSequenceNumber(i); // Keep every transaction unique
+        wallet.receiveFromBlock(tx4, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, i);
+
+        // ... that puts us in category 1 (no fee!)
+        SendRequest request6 = SendRequest.to(OTHER_ADDRESS, CENT.add(tenThousand).subtract(SATOSHI));
+        request6.ensureMinRequiredFee = true;
+        wallet.completeT
