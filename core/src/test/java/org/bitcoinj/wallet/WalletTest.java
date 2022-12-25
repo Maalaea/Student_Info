@@ -2703,4 +2703,49 @@ public class WalletTest extends TestWithWallet {
         // ... that puts us in category 1 (no fee!)
         SendRequest request6 = SendRequest.to(OTHER_ADDRESS, CENT.add(tenThousand).subtract(SATOSHI));
         request6.ensureMinRequiredFee = true;
-        wallet.completeT
+        wallet.completeTx(request6);
+        assertEquals(ZERO, request6.tx.getFee());
+        assertEquals(2, request6.tx.getOutputs().size()); // We should have a change output
+    }
+
+    @Test
+    public void testCategory2WithChange() throws Exception {
+        // Specifically target case 2 with significant change
+
+        // Generate a ton of small outputs
+        StoredBlock block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 1);
+        int i = 0;
+        while (i <= CENT.divide(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.multiply(10))) {
+            Transaction tx = createFakeTxWithChangeAddress(PARAMS, Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.multiply(10), myAddress, OTHER_ADDRESS);
+            tx.getInput(0).setSequenceNumber(i++); // Keep every transaction unique
+            wallet.receiveFromBlock(tx, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, i);
+        }
+
+        // The selector will choose 2 with MIN_TX_FEE fee
+        SendRequest request1 = SendRequest.to(OTHER_ADDRESS, CENT.add(SATOSHI));
+        request1.ensureMinRequiredFee = true;
+        wallet.completeTx(request1);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, request1.tx.getFee());
+        assertEquals(request1.tx.getInputs().size(), i); // We should have spent all inputs
+        assertEquals(2, request1.tx.getOutputs().size()); // and gotten change back
+    }
+
+    @Test
+    public void transactionGetFeeTest() throws Exception {
+        // Prepare wallet to spend
+        StoredBlock block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 1);
+        Transaction tx = createFakeTx(PARAMS, COIN, myAddress);
+        wallet.receiveFromBlock(tx, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 0);
+
+        // Create a transaction
+        SendRequest request = SendRequest.to(OTHER_ADDRESS, CENT);
+        request.feePerKb = Transaction.DEFAULT_TX_FEE;
+        wallet.completeTx(request);
+        assertEquals(Coin.valueOf(11350), request.tx.getFee());
+    }
+
+    @Test
+    public void lowerThanDefaultFee() throws InsufficientMoneyException {
+        int feeFactor = 10;
+        Coin fee = Transaction.DEFAULT_TX_FEE.divide(feeFactor);
+        receiveATransaction
