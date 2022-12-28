@@ -2793,4 +2793,41 @@ public class WalletTest extends TestWithWallet {
         wallet.receiveFromBlock(tx1, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 0);
         Transaction tx2 = createFakeTx(PARAMS, COIN, myAddress);
         assertNotEquals(tx1.getHash(), tx2.getHash());
-        wallet.receiveFromBlock(tx2, block, AbstractBlockChain.NewBlockType.BEST_
+        wallet.receiveFromBlock(tx2, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 1);
+        Transaction tx3 = createFakeTx(PARAMS, CENT, myAddress);
+        wallet.receiveFromBlock(tx3, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 2);
+
+        SendRequest request1 = SendRequest.to(OTHER_ADDRESS, CENT);
+        // If we just complete as-is, we will use one of the COIN outputs to get higher priority,
+        // resulting in a change output
+        request1.shuffleOutputs = false;
+        wallet.completeTx(request1);
+        assertEquals(1, request1.tx.getInputs().size());
+        assertEquals(2, request1.tx.getOutputs().size());
+        assertEquals(CENT, request1.tx.getOutput(0).getValue());
+        assertEquals(COIN.subtract(CENT), request1.tx.getOutput(1).getValue());
+
+        // Now create an identical request2 and add an unsigned spend of the CENT output
+        SendRequest request2 = SendRequest.to(OTHER_ADDRESS, CENT);
+        request2.tx.addInput(tx3.getOutput(0));
+        // Now completeTx will result in one input, one output
+        wallet.completeTx(request2);
+        assertEquals(1, request2.tx.getInputs().size());
+        assertEquals(1, request2.tx.getOutputs().size());
+        assertEquals(CENT, request2.tx.getOutput(0).getValue());
+        // Make sure it was properly signed
+        request2.tx.getInput(0).getScriptSig().correctlySpends(request2.tx, 0, tx3.getOutput(0).getScriptPubKey());
+
+        // However, if there is no connected output, we will grab a COIN output anyway and add the CENT to fee
+        SendRequest request3 = SendRequest.to(OTHER_ADDRESS, CENT);
+        request3.tx.addInput(new TransactionInput(PARAMS, request3.tx, new byte[]{}, new TransactionOutPoint(PARAMS, 0, tx3.getHash())));
+        // Now completeTx will result in two inputs, two outputs and a fee of a CENT
+        // Note that it is simply assumed that the inputs are correctly signed, though in fact the first is not
+        request3.shuffleOutputs = false;
+        wallet.completeTx(request3);
+        assertEquals(2, request3.tx.getInputs().size());
+        assertEquals(2, request3.tx.getOutputs().size());
+        assertEquals(CENT, request3.tx.getOutput(0).getValue());
+        assertEquals(COIN.subtract(CENT), request3.tx.getOutput(1).getValue());
+
+        SendRequest request4 = SendRequest.to(OTHER_ADDRESS, CENT);
