@@ -2748,4 +2748,49 @@ public class WalletTest extends TestWithWallet {
     public void lowerThanDefaultFee() throws InsufficientMoneyException {
         int feeFactor = 10;
         Coin fee = Transaction.DEFAULT_TX_FEE.divide(feeFactor);
-        receiveATransaction
+        receiveATransactionAmount(wallet, myAddress, Coin.COIN);
+        SendRequest req = SendRequest.to(myAddress, Coin.CENT);
+        req.feePerKb = fee;
+        wallet.completeTx(req);
+        assertEquals(Coin.valueOf(11350).divide(feeFactor), req.tx.getFee());
+        wallet.commitTx(req.tx);
+        SendRequest emptyReq = SendRequest.emptyWallet(myAddress);
+        emptyReq.feePerKb = fee;
+        emptyReq.ensureMinRequiredFee = true;
+        emptyReq.emptyWallet = true;
+        emptyReq.coinSelector = AllowUnconfirmedCoinSelector.get();
+        wallet.completeTx(emptyReq);
+        assertEquals(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE, emptyReq.tx.getFee());
+        wallet.commitTx(emptyReq.tx);
+    }
+
+    @Test
+    public void higherThanDefaultFee() throws InsufficientMoneyException {
+        int feeFactor = 10;
+        Coin fee = Transaction.DEFAULT_TX_FEE.multiply(feeFactor);
+        receiveATransactionAmount(wallet, myAddress, Coin.COIN);
+        SendRequest req = SendRequest.to(myAddress, Coin.CENT);
+        req.feePerKb = fee;
+        wallet.completeTx(req);
+        assertEquals(Coin.valueOf(11350).multiply(feeFactor), req.tx.getFee());
+        wallet.commitTx(req.tx);
+        SendRequest emptyReq = SendRequest.emptyWallet(myAddress);
+        emptyReq.feePerKb = fee;
+        emptyReq.emptyWallet = true;
+        emptyReq.coinSelector = AllowUnconfirmedCoinSelector.get();
+        wallet.completeTx(emptyReq);
+        assertEquals(Coin.valueOf(171000), emptyReq.tx.getFee());
+        wallet.commitTx(emptyReq.tx);
+    }
+
+    @Test
+    public void testCompleteTxWithExistingInputs() throws Exception {
+        // Tests calling completeTx with a SendRequest that already has a few inputs in it
+
+        // Generate a few outputs to us
+        StoredBlock block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 1);
+        Transaction tx1 = createFakeTx(PARAMS, COIN, myAddress);
+        wallet.receiveFromBlock(tx1, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 0);
+        Transaction tx2 = createFakeTx(PARAMS, COIN, myAddress);
+        assertNotEquals(tx1.getHash(), tx2.getHash());
+        wallet.receiveFromBlock(tx2, block, AbstractBlockChain.NewBlockType.BEST_
