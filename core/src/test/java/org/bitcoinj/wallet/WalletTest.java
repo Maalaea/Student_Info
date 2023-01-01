@@ -2831,3 +2831,51 @@ public class WalletTest extends TestWithWallet {
         assertEquals(COIN.subtract(CENT), request3.tx.getOutput(1).getValue());
 
         SendRequest request4 = SendRequest.to(OTHER_ADDRESS, CENT);
+        request4.tx.addInput(tx3.getOutput(0));
+        // Now if we manually sign it, completeTx will not replace our signature
+        wallet.signTransaction(request4);
+        byte[] scriptSig = request4.tx.getInput(0).getScriptBytes();
+        wallet.completeTx(request4);
+        assertEquals(1, request4.tx.getInputs().size());
+        assertEquals(1, request4.tx.getOutputs().size());
+        assertEquals(CENT, request4.tx.getOutput(0).getValue());
+        assertArrayEquals(scriptSig, request4.tx.getInput(0).getScriptBytes());
+    }
+
+    // There is a test for spending a coinbase transaction as it matures in BlockChainTest#coinbaseTransactionAvailability
+
+    // Support for offline spending is tested in PeerGroupTest
+
+    @Test
+    public void exceptionsDoNotBlockAllListeners() throws Exception {
+        // Check that if a wallet listener throws an exception, the others still run.
+        wallet.addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                log.info("onCoinsReceived 1");
+                throw new RuntimeException("barf");
+            }
+        });
+        final AtomicInteger flag = new AtomicInteger();
+        wallet.addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener() {
+            @Override
+            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                log.info("onCoinsReceived 2");
+                flag.incrementAndGet();
+            }
+        });
+
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN);
+        log.info("Wait for user thread");
+        Threading.waitForUserCode();
+        log.info("... and test flag.");
+        assertEquals(1, flag.get());
+    }
+
+    @Test
+    public void testEmptyRandomWallet() throws Exception {
+        // Add a random set of outputs
+        StoredBlock block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 1);
+        Random rng = new Random();
+        for (int i = 0; i < rng.nextInt(100) + 1; i++) {
+            Transaction tx = createFakeTx(PARAMS, Coi
