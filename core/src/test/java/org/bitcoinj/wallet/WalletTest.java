@@ -2878,4 +2878,44 @@ public class WalletTest extends TestWithWallet {
         StoredBlock block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 1);
         Random rng = new Random();
         for (int i = 0; i < rng.nextInt(100) + 1; i++) {
-            Transaction tx = createFakeTx(PARAMS, Coi
+            Transaction tx = createFakeTx(PARAMS, Coin.valueOf(rng.nextInt((int) COIN.value)), myAddress);
+            wallet.receiveFromBlock(tx, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, i);
+        }
+        SendRequest request = SendRequest.emptyWallet(OTHER_ADDRESS);
+        wallet.completeTx(request);
+        wallet.commitTx(request.tx);
+        assertEquals(ZERO, wallet.getBalance());
+    }
+
+    @Test
+    public void testEmptyWallet() throws Exception {
+        // Add exactly 0.01
+        StoredBlock block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 1);
+        Transaction tx = createFakeTx(PARAMS, CENT, myAddress);
+        wallet.receiveFromBlock(tx, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 0);
+        SendRequest request = SendRequest.emptyWallet(OTHER_ADDRESS);
+        wallet.completeTx(request);
+        assertEquals(ZERO, request.tx.getFee());
+        wallet.commitTx(request.tx);
+        assertEquals(ZERO, wallet.getBalance());
+        assertEquals(CENT, request.tx.getOutput(0).getValue());
+
+        // Add 1 confirmed cent and 1 unconfirmed cent. Verify only one cent is emptied because of the coin selection
+        // policies that are in use by default.
+        block = new StoredBlock(makeSolvedTestBlock(blockStore, OTHER_ADDRESS), BigInteger.ONE, 2);
+        tx = createFakeTx(PARAMS, CENT, myAddress);
+        wallet.receiveFromBlock(tx, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 0);
+        tx = createFakeTx(PARAMS, CENT, myAddress);
+        wallet.receivePending(tx, null);
+        request = SendRequest.emptyWallet(OTHER_ADDRESS);
+        wallet.completeTx(request);
+        assertEquals(ZERO, request.tx.getFee());
+        wallet.commitTx(request.tx);
+        assertEquals(ZERO, wallet.getBalance());
+        assertEquals(CENT, request.tx.getOutput(0).getValue());
+
+        // Add an unsendable value
+        block = new StoredBlock(block.getHeader().createNextBlock(OTHER_ADDRESS), BigInteger.ONE, 3);
+        Coin outputValue = Transaction.MIN_NONDUST_OUTPUT.subtract(SATOSHI);
+        tx = createFakeTx(PARAMS, outputValue, myAddress);
+        walle
