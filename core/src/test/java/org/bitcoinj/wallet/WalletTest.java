@@ -2918,4 +2918,42 @@ public class WalletTest extends TestWithWallet {
         block = new StoredBlock(block.getHeader().createNextBlock(OTHER_ADDRESS), BigInteger.ONE, 3);
         Coin outputValue = Transaction.MIN_NONDUST_OUTPUT.subtract(SATOSHI);
         tx = createFakeTx(PARAMS, outputValue, myAddress);
-        walle
+        wallet.receiveFromBlock(tx, block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 0);
+        try {
+            request = SendRequest.emptyWallet(OTHER_ADDRESS);
+            assertEquals(ZERO, request.tx.getFee());
+            wallet.completeTx(request);
+            fail();
+        } catch (Wallet.CouldNotAdjustDownwards e) {}
+    }
+
+    @Test
+    public void childPaysForParent() throws Exception {
+        // Receive confirmed balance to play with.
+        Transaction toMe = createFakeTxWithoutChangeAddress(PARAMS, COIN, myAddress);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, toMe);
+        assertEquals(Coin.COIN, wallet.getBalance(BalanceType.ESTIMATED_SPENDABLE));
+        assertEquals(Coin.COIN, wallet.getBalance(BalanceType.AVAILABLE_SPENDABLE));
+        // Receive unconfirmed coin without fee.
+        Transaction toMeWithoutFee = createFakeTxWithoutChangeAddress(PARAMS, COIN, myAddress);
+        wallet.receivePending(toMeWithoutFee, null);
+        assertEquals(Coin.COIN.multiply(2), wallet.getBalance(BalanceType.ESTIMATED_SPENDABLE));
+        assertEquals(Coin.COIN, wallet.getBalance(BalanceType.AVAILABLE_SPENDABLE));
+        // Craft a child-pays-for-parent transaction.
+        final Coin feeRaise = MILLICOIN;
+        final SendRequest sendRequest = SendRequest.childPaysForParent(wallet, toMeWithoutFee, feeRaise);
+        wallet.signTransaction(sendRequest);
+        wallet.commitTx(sendRequest.tx);
+        assertEquals(Transaction.Purpose.RAISE_FEE, sendRequest.tx.getPurpose());
+        assertEquals(Coin.COIN.multiply(2).subtract(feeRaise), wallet.getBalance(BalanceType.ESTIMATED_SPENDABLE));
+        assertEquals(Coin.COIN, wallet.getBalance(BalanceType.AVAILABLE_SPENDABLE));
+    }
+
+    @Test
+    public void keyRotationRandom() throws Exception {
+        Utils.setMockClock();
+        // Start with an empty wallet (no HD chain).
+        wallet = new Wallet(PARAMS);
+        // Watch out for wallet-initiated broadcasts.
+        MockTransactionBroadcaster broadcaster = new MockTransactionBroadcaster(wallet);
+        // Send three cents to two different random keys, then add a key and mark the initial
