@@ -2956,4 +2956,43 @@ public class WalletTest extends TestWithWallet {
         wallet = new Wallet(PARAMS);
         // Watch out for wallet-initiated broadcasts.
         MockTransactionBroadcaster broadcaster = new MockTransactionBroadcaster(wallet);
-        // Send three cents to two different random keys, then add a key and mark the initial
+        // Send three cents to two different random keys, then add a key and mark the initial keys as compromised.
+        ECKey key1 = new ECKey();
+        key1.setCreationTimeSeconds(Utils.currentTimeSeconds() - (86400 * 2));
+        ECKey key2 = new ECKey();
+        key2.setCreationTimeSeconds(Utils.currentTimeSeconds() - 86400);
+        wallet.importKey(key1);
+        wallet.importKey(key2);
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, key1.toAddress(PARAMS));
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, key2.toAddress(PARAMS));
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, key2.toAddress(PARAMS));
+        Date compromiseTime = Utils.now();
+        assertEquals(0, broadcaster.size());
+        assertFalse(wallet.isKeyRotating(key1));
+
+        // We got compromised!
+        Utils.rollMockClock(1);
+        wallet.setKeyRotationTime(compromiseTime);
+        assertTrue(wallet.isKeyRotating(key1));
+        wallet.doMaintenance(null, true);
+
+        Transaction tx = broadcaster.waitForTransactionAndSucceed();
+        final Coin THREE_CENTS = CENT.add(CENT).add(CENT);
+        assertEquals(Coin.valueOf(24550), tx.getFee());
+        assertEquals(THREE_CENTS, tx.getValueSentFromMe(wallet));
+        assertEquals(THREE_CENTS.subtract(tx.getFee()), tx.getValueSentToMe(wallet));
+        // TX sends to one of our addresses (for now we ignore married wallets).
+        final Address toAddress = tx.getOutput(0).getScriptPubKey().getToAddress(PARAMS);
+        final ECKey rotatingToKey = wallet.findKeyFromPubHash(toAddress.getHash160());
+        assertNotNull(rotatingToKey);
+        assertFalse(wallet.isKeyRotating(rotatingToKey));
+        assertEquals(3, tx.getInputs().size());
+        // It confirms.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, tx);
+
+        // Now receive some more money to the newly derived address via a new block and check that nothing happens.
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, toAddress);
+        assertTrue(wallet.doMaintenance(null, true).get().isEmpty());
+        assertEquals(0, broadcaster.size());
+
+        // Receive money via a new block on key1
