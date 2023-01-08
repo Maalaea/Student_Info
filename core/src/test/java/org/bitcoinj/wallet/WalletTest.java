@@ -3078,4 +3078,45 @@ public class WalletTest extends TestWithWallet {
         };
         kcg.importKeys(badKey, goodKey);
         Utils.rollMockClock(86400);
-        wallet = n
+        wallet = new Wallet(PARAMS, kcg);   // This avoids the automatic HD initialisation
+        assertTrue(fChains.get().isEmpty());
+        wallet.upgradeToDeterministic(null);
+        DeterministicKey badWatchingKey = wallet.getWatchingKey();
+        assertEquals(badKey.getCreationTimeSeconds(), badWatchingKey.getCreationTimeSeconds());
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, badWatchingKey.toAddress(PARAMS));
+
+        // Now we set the rotation time to the time we started making good keys. This should create a new HD chain.
+        wallet.setKeyRotationTime(goodKey.getCreationTimeSeconds());
+        List<Transaction> txns = wallet.doMaintenance(null, false).get();
+        assertEquals(1, txns.size());
+        Address output = txns.get(0).getOutput(0).getAddressFromP2PKHScript(PARAMS);
+        ECKey usedKey = wallet.findKeyFromPubHash(output.getHash160());
+        assertEquals(goodKey.getCreationTimeSeconds(), usedKey.getCreationTimeSeconds());
+        assertEquals(goodKey.getCreationTimeSeconds(), wallet.freshReceiveKey().getCreationTimeSeconds());
+        assertEquals("mrM3TpCnav5YQuVA1xLercCGJH4DXujMtv", usedKey.toAddress(PARAMS).toString());
+        DeterministicKeyChain c = fChains.get().get(1);
+        assertEquals(c.getEarliestKeyCreationTime(), goodKey.getCreationTimeSeconds());
+        assertEquals(2, fChains.get().size());
+
+        // Commit the maint txns.
+        wallet.commitTx(txns.get(0));
+
+        // Check next maintenance does nothing.
+        assertTrue(wallet.doMaintenance(null, false).get().isEmpty());
+        assertEquals(c, fChains.get().get(1));
+        assertEquals(2, fChains.get().size());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void importOfHDKeyForbidden() throws Exception {
+        wallet.importKey(wallet.freshReceiveKey());
+    }
+
+    //@Test   //- this test is slow, disable for now.
+    public void fragmentedReKeying() throws Exception {
+        // Send lots of small coins and check the fee is correct.
+        ECKey key = wallet.freshReceiveKey();
+        Address address = key.toAddress(PARAMS);
+        Utils.setMockClock();
+        Utils.rollMockClock(86400);
+        for (int i = 0; i <
