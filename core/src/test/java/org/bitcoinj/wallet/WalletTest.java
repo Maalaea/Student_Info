@@ -2995,4 +2995,46 @@ public class WalletTest extends TestWithWallet {
         assertTrue(wallet.doMaintenance(null, true).get().isEmpty());
         assertEquals(0, broadcaster.size());
 
-        // Receive money via a new block on key1
+        // Receive money via a new block on key1 and ensure it shows up as a maintenance task.
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, key1.toAddress(PARAMS));
+        wallet.doMaintenance(null, true);
+        tx = broadcaster.waitForTransactionAndSucceed();
+        assertNotNull(wallet.findKeyFromPubHash(tx.getOutput(0).getScriptPubKey().getPubKeyHash()));
+        log.info("Unexpected thing: {}", tx);
+        assertEquals(Coin.valueOf(9650), tx.getFee());
+        assertEquals(1, tx.getInputs().size());
+        assertEquals(1, tx.getOutputs().size());
+        assertEquals(CENT, tx.getValueSentFromMe(wallet));
+        assertEquals(CENT.subtract(tx.getFee()), tx.getValueSentToMe(wallet));
+
+        assertEquals(Transaction.Purpose.KEY_ROTATION, tx.getPurpose());
+
+        // We don't attempt to race an attacker against unconfirmed transactions.
+
+        // Now round-trip the wallet and check the protobufs are storing the data correctly.
+        wallet = roundTrip(wallet);
+
+        tx = wallet.getTransaction(tx.getHash());
+        checkNotNull(tx);
+        assertEquals(Transaction.Purpose.KEY_ROTATION, tx.getPurpose());
+        // Have to divide here to avoid mismatch due to second-level precision in serialisation.
+        assertEquals(compromiseTime.getTime() / 1000, wallet.getKeyRotationTime().getTime() / 1000);
+
+        // Make a normal spend and check it's all ok.
+        wallet.sendCoins(broadcaster, OTHER_ADDRESS, wallet.getBalance());
+        tx = broadcaster.waitForTransaction();
+        assertArrayEquals(OTHER_ADDRESS.getHash160(), tx.getOutput(0).getScriptPubKey().getPubKeyHash());
+    }
+
+    private Wallet roundTrip(Wallet wallet) throws UnreadableWalletException {
+        Protos.Wallet protos = new WalletProtobufSerializer().walletToProto(wallet);
+        return new WalletProtobufSerializer().readWallet(PARAMS, null, protos);
+    }
+
+    @Test
+    public void keyRotationHD() throws Exception {
+        // Test that if we rotate an HD chain, a new one is created and all arrivals on the old keys are moved.
+        Utils.setMockClock();
+        wallet = new Wallet(PARAMS);
+        ECKey key1 = wallet.freshReceiveKey();
+        ECKey key2 = wallet.freshReceiveKey(
