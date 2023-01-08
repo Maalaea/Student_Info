@@ -3037,4 +3037,45 @@ public class WalletTest extends TestWithWallet {
         Utils.setMockClock();
         wallet = new Wallet(PARAMS);
         ECKey key1 = wallet.freshReceiveKey();
-        ECKey key2 = wallet.freshReceiveKey(
+        ECKey key2 = wallet.freshReceiveKey();
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, key1.toAddress(PARAMS));
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, key2.toAddress(PARAMS));
+        DeterministicKey watchKey1 = wallet.getWatchingKey();
+
+        // A day later, we get compromised.
+        Utils.rollMockClock(86400);
+        wallet.setKeyRotationTime(Utils.currentTimeSeconds());
+
+        List<Transaction> txns = wallet.doMaintenance(null, false).get();
+        assertEquals(1, txns.size());
+        DeterministicKey watchKey2 = wallet.getWatchingKey();
+        assertNotEquals(watchKey1, watchKey2);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Test
+    public void keyRotationHD2() throws Exception {
+        // Check we handle the following scenario: a weak random key is created, then some good random keys are created
+        // but the weakness of the first isn't known yet. The wallet is upgraded to HD based on the weak key. Later, we
+        // find out about the weakness and set the rotation time to after the bad key's creation date. A new HD chain
+        // should be created based on the oldest known good key and the old chain + bad random key should rotate to it.
+
+        // We fix the private keys just to make the test deterministic (last byte differs).
+        Utils.setMockClock();
+        ECKey badKey = ECKey.fromPrivate(Utils.HEX.decode("00905b93f990267f4104f316261fc10f9f983551f9ef160854f40102eb71cffdbb"));
+        badKey.setCreationTimeSeconds(Utils.currentTimeSeconds());
+        Utils.rollMockClock(86400);
+        ECKey goodKey = ECKey.fromPrivate(Utils.HEX.decode("00905b93f990267f4104f316261fc10f9f983551f9ef160854f40102eb71cffdcc"));
+        goodKey.setCreationTimeSeconds(Utils.currentTimeSeconds());
+
+        // Do an upgrade based on the bad key.
+        final AtomicReference<List<DeterministicKeyChain>> fChains = new AtomicReference<>();
+        KeyChainGroup kcg = new KeyChainGroup(PARAMS) {
+
+            {
+                fChains.set(chains);
+            }
+        };
+        kcg.importKeys(badKey, goodKey);
+        Utils.rollMockClock(86400);
+        wallet = n
