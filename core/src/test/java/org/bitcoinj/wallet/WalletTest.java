@@ -3119,4 +3119,54 @@ public class WalletTest extends TestWithWallet {
         Address address = key.toAddress(PARAMS);
         Utils.setMockClock();
         Utils.rollMockClock(86400);
-        for (int i = 0; i <
+        for (int i = 0; i < 800; i++) {
+            sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, address);
+        }
+
+        MockTransactionBroadcaster broadcaster = new MockTransactionBroadcaster(wallet);
+
+        Date compromise = Utils.now();
+        Utils.rollMockClock(86400);
+        wallet.freshReceiveKey();
+        wallet.setKeyRotationTime(compromise);
+        wallet.doMaintenance(null, true);
+
+        Transaction tx = broadcaster.waitForTransactionAndSucceed();
+        final Coin valueSentToMe = tx.getValueSentToMe(wallet);
+        Coin fee = tx.getValueSentFromMe(wallet).subtract(valueSentToMe);
+        assertEquals(Coin.valueOf(900000), fee);
+        assertEquals(KeyTimeCoinSelector.MAX_SIMULTANEOUS_INPUTS, tx.getInputs().size());
+        assertEquals(Coin.valueOf(599100000), valueSentToMe);
+
+        tx = broadcaster.waitForTransaction();
+        assertNotNull(tx);
+        assertEquals(200, tx.getInputs().size());
+    }
+
+    @Test
+    public void completeTxPartiallySignedWithDummySigs() throws Exception {
+        byte[] dummySig = TransactionSignature.dummy().encodeToBitcoin();
+        completeTxPartiallySigned(Wallet.MissingSigsMode.USE_DUMMY_SIG, dummySig);
+    }
+
+    @Test
+    public void completeTxPartiallySignedWithEmptySig() throws Exception {
+        byte[] emptySig = {};
+        completeTxPartiallySigned(Wallet.MissingSigsMode.USE_OP_ZERO, emptySig);
+    }
+
+    @Test (expected = ECKey.MissingPrivateKeyException.class)
+    public void completeTxPartiallySignedThrows() throws Exception {
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, wallet.freshReceiveKey());
+        SendRequest req = SendRequest.emptyWallet(OTHER_ADDRESS);
+        wallet.completeTx(req);
+        // Delete the sigs
+        for (TransactionInput input : req.tx.getInputs())
+            input.clearScriptBytes();
+        Wallet watching = Wallet.fromWatchingKey(PARAMS, wallet.getWatchingKey().dropParent().dropPrivateBytes());
+        watching.completeTx(SendRequest.forTx(req.tx));
+    }
+
+    @Test
+    public void completeTxPartiallySignedMarriedWithDummySigs() throws Exception {
+        byte[] dummySig = TransactionSignature.
