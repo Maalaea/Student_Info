@@ -3169,4 +3169,52 @@ public class WalletTest extends TestWithWallet {
 
     @Test
     public void completeTxPartiallySignedMarriedWithDummySigs() throws Exception {
-        byte[] dummySig = TransactionSignature.
+        byte[] dummySig = TransactionSignature.dummy().encodeToBitcoin();
+        completeTxPartiallySignedMarried(Wallet.MissingSigsMode.USE_DUMMY_SIG, dummySig);
+    }
+
+    @Test
+    public void completeTxPartiallySignedMarriedWithEmptySig() throws Exception {
+        byte[] emptySig = {};
+        completeTxPartiallySignedMarried(Wallet.MissingSigsMode.USE_OP_ZERO, emptySig);
+    }
+
+    @Test (expected = TransactionSigner.MissingSignatureException.class)
+    public void completeTxPartiallySignedMarriedThrows() throws Exception {
+        byte[] emptySig = {};
+        completeTxPartiallySignedMarried(Wallet.MissingSigsMode.THROW, emptySig);
+    }
+
+    @Test (expected = TransactionSigner.MissingSignatureException.class)
+    public void completeTxPartiallySignedMarriedThrowsByDefault() throws Exception {
+        createMarriedWallet(2, 2, false);
+        myAddress = wallet.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN, myAddress);
+
+        SendRequest req = SendRequest.emptyWallet(OTHER_ADDRESS);
+        wallet.completeTx(req);
+    }
+
+    public void completeTxPartiallySignedMarried(Wallet.MissingSigsMode missSigMode, byte[] expectedSig) throws Exception {
+        // create married wallet without signer
+        createMarriedWallet(2, 2, false);
+        myAddress = wallet.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN, myAddress);
+
+        SendRequest req = SendRequest.emptyWallet(OTHER_ADDRESS);
+        req.missingSigsMode = missSigMode;
+        wallet.completeTx(req);
+        TransactionInput input = req.tx.getInput(0);
+
+        boolean firstSigIsMissing = Arrays.equals(expectedSig, input.getScriptSig().getChunks().get(1).data);
+        boolean secondSigIsMissing = Arrays.equals(expectedSig, input.getScriptSig().getChunks().get(2).data);
+
+        assertTrue("Only one of the signatures should be missing/dummy", firstSigIsMissing ^ secondSigIsMissing);
+        int localSigIndex = firstSigIsMissing ? 2 : 1;
+        int length = input.getScriptSig().getChunks().get(localSigIndex).data.length;
+        assertTrue("Local sig should be present: " + length, length >= 70);
+    }
+
+
+    @SuppressWarnings("ConstantConditions")
+    public void completeTxPartiallySigned(Wallet.Missing
