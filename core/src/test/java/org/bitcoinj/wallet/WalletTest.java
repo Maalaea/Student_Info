@@ -3251,4 +3251,45 @@ public class WalletTest extends TestWithWallet {
     @Test
     public void riskAnalysis() throws Exception {
         // Send a tx that is considered risky to the wallet, verify it doesn't show up in the balances.
-        final Transaction tx = createFakeTx(PARAMS, COIN, m
+        final Transaction tx = createFakeTx(PARAMS, COIN, myAddress);
+        final AtomicBoolean bool = new AtomicBoolean();
+        wallet.setRiskAnalyzer(new RiskAnalysis.Analyzer() {
+            @Override
+            public RiskAnalysis create(Wallet wallet, Transaction wtx, List<Transaction> dependencies) {
+                RiskAnalysis.Result result = RiskAnalysis.Result.OK;
+                if (wtx.getHash().equals(tx.getHash()))
+                    result = RiskAnalysis.Result.NON_STANDARD;
+                final RiskAnalysis.Result finalResult = result;
+                return new RiskAnalysis() {
+                    @Override
+                    public Result analyze() {
+                        bool.set(true);
+                        return finalResult;
+                    }
+                };
+            }
+        });
+        assertTrue(wallet.isPendingTransactionRelevant(tx));
+        assertEquals(Coin.ZERO, wallet.getBalance());
+        assertEquals(Coin.ZERO, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        wallet.receivePending(tx, null);
+        assertEquals(Coin.ZERO, wallet.getBalance());
+        assertEquals(Coin.ZERO, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        assertTrue(bool.get());
+        // Confirm it in the same manner as how Bloom filtered blocks do. Verify it shows up.
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, tx);
+        assertEquals(COIN, wallet.getBalance());
+    }
+
+    @Test
+    public void transactionInBlockNotification() {
+        final Transaction tx = createFakeTx(PARAMS, COIN, myAddress);
+        StoredBlock block = createFakeBlock(blockStore, Block.BLOCK_HEIGHT_GENESIS, tx).storedBlock;
+        wallet.receivePending(tx, null);
+        boolean notification = wallet.notifyTransactionIsInBlock(tx.getHash(), block, AbstractBlockChain.NewBlockType.BEST_CHAIN, 1);
+        assertTrue(notification);
+
+        final Transaction tx2 = createFakeTx(PARAMS, COIN, OTHER_ADDRESS);
+        wallet.receivePending(tx2, null);
+        StoredBlock block2 = createFakeBlock(blockStore, Block.BLOCK_HEIGHT_GENESIS + 1, tx2).storedBlock;
+        boolean notification2 = wallet.notifyTransactionIsInBlock(tx2.getHash(), block2, AbstractBlockChain.NewBlockType.BEST_CHAIN, 1)
