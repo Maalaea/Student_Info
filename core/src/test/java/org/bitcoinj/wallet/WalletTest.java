@@ -3217,4 +3217,38 @@ public class WalletTest extends TestWithWallet {
 
 
     @SuppressWarnings("ConstantConditions")
-    public void completeTxPartiallySigned(Wallet.Missing
+    public void completeTxPartiallySigned(Wallet.MissingSigsMode missSigMode, byte[] expectedSig) throws Exception {
+        // Check the wallet will write dummy scriptSigs for inputs that we have only pubkeys for without the privkey.
+        ECKey priv = new ECKey();
+        ECKey pub = ECKey.fromPublicOnly(priv.getPubKeyPoint());
+        wallet.importKey(pub);
+        ECKey priv2 = wallet.freshReceiveKey();
+        // Send three transactions, with one being an address type and the other being a raw CHECKSIG type pubkey only,
+        // and the final one being a key we do have. We expect the first two inputs to be dummy values and the last
+        // to be signed correctly.
+        Transaction t1 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, pub.toAddress(PARAMS));
+        Transaction t2 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, pub);
+        Transaction t3 = sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, CENT, priv2);
+
+        SendRequest req = SendRequest.emptyWallet(OTHER_ADDRESS);
+        req.missingSigsMode = missSigMode;
+        wallet.completeTx(req);
+        byte[] dummySig = TransactionSignature.dummy().encodeToBitcoin();
+        // Selected inputs can be in any order.
+        for (int i = 0; i < req.tx.getInputs().size(); i++) {
+            TransactionInput input = req.tx.getInput(i);
+            if (input.getConnectedOutput().getParentTransaction().equals(t1)) {
+                assertArrayEquals(expectedSig, input.getScriptSig().getChunks().get(0).data);
+            } else if (input.getConnectedOutput().getParentTransaction().equals(t2)) {
+                assertArrayEquals(expectedSig, input.getScriptSig().getChunks().get(0).data);
+            } else if (input.getConnectedOutput().getParentTransaction().equals(t3)) {
+                input.getScriptSig().correctlySpends(req.tx, i, t3.getOutput(0).getScriptPubKey());
+            }
+        }
+        assertTrue(TransactionSignature.isEncodingCanonical(dummySig));
+    }
+
+    @Test
+    public void riskAnalysis() throws Exception {
+        // Send a tx that is considered risky to the wallet, verify it doesn't show up in the balances.
+        final Transaction tx = createFakeTx(PARAMS, COIN, m
