@@ -3292,4 +3292,53 @@ public class WalletTest extends TestWithWallet {
         final Transaction tx2 = createFakeTx(PARAMS, COIN, OTHER_ADDRESS);
         wallet.receivePending(tx2, null);
         StoredBlock block2 = createFakeBlock(blockStore, Block.BLOCK_HEIGHT_GENESIS + 1, tx2).storedBlock;
-        boolean notification2 = wallet.notifyTransactionIsInBlock(tx2.getHash(), block2, AbstractBlockChain.NewBlockType.BEST_CHAIN, 1)
+        boolean notification2 = wallet.notifyTransactionIsInBlock(tx2.getHash(), block2, AbstractBlockChain.NewBlockType.BEST_CHAIN, 1);
+        assertFalse(notification2);
+    }
+
+    @Test
+    public void duplicatedBlock() {
+        final Transaction tx = createFakeTx(PARAMS, COIN, myAddress);
+        StoredBlock block = createFakeBlock(blockStore, Block.BLOCK_HEIGHT_GENESIS, tx).storedBlock;
+        wallet.notifyNewBestBlock(block);
+        wallet.notifyNewBestBlock(block);
+    }
+
+    @Test
+    public void keyEvents() throws Exception {
+        // Check that we can register an event listener, generate some keys and the callbacks are invoked properly.
+        wallet = new Wallet(PARAMS);
+        final List<ECKey> keys = Lists.newLinkedList();
+        wallet.addKeyChainEventListener(Threading.SAME_THREAD, new KeyChainEventListener() {
+            @Override
+            public void onKeysAdded(List<ECKey> k) {
+                keys.addAll(k);
+            }
+        });
+        wallet.freshReceiveKey();
+        assertEquals(1, keys.size());
+    }
+
+    @Test
+    public void upgradeToHDUnencrypted() throws Exception {
+        // This isn't very deep because most of it is tested in KeyChainGroupTest and Wallet just forwards most logic
+        // there. We're mostly concerned with the slightly different auto upgrade logic: KeyChainGroup won't do an
+        // on-demand auto upgrade of the wallet to HD even in the unencrypted case, because the key rotation time is
+        // a property of the Wallet, not the KeyChainGroup (it should perhaps be moved at some point - it doesn't matter
+        // much where it goes). Wallet on the other hand will try to auto-upgrade you when possible.
+
+        // Create an old-style random wallet.
+        KeyChainGroup group = new KeyChainGroup(PARAMS);
+        group.importKeys(new ECKey(), new ECKey());
+        wallet = new Wallet(PARAMS, group);
+        assertTrue(wallet.isDeterministicUpgradeRequired());
+        // Use an HD feature.
+        wallet.freshReceiveKey();
+        assertFalse(wallet.isDeterministicUpgradeRequired());
+    }
+
+    @Test
+    public void upgradeToHDEncrypted() throws Exception {
+        // Create an old-style random wallet.
+        KeyChainGroup group = new KeyChainGroup(PARAMS);
+      
