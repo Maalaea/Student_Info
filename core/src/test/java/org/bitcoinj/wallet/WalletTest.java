@@ -3341,4 +3341,54 @@ public class WalletTest extends TestWithWallet {
     public void upgradeToHDEncrypted() throws Exception {
         // Create an old-style random wallet.
         KeyChainGroup group = new KeyChainGroup(PARAMS);
-      
+        group.importKeys(new ECKey(), new ECKey());
+        wallet = new Wallet(PARAMS, group);
+        assertTrue(wallet.isDeterministicUpgradeRequired());
+        KeyCrypter crypter = new KeyCrypterScrypt();
+        KeyParameter aesKey = crypter.deriveKey("abc");
+        wallet.encrypt(crypter, aesKey);
+        try {
+            wallet.freshReceiveKey();
+        } catch (DeterministicUpgradeRequiresPassword e) {
+            // Expected.
+        }
+        wallet.upgradeToDeterministic(aesKey);
+        assertFalse(wallet.isDeterministicUpgradeRequired());
+        wallet.freshReceiveKey();  // works.
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldNotAddTransactionSignerThatIsNotReady() throws Exception {
+        wallet.addTransactionSigner(new NopTransactionSigner(false));
+    }
+
+    @Test
+    public void transactionSignersShouldBeSerializedAlongWithWallet() throws Exception {
+        TransactionSigner signer = new NopTransactionSigner(true);
+        wallet.addTransactionSigner(signer);
+        assertEquals(2, wallet.getTransactionSigners().size());
+        wallet = roundTrip(wallet);
+        assertEquals(2, wallet.getTransactionSigners().size());
+        assertTrue(wallet.getTransactionSigners().get(1).isReady());
+    }
+
+    @Test
+    public void watchingMarriedWallet() throws Exception {
+        DeterministicKey watchKey = wallet.getWatchingKey();
+        String serialized = watchKey.serializePubB58(PARAMS);
+        Wallet wallet = Wallet.fromWatchingKeyB58(PARAMS, serialized, 0);
+        blockStore = new MemoryBlockStore(PARAMS);
+        chain = new BlockChain(PARAMS, wallet, blockStore);
+
+        final DeterministicKeyChain keyChain = new DeterministicKeyChain(new SecureRandom());
+        DeterministicKey partnerKey = DeterministicKey.deserializeB58(null, keyChain.getWatchingKey().serializePubB58(PARAMS), PARAMS);
+
+        TransactionSigner signer = new StatelessTransactionSigner() {
+            @Override
+            public boolean isReady() {
+                return true;
+            }
+
+            @Override
+            public boolean signInputs(ProposedTransaction propTx, KeyBag keyBag) {
+                assertEquals(propTx.p
