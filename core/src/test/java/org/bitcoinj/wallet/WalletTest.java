@@ -3437,4 +3437,47 @@ public class WalletTest extends TestWithWallet {
     }
 
     @Test(expected = java.lang.IllegalStateException.class)
-    pu
+    public void sendCoinsNoBroadcasterTest() throws InsufficientMoneyException {
+        ECKey key = ECKey.fromPrivate(BigInteger.TEN);
+        SendRequest req = SendRequest.to(OTHER_ADDRESS.getParameters(), key, SATOSHI.multiply(12));
+        wallet.sendCoins(req);
+    }
+
+    @Test
+    public void sendCoinsWithBroadcasterTest() throws InsufficientMoneyException {
+        ECKey key = ECKey.fromPrivate(BigInteger.TEN);
+        receiveATransactionAmount(wallet, myAddress, Coin.COIN);
+        MockTransactionBroadcaster broadcaster = new MockTransactionBroadcaster(wallet);
+        wallet.setTransactionBroadcaster(broadcaster);
+        SendRequest req = SendRequest.to(OTHER_ADDRESS.getParameters(), key, Coin.CENT);
+        wallet.sendCoins(req);
+    }
+
+    @Test
+    public void fromKeys() {
+        ECKey key = ECKey.fromPrivate(Utils.HEX.decode("00905b93f990267f4104f316261fc10f9f983551f9ef160854f40102eb71cffdcc"));
+        Wallet wallet = Wallet.fromKeys(PARAMS, Arrays.asList(key));
+        assertEquals(1, wallet.getImportedKeys().size());
+        assertEquals(key, wallet.getImportedKeys().get(0));
+        wallet.upgradeToDeterministic(null);
+        String seed = wallet.getKeyChainSeed().toHexString();
+        assertEquals("5ca8cd6c01aa004d3c5396c628b78a4a89462f412f460a845b594ac42eceaa264b0e14dcd4fe73d4ed08ce06f4c28facfa85042d26d784ab2798a870bb7af556", seed);
+    }
+
+    @Test
+    public void reset() {
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN, myAddress);
+        assertNotEquals(Coin.ZERO, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        assertNotEquals(0, wallet.getTransactions(false).size());
+        assertNotEquals(0, wallet.getUnspents().size());
+        wallet.reset();
+        assertEquals(Coin.ZERO, wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        assertEquals(0, wallet.getTransactions(false).size());
+        assertEquals(0, wallet.getUnspents().size());
+    }
+
+    @Test
+    public void totalReceivedSent() throws Exception {
+        // Receive 4 BTC in 2 separate transactions
+        Transaction toMe1 = createFakeTxWithoutChangeAddress(PARAMS, COIN.multiply(2), myAddress);
+        Transaction toMe2 = createFakeTxWithoutChangeAddress(PARAMS, COIN.multi
