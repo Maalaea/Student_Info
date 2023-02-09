@@ -3391,4 +3391,50 @@ public class WalletTest extends TestWithWallet {
 
             @Override
             public boolean signInputs(ProposedTransaction propTx, KeyBag keyBag) {
-                assertEquals(propTx.p
+                assertEquals(propTx.partialTx.getInputs().size(), propTx.keyPaths.size());
+                List<ChildNumber> externalZeroLeaf = ImmutableList.<ChildNumber>builder()
+                        .addAll(DeterministicKeyChain.ACCOUNT_ZERO_PATH)
+                        .addAll(DeterministicKeyChain.EXTERNAL_SUBPATH).add(ChildNumber.ZERO).build();
+                for (TransactionInput input : propTx.partialTx.getInputs()) {
+                    List<ChildNumber> keypath = propTx.keyPaths.get(input.getConnectedOutput().getScriptPubKey());
+                    assertNotNull(keypath);
+                    assertEquals(externalZeroLeaf, keypath);
+                }
+                return true;
+            }
+        };
+        wallet.addTransactionSigner(signer);
+        MarriedKeyChain chain = MarriedKeyChain.builder()
+                .random(new SecureRandom())
+                .followingKeys(partnerKey)
+                .build();
+        wallet.addAndActivateHDChain(chain);
+
+        Address myAddress = wallet.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
+        sendMoneyToWallet(wallet, AbstractBlockChain.NewBlockType.BEST_CHAIN, COIN, myAddress);
+
+        SendRequest req = SendRequest.emptyWallet(OTHER_ADDRESS);
+        req.missingSigsMode = Wallet.MissingSigsMode.USE_DUMMY_SIG;
+        wallet.completeTx(req);
+    }
+
+    @Test
+    public void sendRequestExchangeRate() throws Exception {
+        receiveATransaction(wallet, myAddress);
+        SendRequest sendRequest = SendRequest.to(myAddress, Coin.COIN);
+        sendRequest.exchangeRate = new ExchangeRate(Fiat.parseFiat("EUR", "500"));
+        wallet.completeTx(sendRequest);
+        assertEquals(sendRequest.exchangeRate, sendRequest.tx.getExchangeRate());
+    }
+
+    @Test
+    public void sendRequestMemo() throws Exception {
+        receiveATransaction(wallet, myAddress);
+        SendRequest sendRequest = SendRequest.to(myAddress, Coin.COIN);
+        sendRequest.memo = "memo";
+        wallet.completeTx(sendRequest);
+        assertEquals(sendRequest.memo, sendRequest.tx.getMemo());
+    }
+
+    @Test(expected = java.lang.IllegalStateException.class)
+    pu
