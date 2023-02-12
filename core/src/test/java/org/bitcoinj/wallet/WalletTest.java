@@ -3480,4 +3480,21 @@ public class WalletTest extends TestWithWallet {
     public void totalReceivedSent() throws Exception {
         // Receive 4 BTC in 2 separate transactions
         Transaction toMe1 = createFakeTxWithoutChangeAddress(PARAMS, COIN.multiply(2), myAddress);
-        Transaction toMe2 = createFakeTxWithoutChangeAddress(PARAMS, COIN.multi
+        Transaction toMe2 = createFakeTxWithoutChangeAddress(PARAMS, COIN.multiply(2), myAddress);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, toMe1, toMe2);
+
+        // Check we calculate the total received correctly
+        assertEquals(Coin.COIN.multiply(4), wallet.getTotalReceived());
+
+        // Send 3 BTC in a single transaction
+        SendRequest req = SendRequest.to(OTHER_ADDRESS, Coin.COIN.multiply(3));
+        wallet.completeTx(req);
+        sendMoneyToWallet(AbstractBlockChain.NewBlockType.BEST_CHAIN, req.tx);
+
+        // Check that we still have the same totalReceived, since the above tx will have sent us change back
+        assertEquals(Coin.COIN.multiply(4),wallet.getTotalReceived());
+        assertEquals(Coin.COIN.multiply(3),wallet.getTotalSent());
+
+        // TODO: test shared wallet calculation here
+    }
+}
