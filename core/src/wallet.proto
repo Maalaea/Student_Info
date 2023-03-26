@@ -61,4 +61,50 @@ message DeterministicKey {
   optional uint32 lookahead_size = 4;
 
   /**
-   * Flag indicating that this key is a root of a following chain. This chain is following the next 
+   * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
+   * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
+   * a single P2SH multisignature address
+   */
+  optional bool isFollowing = 5;
+
+  // Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
+  // and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+  optional uint32 sigsRequiredToSpend = 6 [default = 1];
+}
+
+/**
+ * A key used to control Bitcoin spending.
+ *
+ * Either the private key, the public key or both may be present.  It is recommended that
+ * if the private key is provided that the public key is provided too because deriving it is slow.
+ *
+ * If only the public key is provided, the key can only be used to watch the blockchain and verify
+ * transactions, and not for spending.
+ */
+message Key {
+  enum Type {
+    /** Unencrypted - Original bitcoin secp256k1 curve */
+    ORIGINAL = 1;
+
+    /** Encrypted with Scrypt and AES - Original bitcoin secp256k1 curve */
+    ENCRYPTED_SCRYPT_AES = 2;
+
+    /**
+    * Not really a key, but rather contains the mnemonic phrase for a deterministic key hierarchy in the private_key field.
+    * The label and public_key fields are missing. Creation timestamp will exist.
+    */
+    DETERMINISTIC_MNEMONIC = 3;
+
+    /**
+     * A key that was derived deterministically. Note that the root seed that created it may NOT be present in the
+     * wallet, for the case of watching wallets. A deterministic key may or may not have the private key bytes present.
+     * However the public key bytes and the deterministic_key field are guaranteed to exist. In a wallet where there
+     * is a path from this key up to a key that has (possibly encrypted) private bytes, it's expected that the private
+     * key can be rederived on the fly.
+     */
+    DETERMINISTIC_KEY = 4;
+  }
+  required Type type = 1;
+
+  // Either the private EC key bytes (without any ASN.1 wrapping), or the deterministic root seed.
+  // If the secret is encrypted, or this is a "watching entry" then this is mis
