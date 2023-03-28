@@ -107,4 +107,58 @@ message Key {
   required Type type = 1;
 
   // Either the private EC key bytes (without any ASN.1 wrapping), or the deterministic root seed.
-  // If the secret is encrypted, or this is a "watching entry" then this is mis
+  // If the secret is encrypted, or this is a "watching entry" then this is missing.
+  optional bytes secret_bytes = 2;
+
+  // If the secret data is encrypted, then secret_bytes is missing and this field is set.
+  optional EncryptedData encrypted_data = 6;
+
+  // The public EC key derived from the private key. We allow both to be stored to avoid mobile clients having to
+  // do lots of slow EC math on startup. For DETERMINISTIC_MNEMONIC entries this is missing.
+  optional bytes public_key = 3;
+
+  // User-provided label associated with the key.
+  optional string label = 4;
+
+  // Timestamp stored as millis since epoch. Useful for skipping block bodies before this point. The reason it's
+  // optional is that keys derived from a parent don't have this data.
+  optional int64 creation_timestamp = 5;
+
+  optional DeterministicKey deterministic_key = 7;
+
+  // The seed for a deterministic key hierarchy.  Derived from the mnemonic,
+  // but cached here for quick startup.  Only applicable to a DETERMINISTIC_MNEMONIC key entry.
+  optional bytes deterministic_seed = 8;
+
+  // Encrypted version of the seed
+  optional EncryptedData encrypted_deterministic_seed = 9;
+}
+
+message Script {
+  required bytes program = 1;
+
+  // Timestamp stored as millis since epoch. Useful for skipping block bodies before this point
+  // when watching for scripts on the blockchain.
+  required int64 creation_timestamp = 2;
+}
+
+message TransactionInput {
+  // Hash of the transaction this input is using.
+  required bytes transaction_out_point_hash = 1;
+  // Index of transaction output used by this input.
+  required uint32 transaction_out_point_index = 2;
+  // Script that contains the signatures/pubkeys.
+  required bytes script_bytes = 3;
+  // Sequence number.
+  optional uint32 sequence = 4;
+  // Value of connected output, if known
+  optional int64 value = 5;
+}
+
+message TransactionOutput {
+  required int64 value = 1;
+  required bytes script_bytes = 2;    // script of transaction output
+  // If spent, the hash of the transaction doing the spend.
+  optional bytes spent_by_transaction_hash = 3;
+  // If spent, the index of the transaction input of the transaction doing the spend.
+  optional int32 spent
