@@ -261,4 +261,61 @@ message Transaction {
   // A list of blocks in which the transaction has been observed (on any chain). Also, a number used to disambiguate
   // ordering within a block.
   repeated bytes block_hash = 8;
-  repeated int32 b
+  repeated int32 block_relativity_offsets = 11;
+
+  // Data describing where the transaction is in the chain.
+  optional TransactionConfidence confidence = 9;
+
+  // For what purpose the transaction was created.
+  enum Purpose {
+    // Old wallets or the purpose genuinely is a mystery (e.g. imported from some external source).
+    UNKNOWN = 0;
+    // Created in response to a user request for payment. This is the normal case.
+    USER_PAYMENT = 1;
+    // Created automatically to move money from rotated keys.
+    KEY_ROTATION = 2;
+    // Stuff used by Lighthouse.
+    ASSURANCE_CONTRACT_CLAIM = 3;
+    ASSURANCE_CONTRACT_PLEDGE = 4;
+    ASSURANCE_CONTRACT_STUB = 5;
+    // Raise fee, e.g. child-pays-for-parent.
+    RAISE_FEE = 6;
+    // In future: de/refragmentation, privacy boosting/mixing, child-pays-for-parent fees, etc.
+  }
+  optional Purpose purpose = 10 [default = UNKNOWN];
+
+  // Exchange rate that was valid when the transaction was sent.
+  optional ExchangeRate exchange_rate = 12;
+
+  // Memo of the transaction. It can be used to record the memo of the payment request that initiated the
+  // transaction.
+  optional string memo = 13;
+
+  // Next tag: 14
+}
+
+/** The parameters used in the scrypt key derivation function.
+ *  The default values are taken from http://www.tarsnap.com/scrypt/scrypt-slides.pdf.
+ *  They can be increased - n is the number of iterations performed and
+ *  r and p can be used to tweak the algorithm - see:
+ *  http://stackoverflow.com/questions/11126315/what-are-optimal-scrypt-work-factors
+ */
+message ScryptParameters {
+  required bytes salt = 1;                        // Salt to use in generation of the wallet password (8 bytes)
+  optional int64 n = 2 [default = 16384];         // CPU/ memory cost parameter
+  optional int32 r = 3 [default = 8];             // Block size parameter
+  optional int32 p = 4 [default = 1];             // Parallelisation parameter
+}
+
+/** An extension to the wallet */
+message Extension {
+  required string id = 1;   // like org.whatever.foo.bar
+  required bytes data = 2;
+  // If we do not understand a mandatory extension, abort to prevent data loss.
+  // For example, this could be applied to a new type of holding, such as a contract, where
+  // dropping of an extension in a read/write cycle could cause loss of value.
+  required bool mandatory = 3;
+}
+
+/**
+ * A simple key->val
