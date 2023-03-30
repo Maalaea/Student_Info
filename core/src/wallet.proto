@@ -207,4 +207,58 @@ message TransactionConfidence {
   // Where did we get this transaction from? Knowing the source may help us to risk analyze pending transactions.
   enum Source {
     SOURCE_UNKNOWN = 0;  // We don't know where it came from, or this is a wallet from the future.
-    SOURCE_NETWORK = 1;  // We received it from a network br
+    SOURCE_NETWORK = 1;  // We received it from a network broadcast. This is the normal way to get payments.
+    SOURCE_SELF = 2;     // We made it ourselves, so we know it should be valid.
+    // In future:
+    // - direct from trusted counterparty, eg via bluetooth/wifi direct
+    // - direct from untrusted counterparty
+    // - from a wallet that uses trusted computing/secure hardware that won't create double spends
+  }
+  optional Source source = 7;
+
+  // Next tag: 9
+}
+
+/** A bitcoin transaction */
+
+message Transaction {
+  /**
+   * This is a bitfield oriented enum, with the following bits:
+   * 
+   * bit 0 - spent
+   * bit 1 - appears in alt chain
+   * bit 2 - appears in best chain
+   * bit 3 - double-spent
+   * bit 4 - pending (we would like the tx to go into the best chain)
+   * 
+   * Not all combinations are interesting, just the ones actually used in the enum.
+   */
+  enum Pool {
+    UNSPENT = 4; // In best chain, not all outputs spent
+    SPENT = 5; // In best chain, all outputs spent
+    INACTIVE = 2; // In non-best chain, not our transaction
+    DEAD = 10; // Double-spent by a transaction in the best chain
+    PENDING = 16; // Our transaction, not in any chain
+    PENDING_INACTIVE = 18; // In non-best chain, our transaction
+  }
+
+  // See Wallet.java for detailed description of pool semantics
+  required int32 version = 1;
+  required bytes hash = 2;
+
+  // If pool is not present, that means either:
+  //  - This Transaction is either not in a wallet at all (the proto is re-used elsewhere)
+  //  - Or it is stored but for other purposes, for example, because it is the overriding transaction of a double spend.
+  //  - Or the Pool enum got a new value which your software is too old to parse.
+  optional Pool pool = 3;
+
+  optional uint32 lock_time = 4; // The nLockTime field is useful for contracts.
+  optional int64 updated_at = 5; // millis since epoch the transaction was last updated
+
+  repeated TransactionInput transaction_input = 6;
+  repeated TransactionOutput transaction_output = 7;
+
+  // A list of blocks in which the transaction has been observed (on any chain). Also, a number used to disambiguate
+  // ordering within a block.
+  repeated bytes block_hash = 8;
+  repeated int32 b
