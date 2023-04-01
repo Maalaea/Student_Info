@@ -370,4 +370,40 @@ message Wallet {
 
   // The version number of the wallet - used to detect wallets that were produced in the future
   // (i.e. the wallet may contain some future format this protobuf or parser code does not know about).
-  // A version that's higher than the default is considered fr
+  // A version that's higher than the default is considered from the future.
+  optional int32 version = 7 [default = 1];
+
+  // deprecated - do not recycle this numeric identifier
+  // optional int32 minor_version = 8;
+
+  repeated Extension extension = 10;
+
+  // A UTF8 encoded text description of the wallet that is intended for end user provided text.
+  optional string description = 11;
+
+  // (The field number 12 is used by last_seen_block_height)
+
+  // UNIX time in seconds since the epoch. If set, then any keys created before this date are assumed to be no longer
+  // wanted. Money sent to them will be re-spent automatically to the first key that was created after this time. It
+  // can be used to recover a compromised wallet, or just as part of preventative defence-in-depth measures.
+  optional uint64 key_rotation_time = 13;
+
+  repeated Tag tags = 16;
+
+  // transaction signers added to the wallet
+  repeated TransactionSigner transaction_signers = 17;
+
+  // Next tag: 18
+}
+
+/** An exchange rate between Bitcoin and some fiat currency. */
+message ExchangeRate {
+  // This much of satoshis (1E-8 fractions)…
+  required int64 coin_value = 1;
+  // …is worth this much of fiat (1E-4 fractions).
+  required int64 fiat_value = 2;
+  // ISO 4217 currency code (if available) of the fiat currency.
+  required string fiat_currency_code = 3;
+
+  // Next tag: 4
+}
