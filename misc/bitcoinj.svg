@@ -74,4 +74,24 @@
        sodipodi:nodetypes="ccsccc"
        inkscape:connector-curvature="0"
        id="path13"
-       d="m 29.0427,11.929459 -3.510569,23.424623 c -0.195236,0.614837 0.264803,1.349517 0.903175,1.442372 0.638372,0.092
+       d="m 29.0427,11.929459 -3.510569,23.424623 c -0.195236,0.614837 0.264803,1.349517 0.903175,1.442372 0.638372,0.09285 1.288645,-0.480327 1.276656,-1.125305 l 3.44944,-22.805606 C 30.496217,12.487187 29.827682,12.183312 29.0427,11.929459 z"
+       style="font-size:medium;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:normal;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.75999999;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Sans;-inkscape-font-specification:Sans" />
+    <path
+       d="m 13.113591,27.480372 c -1.266997,-1.266997 -1.266997,-3.322856 0,-4.589853 1.266997,-1.266997 3.322856,-1.266997 4.589853,0 1.268266,1.266997 1.268266,3.322856 0,4.589853 -1.266997,1.266998 -3.322856,1.266998 -4.589853,0 z"
+       id="path15"
+       inkscape:connector-curvature="0"
+       style="fill:#ffffff" />
+    <path
+       d="m 28.885742,8.7493571 c -1.266997,-1.266997 -1.266997,-3.3228554 0,-4.5898528 1.266997,-1.2682656 3.322856,-1.2682656 4.589853,0 1.266998,1.2669974 1.266998,3.3228558 0,4.5898528 -1.266997,1.2669979 -3.322856,1.2669979 -4.589853,0 z"
+       id="path17"
+       inkscape:connector-curvature="0"
+       style="fill:#0f7964" />
+    <path
+       d="m 23.816484,38.154096 c -1.266997,-1.266998 -1.266997,-3.322856 0,-4.589853 1.266998,-1.268266 3.322856,-1.268266 4.589854,0 1.268265,1.266997 1.268265,3.322855 0,4.589853 -1.266998,1.266997 -3.322856,1.266997 -4.589854,0 z"
+       id="path19"
+       inkscape:connector-curvature="0"
+       style="fill:#ffffff" />
+  </g>
+  <defs
+     id="defs21" />
+</svg>
