@@ -17,4 +17,61 @@
    inkscape:version="0.48.4 r9939"
    sodipodi:docname="bitcoinj.svg">
   <metadata
-   
+     id="metadata25">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1268"
+     inkscape:window-height="863"
+     id="namedview23"
+     showgrid="false"
+     inkscape:zoom="4.72"
+     inkscape:cx="-9.2492079"
+     inkscape:cy="13.988792"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg2" />
+  <g
+     id="g2989"
+     transform="matrix(1.1238175,0,0,1.1238175,-2.3129391,-2.7277529)">
+    <path
+       d="M 26.047363,38.254289 30.646095,8.9459391"
+       id="path5"
+       inkscape:connector-curvature="0"
+       style="fill-opacity:0;stroke:#0f7964;stroke-width:2.23214746;stroke-linecap:round;stroke-linejoin:round" />
+    <path
+       d="m 23.477857,10.973895 -0.24858,0 c -9.127707,0 -16.5267685,7.399062 -16.5267685,16.52677 l 0,0.247311 c 0,9.127708 7.3990615,16.52677 16.5267685,16.52677 l 0.24858,0 c 9.125171,0 16.524233,-7.399062 16.524233,-16.52677 l 0,-0.247311 c 0,-9.127708 -7.399062,-16.52677 -16.524233,-16.52677 z"
+       id="path7"
+       inkscape:connector-curvature="0"
+       style="fill:#0f7964" />
+    <path
+       d="m 20.238707,31.442434 c 0,0 1.84279,-1.98864 -1.037441,-4.338737 -2.880232,-2.347559 -6.031872,-5.737633 -6.031872,-5.737633"
+       id="path9"
+       inkscape:connector-curvature="0"
+       style="fill-opacity:0;stroke:#0f7964;stroke-width:1.01461256;stroke-linecap:round" />
+    <path
+       d="M 26.118386,37.362698 16.149819,26.029477"
+       id="path11"
+       inkscape:connector-curvature="0"
+       style="fill-opacity:0;stroke:#ffffff;stroke-width:2.23214746" />
+    <path
+       sodipodi:nodetypes="ccsccc"
+       inkscape:connector-curvature="0"
+       id="path13"
+       d="m 29.0427,11.929459 -3.510569,23.424623 c -0.195236,0.614837 0.264803,1.349517 0.903175,1.442372 0.638372,0.092
